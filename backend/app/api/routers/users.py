@@ -90,6 +90,12 @@ def account_overview(
     )
     active = bool(sub and sub.status == "active" and sub.ends_at > now)
     trial_active = bool(active and sub and sub.plan == "trial")
+    trial_used = bool(
+        user.trial_activated_at
+        or db.query(Subscription.id)
+        .filter(Subscription.user_id == user.id, Subscription.plan == "trial")
+        .first()
+    )
 
     invited_count = (
         db.query(func.count(Referral.id))
@@ -126,7 +132,7 @@ def account_overview(
     referral_link = f"{settings.telegram_miniapp_url}?startapp={user.referral_code}"
 
     onboarding = {
-        "trial_available": user.trial_activated_at is None,
+        "trial_available": not trial_used,
         "wallet_ready": user.wallet_balance_rub >= 74,
         "has_active_subscription": active,
         "vpn_ready": bool(vpn_profile),
@@ -149,7 +155,7 @@ def account_overview(
         },
         "trial": {
             "active": trial_active,
-            "available": user.trial_activated_at is None,
+            "available": not trial_used,
             "days": user.trial_days,
             "activated_at": user.trial_activated_at,
             "ends_at": sub.ends_at if trial_active else None,

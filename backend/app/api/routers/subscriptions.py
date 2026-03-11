@@ -82,7 +82,23 @@ async def activate_trial(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if user.trial_activated_at:
+    trial_exists = (
+        db.query(Subscription.id)
+        .filter(Subscription.user_id == user.id, Subscription.plan == "trial")
+        .first()
+        is not None
+    )
+    if user.trial_activated_at or trial_exists:
+        # Backfill marker for legacy users where trial_activated_at is still NULL.
+        if not user.trial_activated_at and trial_exists:
+            first_trial = (
+                db.query(Subscription)
+                .filter(Subscription.user_id == user.id, Subscription.plan == "trial")
+                .order_by(Subscription.starts_at.asc())
+                .first()
+            )
+            user.trial_activated_at = (first_trial.starts_at if first_trial else datetime.utcnow())
+            db.commit()
         raise HTTPException(status_code=400, detail="Trial already activated")
 
     now = datetime.utcnow()
