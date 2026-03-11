@@ -1,4 +1,4 @@
-﻿import json
+import json
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -13,6 +13,7 @@ from app.models.referral import Referral
 from app.models.subscription import Subscription
 from app.models.user import User
 from app.schemas.auth import Token
+from app.schemas.user import UserOut
 from app.utils.audit import log_audit
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -62,7 +63,7 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
             db.add(Referral(inviter_id=inviter.id, invitee_id=user.id))
             db.commit()
             await send_admin_log(
-                "переход по реферальной ссылке",
+                "??????? ?? ??????????? ??????",
                 user.telegram_id,
                 username,
                 {"Inviter": inviter.telegram_id},
@@ -84,10 +85,10 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
 
     log_audit(db, user.id, "registration" if is_new else "login", {"username": username})
     await send_admin_log(
-        "регистрация пользователя" if is_new else "авторизация",
+        "??????????? ????????????" if is_new else "???????????",
         user.telegram_id,
         username,
-        {"Trial": "активирован" if is_new else "-"},
+        {"Trial": "???????????" if is_new else "-"},
     )
 
     return Token(access_token=token)
