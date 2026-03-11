@@ -12,6 +12,7 @@ from app.models.payment import Payment
 from app.models.user import User
 from app.schemas.payment import PaymentCreate, PaymentOut
 from app.services.payments_yookassa import create_yookassa_payment
+from app.services.referral import apply_referral_commission
 from app.utils.audit import log_audit
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
@@ -82,6 +83,29 @@ async def yookassa_webhook(
 
         if payment.kind == "topup" and user:
             user.wallet_balance_rub += payment.amount_rub
+            # Referral bonus: inviter receives 10% from referred user's top-up.
+            if user.referred_by_id:
+                commission = apply_referral_commission(
+                    db=db,
+                    inviter_id=user.referred_by_id,
+                    invitee_id=user.id,
+                    amount_rub=payment.amount_rub,
+                )
+                if commission > 0:
+                    inviter = db.query(User).filter(User.id == user.referred_by_id).first()
+                    if inviter:
+                        inviter.wallet_balance_rub += commission
+                        db.add(
+                            Payment(
+                                user_id=inviter.id,
+                                amount_rub=commission,
+                                status="paid",
+                                provider="internal",
+                                kind="referral_bonus",
+                                paid_at=datetime.utcnow(),
+                                meta={"invitee_user_id": user.id, "source_payment_id": payment.id},
+                            )
+                        )
             await send_admin_log(
                 "wallet_topup",
                 user.telegram_id,
@@ -120,9 +144,9 @@ def payment_history(
 ):
     payments = (
         db.query(Payment)
-        .filter(Payment.user_id == user.id)
+        .filter(Payment.user_id == user.id, Payment.status == "paid")
         .order_by(Payment.created_at.desc())
-        .limit(50)
+        .limit(100)
         .all()
     )
     return [
@@ -131,7 +155,8 @@ def payment_history(
             "amount_rub": p.amount_rub,
             "status": p.status,
             "kind": p.kind,
-            "created_at": p.created_at,
+            "created_at": p.paid_at or p.created_at,
+            "meta": p.meta or {},
         }
         for p in payments
     ]

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.core.logging import send_admin_log
 from app.db.session import get_db
+from app.models.payment import Payment
 from app.models.subscription import Subscription
 from app.models.user import User
 from app.schemas.subscription import (
@@ -155,6 +156,17 @@ async def purchase_subscription(
         ends_at=ends_at,
     )
     db.add(sub)
+    db.add(
+        Payment(
+            user_id=user.id,
+            amount_rub=amount,
+            status="paid",
+            provider="internal",
+            kind="subscription_debit",
+            paid_at=now,
+            meta={"plan": payload.plan},
+        )
+    )
     db.commit()
 
     log_audit(db, user.id, "subscription_purchased", {"plan": payload.plan, "price": amount})
