@@ -179,15 +179,6 @@ export default function App() {
     return url;
   };
 
-  const readableVlessUrl = (url) => {
-    if (!url) return "";
-    try {
-      return decodeURIComponent(url);
-    } catch {
-      return url;
-    }
-  };
-
   const openDoc = async (name, title) => {
     const res = await fetch(`/docs/${name}.html`);
     const html = await res.text();
@@ -302,20 +293,11 @@ export default function App() {
               {vpnConfig && (
                 <div className="config-box">
                   <div className="config-item">
-                    <label>UUID</label>
-                    <textarea readOnly value={vpnConfig.uuid || ""} rows={2} />
-                  </div>
-                  <div className="config-item">
-                    <label>VLESS ссылка</label>
-                    <textarea readOnly value={readableVlessUrl(vpnConfig.vless_url)} rows={4} />
-                  </div>
-                  <div className="config-item">
                     <label>Subscription URL</label>
                     <textarea readOnly value={normalizeSubscriptionUrl(vpnConfig.subscription_url)} rows={3} />
                   </div>
                   <div className="row">
                     <button onClick={() => copy(normalizeSubscriptionUrl(vpnConfig.subscription_url))}>Скопировать Subscription URL</button>
-                    <button onClick={() => copy(vpnConfig.vless_url)}>Скопировать VLESS</button>
                   </div>
                 </div>
               )}
