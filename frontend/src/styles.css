@@ -33,9 +33,17 @@ a:hover {
 }
 
 .app {
-  padding: 20px;
+  padding: 20px 20px 90px;
   max-width: 1100px;
   margin: 0 auto;
+}
+
+.alert {
+  background: #fff3d6;
+  border: 1px solid #ffd786;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin-bottom: 14px;
 }
 
 .hero {
@@ -123,11 +131,39 @@ a:hover {
   box-shadow: 0 8px 20px rgba(35, 114, 39, 0.08);
 }
 
+.card.nested {
+  margin-top: 12px;
+}
+
+.price-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
 .plan {
   background: var(--card);
   border: 2px solid var(--peach);
   border-radius: 16px;
   padding: 16px;
+  position: relative;
+}
+
+.plan.highlight {
+  border-color: var(--orange);
+  box-shadow: 0 12px 24px rgba(255, 170, 0, 0.2);
+}
+
+.badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--orange);
+  color: var(--green-dark);
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .price {
@@ -141,6 +177,20 @@ button {
   border: none;
   padding: 10px 14px;
   border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.primary {
+  width: 100%;
+  margin-top: 12px;
+}
+
+button.link {
+  background: transparent;
+  border: none;
+  color: var(--green-dark);
+  padding: 0;
   font-weight: 600;
   cursor: pointer;
 }
@@ -177,11 +227,51 @@ ul {
   text-align: center;
 }
 
+.muted {
+  color: #6b6b6b;
+}
+
+.doc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.doc-body {
+  margin-top: 12px;
+}
+
 .footer {
   margin-top: 32px;
   padding: 16px;
   background: var(--peach);
   border-radius: 12px;
+}
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: #ffffff;
+  border-top: 1px solid #eaeaea;
+  padding: 8px 6px;
+}
+
+.tabbar button {
+  background: transparent;
+  border: none;
+  padding: 8px 4px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #4b4b4b;
+}
+
+.tabbar button.active {
+  color: var(--green-dark);
 }
 
 @media (min-width: 900px) {
@@ -191,5 +281,11 @@ ul {
   }
   .hero-text h1 {
     font-size: 36px;
+  }
+  .tabbar {
+    max-width: 1100px;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
   }
 }
