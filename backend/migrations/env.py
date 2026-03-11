@@ -1,8 +1,13 @@
-﻿from logging.config import fileConfig
+import os
+import sys
+from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+
+# Ensure backend package is importable when alembic runs from any cwd.
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.core.config import settings
 from app.db.base import Base
