@@ -33,7 +33,14 @@ def verify_telegram_init_data(init_data: str, max_age_seconds: int = 86400) -> D
         raise ValueError("Missing hash")
 
     data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(data.items()))
-    secret_key = hashlib.sha256(settings.bot_token.encode()).digest()
+    # Telegram MiniApp verification:
+    # secret_key = HMAC_SHA256("WebAppData", bot_token)
+    # (not SHA256(bot_token), that is for other auth flows).
+    secret_key = hmac.new(
+        b"WebAppData",
+        settings.bot_token.encode(),
+        hashlib.sha256,
+    ).digest()
     computed_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
 
     if not hmac.compare_digest(received_hash, computed_hash):
