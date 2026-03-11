@@ -3,12 +3,10 @@
 Production-ready сервис защищенного удаленного доступа к российскому IP для пользователей за границей. Сервис не предназначен для обхода блокировок.
 
 ## Важно про x-ui
-В текущем проекте интеграция реализована через Marzban API (контейнер `panel`).
+В текущем проекте интеграция реализована через Marzban API (контейнер `panel` или внешний Marzban).
 Если у вас уже установлен x-ui, есть два пути:
-1. Оставить x-ui как есть и реализовать адаптер API под x-ui (я могу добавить его по запросу).
-2. Отключить/не использовать x-ui и использовать Marzban (рекомендуется для этой реализации).
-
-Сейчас проект ожидает `PANEL_URL` и `PANEL_TOKEN` от Marzban. Для x-ui потребуется отдельная прослойка.
+1. Оставить x-ui как есть и реализовать адаптер API под x-ui (могу добавить по запросу).
+2. Использовать Marzban (рекомендуется для этой реализации).
 
 ## Архитектура
 - Backend API: FastAPI + SQLAlchemy + Alembic
@@ -20,8 +18,7 @@ Production-ready сервис защищенного удаленного дос
 - Scheduler: Celery beat
 - Nginx reverse proxy
 
-## Размещение и порты
-Контейнеры работают на нестандартных портах:
+## Порты контейнеров
 - backend: `18081`
 - bot: `18082`
 - frontend: `18083`
@@ -32,97 +29,166 @@ Nginx принимает 80/443 и проксирует:
 - `/api` -> backend
 - `/` -> frontend
 
-## Подготовка сервера
+---
+
+# Полная инструкция по запуску
+
+## 1) Подготовка сервера
+
 1. Установите Docker и Docker Compose.
 2. Откройте порты 80/443 и убедитесь, что домен указывает на сервер.
 3. Подготовьте внешнюю PostgreSQL (на другом сервере).
+4. Решите, где будет Marzban:
+   - Внутри `docker-compose` (контейнер `panel`)
+   - На отдельном сервере (в этом случае используйте `PANEL_URL` с внешним адресом)
 
-## Запуск проекта
-1. Скопируйте `.env.example` в `.env`.
-2. Заполните `.env`.
-3. Запустите:
+## 2) Подготовка домена и SSL
+
+1. Создайте DNS запись `pineapple.ambot24.ru` на IP сервера.
+2. Выпустите SSL-сертификат (LetsEncrypt). Можно использовать отдельный Nginx/Traefik для SSL.
+3. Убедитесь, что `https://pineapple.ambot24.ru` открывается.
+
+## 3) Настройка Telegram Bot и MiniApp
+
+1. Создайте бота через @BotFather.
+2. Получите `BOT_TOKEN`.
+3. Настройте WebApp URL — укажите `https://pineapple.ambot24.ru`.
+4. Создайте Telegram-чат для админ-логов и получите `ADMIN_CHAT_ID`.
+
+## 4) Настройка YooKassa
+
+1. Создайте магазин в YooKassa.
+2. Получите `YOOKASSA_SHOP_ID` и `YOOKASSA_SECRET_KEY`.
+3. В кабинете YooKassa настройте webhook:
+   `https://pineapple.ambot24.ru/api/payments/webhook`
+4. В `YOOKASSA_WEBHOOK_SECRET` укажите секрет, которым подписывается webhook.
+
+## 5) Настройка Marzban
+
+Подробная инструкция находится в `docs/marzban_setup.md`.
+
+Коротко:
+1. Установите Marzban (на этом сервере или на отдельном).
+2. Получите API токен через `/api/admin/token`.
+3. Укажите `PANEL_URL` и `PANEL_TOKEN` в `.env` Pineapple VPN.
+4. Настройте inbound VLESS + Reality + XTLS Vision в панели.
+
+## 6) Настройка .env
+
+Скопируйте `.env.example` в `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Заполните `.env`:
+
+### Общие
+- `PROJECT_NAME` — Pineapple VPN
+- `DOMAIN` — `pineapple.ambot24.ru`
+- `APP_ENV` — `production`
+
+### Безопасность и JWT
+- `SECRET_KEY` — 32+ символов
+- `JWT_SECRET` — отдельный секрет
+- `JWT_ALG` — `HS256`
+- `ACCESS_TOKEN_EXPIRE_MINUTES` — срок жизни JWT
+
+### CORS и URL
+- `ALLOWED_ORIGINS` — `https://pineapple.ambot24.ru,https://t.me`
+- `FRONTEND_URL` — `https://pineapple.ambot24.ru`
+- `API_BASE_URL` — `https://pineapple.ambot24.ru/api`
+
+### PostgreSQL (внешняя)
+- `DB_HOST` — хост внешней БД
+- `DB_PORT` — порт БД
+- `DB_NAME` — имя БД
+- `DB_USER` — пользователь
+- `DB_PASSWORD` — пароль
+
+### Redis
+- `REDIS_URL` — `redis://redis:16379/0`
+
+### Telegram
+- `BOT_TOKEN` — токен
+- `ADMIN_CHAT_ID` — чат для логов
+- `TELEGRAM_MINIAPP_URL` — `https://pineapple.ambot24.ru`
+
+### YooKassa
+- `YOOKASSA_SHOP_ID` — ID магазина
+- `YOOKASSA_SECRET_KEY` — секрет
+- `YOOKASSA_WEBHOOK_SECRET` — секрет webhook
+
+### VPN Panel (Marzban)
+- `PANEL_URL` — `http://panel:19090` (если Marzban в compose) или внешний URL
+- `PANEL_TOKEN` — токен Marzban
+- `VPN_LIMIT_MBPS` — лимит скорости
+- `VPN_MAX_CONNECTIONS` — лимит соединений
+
+### Webhook
+- `WEBHOOK_BASE_URL` — `https://pineapple.ambot24.ru`
+- `WEBHOOK_PATH` — `/api/payments/webhook`
+
+## 7) Запуск проекта
 
 ```bash
 docker compose up -d
 ```
 
-4. Выполните миграции:
+Проверьте статус:
+
+```bash
+docker compose ps
+```
+
+## 8) Миграции базы данных
+
+Выполните миграции Alembic:
 
 ```bash
 docker compose exec backend alembic upgrade head
 ```
 
-## Настройка .env (подробно)
-Пример файла находится в `.env.example`. Ниже пояснения по ключам.
+Если нужно откатить:
 
-### Общие
-- `PROJECT_NAME` — название проекта.
-- `DOMAIN` — домен, например `pineapple.ambot24.ru`.
-- `APP_ENV` — `production`.
+```bash
+docker compose exec backend alembic downgrade -1
+```
 
-### Безопасность и JWT
-- `SECRET_KEY` — произвольная строка 32+ символа.
-- `JWT_SECRET` — отдельный секрет для JWT.
-- `JWT_ALG` — `HS256`.
-- `ACCESS_TOKEN_EXPIRE_MINUTES` — срок жизни токена (минуты).
+## 9) Проверка работоспособности
 
-### CORS и URL
-- `ALLOWED_ORIGINS` — список доменов через запятую.
-- `FRONTEND_URL` — публичный URL фронтенда.
-- `API_BASE_URL` — публичный URL API.
+1. `https://pineapple.ambot24.ru` — открывается MiniApp (через Telegram).
+2. `https://pineapple.ambot24.ru/api/health` — ответ `{ "status": "ok" }`.
+3. В админ-чат приходят логи.
+4. Создается платеж YooKassa и проходит webhook.
+5. Marzban создает пользователей и возвращает VLESS/Subscription URL.
 
-### PostgreSQL (внешняя)
-- `DB_HOST` — хост БД.
-- `DB_PORT` — порт БД.
-- `DB_NAME` — имя БД.
-- `DB_USER` — пользователь.
-- `DB_PASSWORD` — пароль.
+## 10) Логи и обслуживание
 
-### Redis
-- `REDIS_URL` — `redis://redis:16379/0`.
+- Логи контейнеров:
 
-### Telegram
-- `BOT_TOKEN` — токен Telegram-бота.
-- `ADMIN_CHAT_ID` — ID чата для логов.
-- `TELEGRAM_MINIAPP_URL` — URL MiniApp.
+```bash
+docker compose logs -f backend
+```
 
-### YooKassa
-- `YOOKASSA_SHOP_ID` — ID магазина.
-- `YOOKASSA_SECRET_KEY` — секретный ключ.
-- `YOOKASSA_WEBHOOK_SECRET` — секрет для подписи webhook.
+- Очистка логов подключений старше 30 дней выполняется scheduler.
 
-### VPN Panel (Marzban)
-- `PANEL_URL` — URL панели (например `http://panel:19090`).
-- `PANEL_TOKEN` — токен панели.
-- `VPN_LIMIT_MBPS` — лимит скорости на пользователя.
-- `VPN_MAX_CONNECTIONS` — лимит одновременных подключений.
+## 11) Структура проекта
 
-### Webhook
-- `WEBHOOK_BASE_URL` — публичный URL сервера.
-- `WEBHOOK_PATH` — `/api/payments/webhook`.
+```
+vpn-service/
+  backend/
+  bot/
+  frontend/
+  worker/
+  scheduler/
+  nginx/
+  docker/
+  docs/
+```
 
-## Настройка Telegram Bot и MiniApp
-1. Создайте бота через @BotFather и получите `BOT_TOKEN`.
-2. Включите WebApp URL, укажите `TELEGRAM_MINIAPP_URL`.
-3. Создайте админ-чат и укажите его ID как `ADMIN_CHAT_ID`.
+## 12) Админ-логирование
 
-## Настройка YooKassa
-1. Создайте магазин и получите `YOOKASSA_SHOP_ID` и `YOOKASSA_SECRET_KEY`.
-2. В кабинете YooKassa укажите webhook на:
-`https://<DOMAIN>/api/payments/webhook`
-3. Секрет подписи укажите в `YOOKASSA_WEBHOOK_SECRET`.
-
-## Настройка VPN панели
-Если используете Marzban:
-1. Запустите контейнер `panel`.
-2. Создайте токен и укажите `PANEL_TOKEN`.
-3. Убедитесь, что API доступно по `PANEL_URL`.
-
-Если используете x-ui:
-- Нужен адаптер между x-ui и backend Pineapple VPN.
-- Напишите, и я добавлю x-ui интеграцию (API обертка + конфигурация).
-
-## Админ-логирование
 Все действия пользователей отправляются в Telegram-чат `ADMIN_CHAT_ID` с тегами:
 - `#user_<telegram_id>`
 - `#action`
@@ -142,24 +208,18 @@ Trial: активирован
 #registration
 ```
 
-## Webhook YooKassa
+## 13) Webhook YooKassa
+
 Эндпоинт: `/api/payments/webhook`.
 Ожидается заголовок `X-Webhook-Signature` (HMAC-SHA256 от тела запроса и секрета `YOOKASSA_WEBHOOK_SECRET`).
 
-## Логи подключений
-Сохраняются:
-- Telegram ID
-- IP подключения
-- Время подключения
-Срок хранения: 30 дней.
+## 14) Правовые документы
 
-## Инструкции подключения
-MiniApp показывает инструкции:
-- Windows: NekoRay
-- iPhone: Streisand
-
-## Правовые документы
 Документы находятся в `docs/`:
 - `docs/terms.md`
 - `docs/privacy.md`
 - `docs/acceptable_use.md`
+
+## 15) Дополнительно
+
+Если нужен адаптер под x-ui, напишите — добавлю сервис и настройки.
