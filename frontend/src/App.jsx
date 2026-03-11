@@ -253,6 +253,7 @@ export default function App() {
   const trialAvailable = !!overview?.trial?.available;
   const subEndsAt = overview?.subscription?.ends_at;
   const subDaysLeft = daysLeft(subEndsAt);
+  const hasPlanInfo = Boolean(status?.plan);
 
   const setupSteps = [
     { id: "trial", title: "Активируйте пробный период", done: overview?.trial?.active || !trialAvailable },
@@ -279,18 +280,22 @@ export default function App() {
                   <span>Статус</span>
                   <strong>{statusRu(status?.status)}</strong>
                 </div>
-                <div className="hero-status-item">
-                  <span>Тариф</span>
-                  <strong>{planRu(status?.plan)}</strong>
-                </div>
-                <div className="hero-status-item">
-                  <span>Окончание</span>
-                  <strong>{formatDate(subEndsAt)}</strong>
-                </div>
-                <div className="hero-status-item">
-                  <span>Осталось</span>
-                  <strong>{subDaysLeft === null ? "—" : `${subDaysLeft} дн.`}</strong>
-                </div>
+                {hasPlanInfo && (
+                  <>
+                    <div className="hero-status-item">
+                      <span>Тариф</span>
+                      <strong>{planRu(status?.plan)}</strong>
+                    </div>
+                    <div className="hero-status-item">
+                      <span>Окончание</span>
+                      <strong>{formatDate(subEndsAt)}</strong>
+                    </div>
+                    <div className="hero-status-item">
+                      <span>Осталось</span>
+                      <strong>{subDaysLeft === null ? "—" : `${subDaysLeft} дн.`}</strong>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -489,4 +494,3 @@ export default function App() {
     </div>
   );
 }
-
