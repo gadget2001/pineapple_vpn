@@ -3,11 +3,11 @@ import React, { useEffect, useMemo, useState } from "react";
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 const TABS = [
-  { id: "home", label: "Home" },
-  { id: "cabinet", label: "Cabinet" },
-  { id: "setup", label: "Setup" },
-  { id: "referral", label: "Referral" },
-  { id: "help", label: "Help" },
+  { id: "home", label: "Главная" },
+  { id: "cabinet", label: "Кабинет" },
+  { id: "setup", label: "Настройка" },
+  { id: "referral", label: "Рефералы" },
+  { id: "help", label: "Помощь" },
 ];
 
 function useTelegram() {
@@ -36,7 +36,6 @@ export default function App() {
   const [docTitle, setDocTitle] = useState("");
 
   const authHeaders = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token]);
-
   const startParam = tg?.initDataUnsafe?.start_param || "";
 
   const request = async (path, options = {}) => {
@@ -71,7 +70,7 @@ export default function App() {
   useEffect(() => {
     const auth = async () => {
       if (!tg?.initData) {
-        setAuthError("Open app from Telegram bot button.");
+        setAuthError("Откройте приложение через кнопку в Telegram-боте.");
         return;
       }
       if (token) return;
@@ -167,7 +166,7 @@ export default function App() {
   const copy = async (text) => {
     if (!text) return;
     await navigator.clipboard.writeText(text);
-    tg?.showPopup?.({ title: "Copied", message: "Text copied", buttons: [{ type: "ok" }] });
+    tg?.showPopup?.({ title: "Скопировано", message: "Текст скопирован", buttons: [{ type: "ok" }] });
   };
 
   const openDoc = async (name, title) => {
@@ -182,10 +181,10 @@ export default function App() {
   const trialAvailable = overview?.trial?.available;
 
   const setupSteps = [
-    { id: "trial", title: "Activate trial", done: overview?.trial?.active || !trialAvailable },
-    { id: "wallet", title: "Top up wallet", done: wallet >= 50 },
-    { id: "sub", title: "Buy subscription", done: status?.status === "active" && !status?.trial },
-    { id: "vpn", title: "Get VPN config", done: !!vpnConfig?.subscription_url },
+    { id: "trial", title: "Активировать пробный период", done: overview?.trial?.active || !trialAvailable },
+    { id: "wallet", title: "Пополнить кошелек", done: wallet >= 50 },
+    { id: "sub", title: "Оформить подписку", done: status?.status === "active" && !status?.trial },
+    { id: "vpn", title: "Получить VPN конфиг", done: !!vpnConfig?.subscription_url },
   ];
 
   return (
@@ -200,36 +199,36 @@ export default function App() {
           <section className="page">
             <div className="hero">
               <div className="hero-title">Pineapple VPN</div>
-              <p>Secure Russian IP access from abroad</p>
+              <p>Защищенный доступ к российскому IP из-за границы</p>
               <div className="hero-meta">
-                <span className="pill">Wallet: {wallet} RUB</span>
-                <span className="pill">Status: {status?.status || "none"}</span>
+                <span className="pill">Кошелек: {wallet} ₽</span>
+                <span className="pill">Статус: {status?.status || "нет"}</span>
               </div>
             </div>
             <div className="grid two">
               <article className="card accent">
-                <h3>Trial access</h3>
-                <p>{trialAvailable ? `${overview?.trial?.days || 3} days available` : "Trial already used"}</p>
-                <button disabled={!trialAvailable || loading} onClick={activateTrial}>Activate trial</button>
+                <h3>Пробный доступ</h3>
+                <p>{trialAvailable ? `Доступно ${overview?.trial?.days || 3} дн.` : "Пробный период уже использован"}</p>
+                <button disabled={!trialAvailable || loading} onClick={activateTrial}>Активировать trial</button>
               </article>
               <article className="card">
-                <h3>Wallet top-up</h3>
+                <h3>Пополнение кошелька</h3>
                 <div className="row">
                   <input type="number" min="50" value={topupAmount} onChange={(e) => setTopupAmount(e.target.value)} />
-                  <button disabled={loading} onClick={topup}>Top up</button>
+                  <button disabled={loading} onClick={topup}>Пополнить</button>
                 </div>
-                <small>Minimum top-up is 50 RUB</small>
+                <small>Минимальное пополнение 50 ₽</small>
               </article>
             </div>
             <article className="card">
-              <h3>Plans</h3>
+              <h3>Тарифы</h3>
               <div className="grid two">
                 {plans.map((plan) => (
                   <div className="price-card" key={plan.code}>
-                    <div className="price-name">{plan.title}</div>
-                    <div className="price-value">{plan.price_rub} RUB</div>
-                    <div className="price-meta">{plan.duration_days} days</div>
-                    <button disabled={loading} onClick={() => buyPlan(plan.code)}>Buy</button>
+                    <div className="price-name">{plan.code === "week" ? "Неделя" : "Месяц"}</div>
+                    <div className="price-value">{plan.price_rub} ₽</div>
+                    <div className="price-meta">{plan.duration_days} дней</div>
+                    <button disabled={loading} onClick={() => buyPlan(plan.code)}>Оформить</button>
                   </div>
                 ))}
               </div>
@@ -241,28 +240,28 @@ export default function App() {
           <section className="page">
             <div className="grid two">
               <article className="card">
-                <h3>Profile</h3>
-                <p>Username: @{overview?.user?.username || "-"}</p>
-                <p>Subscription: {overview?.subscription?.plan || "-"}</p>
-                <p>Ends at: {overview?.subscription?.ends_at ? new Date(overview.subscription.ends_at).toLocaleString() : "-"}</p>
+                <h3>Профиль</h3>
+                <p>Пользователь: @{overview?.user?.username || "-"}</p>
+                <p>Подписка: {overview?.subscription?.plan || "-"}</p>
+                <p>До: {overview?.subscription?.ends_at ? new Date(overview.subscription.ends_at).toLocaleString() : "-"}</p>
               </article>
               <article className="card">
-                <h3>Devices</h3>
+                <h3>Устройства</h3>
                 <div className="row">
-                  <input value={deviceName} onChange={(e) => setDeviceName(e.target.value)} placeholder="Device name" />
-                  <button onClick={addDevice}>Add</button>
+                  <input value={deviceName} onChange={(e) => setDeviceName(e.target.value)} placeholder="Название устройства" />
+                  <button onClick={addDevice}>Добавить</button>
                 </div>
                 <ul className="list">
                   {devices.map((d) => <li key={d.id}>{d.name}</li>)}
-                  {!devices.length && <li>No devices yet</li>}
+                  {!devices.length && <li>Устройств пока нет</li>}
                 </ul>
               </article>
             </div>
             <article className="card">
-              <h3>Payment history</h3>
+              <h3>История платежей</h3>
               <ul className="list">
-                {payments.map((p) => <li key={p.id}>{p.kind} {p.amount_rub} RUB ({p.status})</li>)}
-                {!payments.length && <li>No payments yet</li>}
+                {payments.map((p) => <li key={p.id}>{p.kind} {p.amount_rub} ₽ ({p.status})</li>)}
+                {!payments.length && <li>Платежей пока нет</li>}
               </ul>
             </article>
           </section>
@@ -271,7 +270,7 @@ export default function App() {
         {tab === "setup" && (
           <section className="page">
             <article className="card">
-              <h3>Step-by-step setup</h3>
+              <h3>Пошаговая настройка</h3>
               <ol className="steps">
                 {setupSteps.map((s) => (
                   <li key={s.id} className={s.done ? "done" : "pending"}>{s.title}</li>
@@ -279,15 +278,15 @@ export default function App() {
               </ol>
             </article>
             <article className="card">
-              <h3>VPN configuration</h3>
-              <button onClick={loadVpnConfig} disabled={loading}>Get config</button>
+              <h3>VPN конфигурация</h3>
+              <button onClick={loadVpnConfig} disabled={loading}>Получить конфиг</button>
               {vpnConfig && (
                 <div className="config-box">
                   <p>UUID: {vpnConfig.uuid}</p>
                   <p>VLESS: {vpnConfig.vless_url}</p>
                   <p>Subscription URL: {vpnConfig.subscription_url}</p>
                   <div className="row">
-                    <button onClick={() => copy(vpnConfig.subscription_url)}>Copy URL</button>
+                    <button onClick={() => copy(vpnConfig.subscription_url)}>Скопировать URL</button>
                   </div>
                 </div>
               )}
@@ -296,17 +295,17 @@ export default function App() {
               <article className="card">
                 <h3>Windows (NekoRay)</h3>
                 <ol>
-                  <li>Install NekoRay.</li>
-                  <li>Paste Subscription URL.</li>
-                  <li>Connect profile.</li>
+                  <li>Установите NekoRay.</li>
+                  <li>Вставьте Subscription URL.</li>
+                  <li>Подключитесь.</li>
                 </ol>
               </article>
               <article className="card">
                 <h3>iPhone (Streisand)</h3>
                 <ol>
-                  <li>Install Streisand.</li>
-                  <li>Add profile by URL.</li>
-                  <li>Enable connection.</li>
+                  <li>Установите Streisand.</li>
+                  <li>Добавьте профиль по URL.</li>
+                  <li>Включите VPN.</li>
                 </ol>
               </article>
             </div>
@@ -316,22 +315,22 @@ export default function App() {
         {tab === "referral" && (
           <section className="page">
             <article className="card">
-              <h3>Referral stats</h3>
-              <p>Link: {referralStats?.link || overview?.referral?.link || "-"}</p>
+              <h3>Реферальная статистика</h3>
+              <p>Ссылка: {referralStats?.link || overview?.referral?.link || "-"}</p>
               <div className="row">
-                <button onClick={() => copy(referralStats?.link || overview?.referral?.link)}>Copy referral link</button>
+                <button onClick={() => copy(referralStats?.link || overview?.referral?.link)}>Скопировать ссылку</button>
               </div>
               <div className="grid three">
-                <div className="stat">Invited: {referralStats?.invited_count || 0}</div>
-                <div className="stat">Earned: {referralStats?.earned_rub || 0} RUB</div>
-                <div className="stat">Commission: {referralStats?.commission_percent || 10}%</div>
+                <div className="stat">Приглашено: {referralStats?.invited_count || 0}</div>
+                <div className="stat">Начислено: {referralStats?.earned_rub || 0} ₽</div>
+                <div className="stat">Комиссия: {referralStats?.commission_percent || 10}%</div>
               </div>
             </article>
             <article className="card">
-              <h3>Referrals</h3>
+              <h3>Список рефералов</h3>
               <ul className="list">
-                {referralList.map((r, i) => <li key={`${r.invitee_id}-${i}`}>@{r.username || "-"} +{r.earned_rub} RUB</li>)}
-                {!referralList.length && <li>No referrals yet</li>}
+                {referralList.map((r, i) => <li key={`${r.invitee_id}-${i}`}>@{r.username || "-"} +{r.earned_rub} ₽</li>)}
+                {!referralList.length && <li>Рефералов пока нет</li>}
               </ul>
             </article>
           </section>
@@ -341,11 +340,11 @@ export default function App() {
           <section className="page">
             {!docHtml && (
               <article className="card">
-                <h3>Legal documents</h3>
+                <h3>Юридические документы</h3>
                 <div className="doc-links">
-                  <button className="link-btn" onClick={() => openDoc("terms", "Terms")}>Terms</button>
-                  <button className="link-btn" onClick={() => openDoc("privacy", "Privacy")}>Privacy</button>
-                  <button className="link-btn" onClick={() => openDoc("acceptable_use", "Acceptable Use")}>Acceptable Use</button>
+                  <button className="link-btn" onClick={() => openDoc("terms", "Пользовательское соглашение")}>Пользовательское соглашение</button>
+                  <button className="link-btn" onClick={() => openDoc("privacy", "Политика конфиденциальности")}>Политика конфиденциальности</button>
+                  <button className="link-btn" onClick={() => openDoc("acceptable_use", "Правила использования")}>Правила использования</button>
                 </div>
               </article>
             )}
@@ -353,7 +352,7 @@ export default function App() {
               <article className="card">
                 <div className="row between">
                   <h3>{docTitle}</h3>
-                  <button onClick={() => { setDocHtml(""); setDocTitle(""); }}>Back</button>
+                  <button onClick={() => { setDocHtml(""); setDocTitle(""); }}>Назад</button>
                 </div>
                 <div className="doc-view" dangerouslySetInnerHTML={{ __html: docHtml }} />
               </article>
