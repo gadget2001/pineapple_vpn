@@ -28,7 +28,12 @@ PLAN_DAYS = {
 }
 
 
-@router.get("/plans", response_model=list[SubscriptionPlan], summary="Available subscription plans")
+@router.get(
+    "/plans",
+    response_model=list[SubscriptionPlan],
+    summary="Доступные тарифы",
+    description="Возвращает тарифные планы для покупки из кошелька.",
+)
 def list_plans():
     return [
         SubscriptionPlan(code="week", title="Week", price_rub=74, duration_days=7),
@@ -36,7 +41,12 @@ def list_plans():
     ]
 
 
-@router.get("/status", response_model=SubscriptionStatus, summary="Subscription status")
+@router.get(
+    "/status",
+    response_model=SubscriptionStatus,
+    summary="Статус подписки",
+    description="Показывает текущий статус: active/expired/none, план, дату окончания и признак trial.",
+)
 def subscription_status(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -62,7 +72,11 @@ def subscription_status(
     )
 
 
-@router.post("/trial/activate", summary="Activate trial subscription")
+@router.post(
+    "/trial/activate",
+    summary="Активировать пробный период",
+    description="Однократно активирует trial (3 или 7 дней при регистрации по рефералу), если нет активной подписки.",
+)
 async def activate_trial(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -104,7 +118,11 @@ async def activate_trial(
     return {"status": "ok", "ends_at": ends_at}
 
 
-@router.post("/purchase", summary="Purchase plan from wallet")
+@router.post(
+    "/purchase",
+    summary="Купить подписку из кошелька",
+    description="Списывает средства с кошелька и активирует/продлевает выбранный тариф.",
+)
 async def purchase_subscription(
     payload: SubscriptionPurchaseRequest,
     user: User = Depends(get_current_user),

@@ -17,7 +17,12 @@ from app.utils.audit import log_audit
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
 
-@router.post("/topup", response_model=PaymentOut, summary="Create wallet top-up payment")
+@router.post(
+    "/topup",
+    response_model=PaymentOut,
+    summary="Создать платеж на пополнение кошелька",
+    description="Создает платеж ЮKassa на пополнение баланса. Минимальная сумма задается валидатором схемы.",
+)
 async def create_topup_payment(
     payload: PaymentCreate,
     user: User = Depends(get_current_user),
@@ -46,7 +51,11 @@ async def create_topup_payment(
     return PaymentOut(id=payment.id, amount_rub=amount, status=payment.status, confirmation_url=confirmation_url)
 
 
-@router.post("/webhook", summary="YooKassa webhook")
+@router.post(
+    "/webhook",
+    summary="Webhook ЮKassa",
+    description="Точка подтверждения оплаты от ЮKassa. При `payment.succeeded` зачисляет средства в кошелек.",
+)
 async def yookassa_webhook(
     request: Request,
     x_webhook_signature: str = Header(None),
@@ -100,7 +109,11 @@ async def yookassa_webhook(
     return {"status": "ok"}
 
 
-@router.get("/history", summary="Payment history")
+@router.get(
+    "/history",
+    summary="История платежей",
+    description="Возвращает последние платежи пользователя: сумма, статус, тип операции и дата.",
+)
 def payment_history(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

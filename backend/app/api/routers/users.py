@@ -23,7 +23,11 @@ class DeviceCreate(BaseModel):
     name: str
 
 
-@router.get("/me", summary="Current user profile")
+@router.get(
+    "/me",
+    summary="Профиль пользователя",
+    description="Короткий профиль: Telegram-данные, реферальный код и баланс кошелька.",
+)
 def get_profile(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -38,7 +42,11 @@ def get_profile(
     }
 
 
-@router.post("/devices", summary="Add user device")
+@router.post(
+    "/devices",
+    summary="Добавить устройство",
+    description="Добавляет устройство пользователя (например, телефон/ноутбук) для учета в кабинете.",
+)
 def add_device(
     payload: DeviceCreate,
     user: User = Depends(get_current_user),
@@ -51,7 +59,11 @@ def add_device(
     return {"status": "ok"}
 
 
-@router.get("/devices", summary="List user devices")
+@router.get(
+    "/devices",
+    summary="Список устройств",
+    description="Возвращает список устройств, добавленных пользователем.",
+)
 def list_devices(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -60,7 +72,11 @@ def list_devices(
     return [{"id": d.id, "name": d.name, "last_seen_at": d.last_seen_at} for d in devices]
 
 
-@router.get("/overview", summary="Dashboard overview")
+@router.get(
+    "/overview",
+    summary="Обзор личного кабинета",
+    description="Единая сводка для MiniApp: пользователь, trial, подписка, баланс, рефералы, устройства, VPN-готовность.",
+)
 def account_overview(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

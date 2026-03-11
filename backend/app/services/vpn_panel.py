@@ -68,9 +68,9 @@ async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, A
         if existing:
             return _extract_profile(existing)
 
+        discovered_inbounds = await _get_vless_inbounds(client)
         inbound_candidates = [settings.panel_inbound_name]
-        inbound_candidates.extend(await _get_vless_inbounds(client))
-        inbound_candidates.extend(["reality", "VLESS TCP REALITY"])
+        inbound_candidates.extend(discovered_inbounds)
 
         # Remove duplicates while preserving order
         unique_inbounds = list(dict.fromkeys([i for i in inbound_candidates if i]))
@@ -99,8 +99,15 @@ async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, A
                 return _extract_profile(details or response.json())
             last_error = response.text
 
+        available = ", ".join(discovered_inbounds) if discovered_inbounds else "не удалось получить список inbound из панели"
+        configured = settings.panel_inbound_name
         raise httpx.HTTPStatusError(
-            f"Failed to create Marzban user. Last response: {last_error}",
+            (
+                "Failed to create Marzban user. "
+                f"Configured PANEL_INBOUND_NAME='{configured}'. "
+                f"Discovered VLESS inbounds: {available}. "
+                f"Last response: {last_error}"
+            ),
             request=httpx.Request("POST", f"{_normalize_panel_url()}/api/user"),
             response=httpx.Response(422, text=last_error or "Unprocessable Entity"),
         )

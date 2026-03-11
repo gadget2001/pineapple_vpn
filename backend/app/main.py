@@ -10,22 +10,29 @@ from app.core.rate_limit import RateLimitMiddleware
 app = FastAPI(
     title=settings.project_name,
     description=(
-        "Pineapple VPN API. Telegram MiniApp backend with wallet top-up, "
-        "trial activation, subscriptions, referrals, and VPN profile issuance via Marzban."
+        "API сервиса Pineapple VPN для Telegram MiniApp.\n\n"
+        "Рекомендуемый сценарий работы клиента:\n"
+        "1) Авторизация через Telegram MiniApp (`/auth/telegram`).\n"
+        "2) Проверка профиля и состояния (`/users/overview`, `/subscriptions/status`).\n"
+        "3) Активация trial вручную (`/subscriptions/trial/activate`) "
+        "или пополнение кошелька (`/payments/topup`) и покупка тарифа (`/subscriptions/purchase`).\n"
+        "4) Получение VPN-конфига (`/vpn/config`) после активной подписки.\n\n"
+        "Важно: сервис предназначен для защищенного удаленного доступа к российским сервисам из-за границы. "
+        "Сервис не предназначен для противоправной деятельности."
     ),
     version="1.0.0",
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
     openapi_tags=[
-        {"name": "Auth", "description": "Telegram MiniApp authorization"},
-        {"name": "Users", "description": "Profile, dashboard and devices"},
-        {"name": "Subscriptions", "description": "Trial and paid subscription management"},
-        {"name": "Payments", "description": "Wallet top-up and YooKassa webhook"},
-        {"name": "VPN", "description": "VPN profile generation and retrieval"},
-        {"name": "Referrals", "description": "Referral stats and invited users"},
-        {"name": "admin", "description": "Admin metrics and lists"},
-        {"name": "webhooks", "description": "System webhooks"},
+        {"name": "Auth", "description": "Авторизация пользователя через Telegram MiniApp"},
+        {"name": "Users", "description": "Профиль, обзор кабинета и устройства пользователя"},
+        {"name": "Subscriptions", "description": "Пробный период, статусы и покупка подписки"},
+        {"name": "Payments", "description": "Пополнение кошелька и webhook ЮKassa"},
+        {"name": "VPN", "description": "Выдача и получение VPN-конфигурации через Marzban"},
+        {"name": "Referrals", "description": "Реферальная система и статистика приглашений"},
+        {"name": "admin", "description": "Админ-эндпоинты: метрики, списки пользователей и платежей"},
+        {"name": "webhooks", "description": "Внутренние системные webhook-эндпоинты"},
     ],
 )
 
@@ -42,7 +49,7 @@ if settings.allowed_origins:
     )
 
 
-@app.get("/health", summary="Health check")
+@app.get("/health", summary="Проверка доступности API")
 def health():
     return {"status": "ok"}
 

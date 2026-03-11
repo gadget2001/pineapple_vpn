@@ -13,7 +13,12 @@ from app.utils.audit import log_audit
 router = APIRouter(prefix="/referral", tags=["Referrals"])
 
 
-@router.get("/info", response_model=ReferralInfo, summary="Referral link")
+@router.get(
+    "/info",
+    response_model=ReferralInfo,
+    summary="Реферальная ссылка",
+    description="Возвращает личный реферальный код и ссылку для приглашения пользователей.",
+)
 def referral_info(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -23,7 +28,11 @@ def referral_info(
     return ReferralInfo(referral_code=user.referral_code, referral_link=link)
 
 
-@router.get("/stats", summary="Referral stats")
+@router.get(
+    "/stats",
+    summary="Статистика рефералов",
+    description="Показывает количество приглашенных, заработанную комиссию и процент комиссии.",
+)
 def referral_stats(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -50,7 +59,11 @@ def referral_stats(
     }
 
 
-@router.get("/list", summary="Referral list")
+@router.get(
+    "/list",
+    summary="Список приглашенных",
+    description="Список пользователей, которые зарегистрировались по вашей реферальной ссылке.",
+)
 def referral_list(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

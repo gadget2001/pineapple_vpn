@@ -15,7 +15,11 @@ class ConnectionEvent(BaseModel):
     ip_address: str
 
 
-@router.post("/connection")
+@router.post(
+    "/connection",
+    summary="Лог подключения из VPN-панели",
+    description="Системный webhook для записи сетевых логов (Telegram ID, IP, время) от панели VPN.",
+)
 def connection_log(
     payload: ConnectionEvent,
     x_panel_token: str = Header(None),

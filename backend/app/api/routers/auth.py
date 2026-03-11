@@ -23,7 +23,12 @@ class TelegramAuthRequest(BaseModel):
     referral_code: str | None = None
 
 
-@router.post("/telegram", response_model=Token, summary="Telegram MiniApp authorization")
+@router.post(
+    "/telegram",
+    response_model=Token,
+    summary="Авторизация через Telegram MiniApp",
+    description="Принимает `init_data` из Telegram WebApp, проверяет подпись и выдает JWT токен для работы с API.",
+)
 async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_db)):
     try:
         data = verify_telegram_init_data(payload.init_data)
@@ -82,6 +87,11 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
         raise HTTPException(status_code=503, detail="Database unavailable") from exc
 
 
-@router.get("/me", response_model=UserOut, summary="Current user")
+@router.get(
+    "/me",
+    response_model=UserOut,
+    summary="Текущий пользователь",
+    description="Возвращает данные авторизованного пользователя по JWT токену.",
+)
 def get_me(user: User = Depends(get_current_user)):
     return user

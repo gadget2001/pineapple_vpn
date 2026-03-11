@@ -13,7 +13,12 @@ from app.schemas.admin import AdminMetrics
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
-@router.get("/metrics", response_model=AdminMetrics)
+@router.get(
+    "/metrics",
+    response_model=AdminMetrics,
+    summary="Ключевые метрики",
+    description="Сводные метрики: пользователи, активные подписки, общий оплаченный доход.",
+)
 def metrics(
     _admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
@@ -38,7 +43,11 @@ def metrics(
     )
 
 
-@router.get("/users")
+@router.get(
+    "/users",
+    summary="Список пользователей",
+    description="Возвращает последних зарегистрированных пользователей для админ-панели.",
+)
 def list_users(
     _admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
@@ -56,7 +65,11 @@ def list_users(
     ]
 
 
-@router.get("/subscriptions")
+@router.get(
+    "/subscriptions",
+    summary="Список подписок",
+    description="Возвращает последние подписки с планом, статусом, ценой и сроком окончания.",
+)
 def list_subscriptions(
     _admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
@@ -80,7 +93,11 @@ def list_subscriptions(
     ]
 
 
-@router.get("/payments")
+@router.get(
+    "/payments",
+    summary="Список платежей",
+    description="Возвращает последние платежи пользователей.",
+)
 def list_payments(
     _admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
@@ -98,7 +115,11 @@ def list_payments(
     ]
 
 
-@router.get("/referrals")
+@router.get(
+    "/referrals",
+    summary="Список рефералов",
+    description="Возвращает последние реферальные связи и накопленную комиссию.",
+)
 def list_referrals(
     _admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db),

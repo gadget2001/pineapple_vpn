@@ -15,7 +15,15 @@ from app.utils.audit import log_audit
 router = APIRouter(prefix="/vpn", tags=["VPN"])
 
 
-@router.get("/config", response_model=VPNConfigOut, summary="Get or create VPN config")
+@router.get(
+    "/config",
+    response_model=VPNConfigOut,
+    summary="Получить или создать VPN-конфиг",
+    description=(
+        "При активной подписке возвращает VPN-профиль пользователя. "
+        "Если профиль отсутствует, создаёт пользователя в Marzban и сохраняет UUID/VLESS/subscription URL."
+    ),
+)
 async def get_config(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
