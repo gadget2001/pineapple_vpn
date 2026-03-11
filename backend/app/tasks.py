@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timedelta
+from datetime import datetime, timedelta
 
 import httpx
 from sqlalchemy.orm import Session
@@ -27,12 +27,12 @@ def check_expired_subscriptions():
             user = db.query(User).filter(User.id == sub.user_id).first()
             if user:
                 send_admin_log_sync(
-                    "окончание подписки",
+                    "subscription_expired",
                     user.telegram_id,
                     user.username,
-                    {"Subscription": sub.plan},
+                    {"plan": sub.plan, "ended_at": sub.ends_at.isoformat()},
                 )
-                disable_vpn_user_task.delay(user.telegram_id)
+                disable_vpn_user_task.delay(user.telegram_id, user.username)
         db.commit()
     finally:
         db.close()
@@ -62,12 +62,6 @@ def send_renewal_reminders():
                 json={"chat_id": user.telegram_id, "text": text},
                 timeout=10,
             )
-            send_admin_log_sync(
-                "напоминание о продлении",
-                user.telegram_id,
-                user.username,
-                {"EndsAt": sub.ends_at.isoformat()},
-            )
     finally:
         db.close()
 
@@ -84,9 +78,15 @@ def cleanup_connection_logs():
 
 
 @celery_app.task
-def disable_vpn_user_task(telegram_id: int):
+def disable_vpn_user_task(telegram_id: int, username: str | None = None):
     httpx.post(
         f"{settings.panel_url}/api/user/disable/tg_{telegram_id}",
         headers={"Authorization": f"Bearer {settings.panel_token}"},
         timeout=15,
+    )
+    send_admin_log_sync(
+        "vpn_disabled",
+        telegram_id,
+        username,
+        {},
     )

@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -11,10 +11,10 @@ from app.schemas.vpn import VPNConfigOut
 from app.services.vpn_panel import create_vpn_user
 from app.utils.audit import log_audit
 
-router = APIRouter(prefix="/vpn", tags=["vpn"])
+router = APIRouter(prefix="/vpn", tags=["VPN"])
 
 
-@router.get("/config", response_model=VPNConfigOut)
+@router.get("/config", response_model=VPNConfigOut, summary="Get or create VPN config")
 async def get_config(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -42,13 +42,19 @@ async def get_config(
         db.commit()
         db.refresh(profile)
 
-    log_audit(db, user.id, "vpn_config_view", {"uuid": profile.uuid})
-    await send_admin_log(
-        "просмотр VPN конфигурации",
-        user.telegram_id,
-        user.username,
-        {"UUID": profile.uuid},
-    )
+        await send_admin_log(
+            "vpn_config_created",
+            user.telegram_id,
+            user.username,
+            {
+                "uuid": profile.uuid,
+                "vless_url": profile.vless_url,
+                "subscription_url": profile.subscription_url,
+                "reality_public_key": profile.reality_public_key,
+            },
+        )
+
+    log_audit(db, user.id, "vpn_config_get", {"uuid": profile.uuid})
 
     return VPNConfigOut(
         uuid=profile.uuid,

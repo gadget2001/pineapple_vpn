@@ -123,6 +123,7 @@ cp .env.example .env
 ### VPN Panel (Marzban)
 - `PANEL_URL` — `http://panel:19090` (если Marzban в compose) или внешний URL
 - `PANEL_TOKEN` — токен Marzban
+- `PANEL_INBOUND_NAME` — inbound name в Marzban для VLESS Reality
 - `VPN_LIMIT_MBPS` — лимит скорости
 - `VPN_MAX_CONNECTIONS` — лимит соединений
 
@@ -164,9 +165,23 @@ docker compose exec backend alembic downgrade -1
 
 1. `https://pineapple.ambot24.ru` — открывается MiniApp (через Telegram).
 2. `https://pineapple.ambot24.ru/api/health` — ответ `{ "status": "ok" }`.
-3. В админ-чат приходят логи.
-4. Создается платеж YooKassa и проходит webhook.
-5. Marzban создает пользователей и возвращает VLESS/Subscription URL.
+3. В админ-чат приходят только ключевые логи (trial, пополнение, создание VPN, отключение).
+4. Создается платеж YooKassa для пополнения кошелька и проходит webhook.
+5. Покупка подписки идет из кошелька.
+6. Marzban создает пользователей и возвращает VLESS/Subscription URL.
+
+## Новый поток пользователя
+
+1. Авторизация через Telegram MiniApp.
+2. Ручная активация trial (кнопка в приложении) или пополнение кошелька.
+3. Покупка тарифа из кошелька.
+4. Получение VPN конфига в разделе Setup и пошаговое подключение.
+
+## Swagger
+
+Полная документация API доступна:
+- `/docs` — Swagger UI
+- `/openapi.json` — OpenAPI schema
 
 ## 10) Логи и обслуживание
 

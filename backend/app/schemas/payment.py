@@ -1,8 +1,8 @@
-﻿from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PaymentCreate(BaseModel):
-    plan: str
+    amount_rub: int = Field(ge=50, description="Amount in RUB, minimum 50")
 
 
 class PaymentOut(BaseModel):

@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.config import settings
-from app.core.logging import send_admin_log_sync
 from app.db.session import get_db
 from app.models.device import Device
 from app.models.payment import Payment
@@ -17,29 +16,29 @@ from app.models.user import User
 from app.models.vpn_profile import VPNProfile
 from app.utils.audit import log_audit
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/users", tags=["Users"])
 
 
 class DeviceCreate(BaseModel):
     name: str
 
 
-@router.get("/me")
+@router.get("/me", summary="Current user profile")
 def get_profile(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     log_audit(db, user.id, "profile_view", {})
-    send_admin_log_sync("просмотр профиля", user.telegram_id, user.username, {})
     return {
         "id": user.id,
         "telegram_id": user.telegram_id,
         "username": user.username,
         "referral_code": user.referral_code,
+        "wallet_balance_rub": user.wallet_balance_rub,
     }
 
 
-@router.post("/devices")
+@router.post("/devices", summary="Add user device")
 def add_device(
     payload: DeviceCreate,
     user: User = Depends(get_current_user),
@@ -49,32 +48,19 @@ def add_device(
     db.add(device)
     db.commit()
     log_audit(db, user.id, "device_add", {"device": payload.name})
-    send_admin_log_sync(
-        "добавление устройства",
-        user.telegram_id,
-        user.username,
-        {"Device": payload.name},
-    )
     return {"status": "ok"}
 
 
-@router.get("/devices")
+@router.get("/devices", summary="List user devices")
 def list_devices(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     devices = db.query(Device).filter(Device.user_id == user.id).all()
-    log_audit(db, user.id, "device_list", {"count": len(devices)})
-    send_admin_log_sync(
-        "просмотр устройств",
-        user.telegram_id,
-        user.username,
-        {"Count": len(devices)},
-    )
     return [{"id": d.id, "name": d.name, "last_seen_at": d.last_seen_at} for d in devices]
 
 
-@router.get("/overview")
+@router.get("/overview", summary="Dashboard overview")
 def account_overview(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -123,8 +109,14 @@ def account_overview(
 
     referral_link = f"{settings.telegram_miniapp_url}?startapp={user.referral_code}"
 
+    onboarding = {
+        "trial_available": user.trial_activated_at is None,
+        "wallet_ready": user.wallet_balance_rub >= 74,
+        "has_active_subscription": active,
+        "vpn_ready": bool(vpn_profile),
+    }
+
     log_audit(db, user.id, "account_overview", {})
-    send_admin_log_sync("открытие личного кабинета", user.telegram_id, user.username, {})
 
     return {
         "user": {
@@ -132,6 +124,7 @@ def account_overview(
             "telegram_id": user.telegram_id,
             "username": user.username,
             "created_at": user.created_at,
+            "wallet_balance_rub": user.wallet_balance_rub,
         },
         "subscription": {
             "status": "active" if active else "expired" if sub else "none",
@@ -140,7 +133,9 @@ def account_overview(
         },
         "trial": {
             "active": trial_active,
+            "available": user.trial_activated_at is None,
             "days": user.trial_days,
+            "activated_at": user.trial_activated_at,
             "ends_at": sub.ends_at if trial_active else None,
         },
         "referral": {
@@ -160,4 +155,5 @@ def account_overview(
         "vpn": {
             "has_profile": bool(vpn_profile),
         },
+        "onboarding": onboarding,
     }

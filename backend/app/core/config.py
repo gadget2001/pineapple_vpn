@@ -34,6 +34,7 @@ class Settings(BaseSettings):
 
     panel_url: str
     panel_token: str
+    panel_inbound_name: str = "VLESS TCP REALITY"
     vpn_limit_mbps: int = 50
     vpn_max_connections: int = 2
 

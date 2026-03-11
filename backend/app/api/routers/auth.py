@@ -1,23 +1,20 @@
 import json
-from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
 from app.core.logging import send_admin_log
 from app.core.security import create_access_token, verify_telegram_init_data
 from app.db.session import get_db
 from app.models.referral import Referral
-from app.models.subscription import Subscription
 from app.models.user import User
 from app.schemas.auth import Token
 from app.schemas.user import UserOut
 from app.utils.audit import log_audit
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 class TelegramAuthRequest(BaseModel):
@@ -25,7 +22,7 @@ class TelegramAuthRequest(BaseModel):
     referral_code: str | None = None
 
 
-@router.post("/telegram", response_model=Token)
+@router.post("/telegram", response_model=Token, summary="Telegram MiniApp authorization")
 async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_db)):
     try:
         data = verify_telegram_init_data(payload.init_data)
@@ -43,13 +40,12 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
         is_new = False
         if not user:
             is_new = True
-            referral_code = f"ref_{telegram_id}"
             user = User(
                 telegram_id=telegram_id,
                 username=username,
                 first_name=first_name,
                 last_name=last_name,
-                referral_code=referral_code,
+                referral_code=f"ref_{telegram_id}",
             )
             inviter = None
             if payload.referral_code:
@@ -57,6 +53,7 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
                 if inviter:
                     user.referred_by_id = inviter.id
                     user.trial_days = 7
+
             db.add(user)
             db.commit()
             db.refresh(user)
@@ -64,40 +61,26 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
             if inviter:
                 db.add(Referral(inviter_id=inviter.id, invitee_id=user.id))
                 db.commit()
-                await send_admin_log(
-                    "referral_open",
-                    user.telegram_id,
-                    username,
-                    {"Inviter": inviter.telegram_id},
-                )
-
-            ends_at = datetime.utcnow() + timedelta(days=user.trial_days)
-            trial = Subscription(
-                user_id=user.id,
-                plan="trial",
-                status="active",
-                price_rub=0,
-                starts_at=datetime.utcnow(),
-                ends_at=ends_at,
-            )
-            db.add(trial)
-            db.commit()
 
         token = create_access_token(str(user.id), user.is_admin)
 
         log_audit(db, user.id, "registration" if is_new else "login", {"username": username})
-        await send_admin_log(
-            "registration" if is_new else "login",
-            user.telegram_id,
-            username,
-            {"Trial": "activated" if is_new else "-"},
-        )
+        if is_new:
+            await send_admin_log(
+                "registration",
+                user.telegram_id,
+                username,
+                {
+                    "referral": "yes" if user.referred_by_id else "no",
+                    "trial_days": user.trial_days,
+                },
+            )
 
         return Token(access_token=token)
     except OperationalError as exc:
         raise HTTPException(status_code=503, detail="Database unavailable") from exc
 
 
-@router.get("/me", response_model=UserOut)
+@router.get("/me", response_model=UserOut, summary="Current user")
 def get_me(user: User = Depends(get_current_user)):
     return user
