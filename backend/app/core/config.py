@@ -1,4 +1,4 @@
-﻿from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     bot_token: str
     admin_chat_id: int
     telegram_miniapp_url: str
+    telegram_debug_auth: bool = False
 
     yookassa_shop_id: str
     yookassa_secret_key: str

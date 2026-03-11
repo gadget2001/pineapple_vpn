@@ -1,4 +1,4 @@
-﻿import hashlib
+import hashlib
 import hmac
 import time
 from datetime import datetime, timedelta, timezone
@@ -37,6 +37,11 @@ def verify_telegram_init_data(init_data: str, max_age_seconds: int = 86400) -> D
     computed_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
 
     if not hmac.compare_digest(received_hash, computed_hash):
+        if settings.telegram_debug_auth:
+            raise ValueError(
+                f"Invalid hash. received={received_hash} computed={computed_hash} "
+                f"data_check_string={data_check_string}"
+            )
         raise ValueError("Invalid hash")
 
     auth_date = int(data.get("auth_date", "0"))
