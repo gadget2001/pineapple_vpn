@@ -1,0 +1,88 @@
+﻿version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: pineapple_backend
+    env_file: .env
+    ports:
+      - "18081:18081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  bot:
+    build: ./bot
+    container_name: pineapple_bot
+    env_file: .env
+    ports:
+      - "18082:18082"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: pineapple_frontend
+    ports:
+      - "18083:18083"
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    container_name: pineapple_worker
+    env_file: .env
+    depends_on:
+      - backend
+      - redis
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: scheduler/Dockerfile
+    container_name: pineapple_scheduler
+    env_file: .env
+    depends_on:
+      - backend
+      - redis
+    restart: unless-stopped
+
+  panel:
+    image: gozargah/marzban:latest
+    container_name: pineapple_panel
+    environment:
+      - DATABASE_URL=${MARZBAN_DB_URL}
+    ports:
+      - "19090:19090"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: pineapple_redis
+    command: ["redis-server", "--port", "16379", "--appendonly", "yes"]
+    ports:
+      - "16379:16379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: pineapple_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+
+volumes:
+  redis_data:

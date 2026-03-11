@@ -1,0 +1,137 @@
+﻿@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap");
+
+:root {
+  --green-dark: #237227;
+  --green: #519A66;
+  --orange: #FFAA00;
+  --peach: #FFD786;
+  --bg: #f6f4ec;
+  --text: #1e1e1e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Montserrat", "Segoe UI", sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at top left, #fff3d6, var(--bg));
+}
+
+.app {
+  padding: 24px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--green-dark), var(--green));
+  color: white;
+  padding: 20px;
+  border-radius: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo {
+  width: 48px;
+  height: 48px;
+  background: var(--orange);
+  color: var(--green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border-radius: 12px;
+}
+
+.status-card {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+section {
+  margin-top: 28px;
+}
+
+.plan-grid,
+.instruction-grid,
+.admin-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.plan-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.plan {
+  background: white;
+  border: 2px solid var(--peach);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.price {
+  font-size: 24px;
+  color: var(--green-dark);
+  margin: 12px 0;
+}
+
+button {
+  background: var(--orange);
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e6e0d0;
+}
+
+.device-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+.vpn-box {
+  margin-top: 12px;
+  background: white;
+  border: 1px solid #e6e0d0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.footer {
+  margin-top: 32px;
+  padding: 16px;
+  background: var(--peach);
+  border-radius: 12px;
+}
+
+@media (min-width: 720px) {
+  .hero {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
