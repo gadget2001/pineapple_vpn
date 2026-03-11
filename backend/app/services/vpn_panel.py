@@ -49,15 +49,54 @@ async def _get_vless_inbounds(client: httpx.AsyncClient) -> list[str]:
         return []
 
     data = response.json()
-    inbounds = data if isinstance(data, list) else data.get("inbounds", [])
-
     names: list[str] = []
-    for inbound in inbounds:
-        tag = inbound.get("tag") or inbound.get("name")
-        protocol = (inbound.get("protocol") or "").lower()
-        if tag and protocol == "vless":
-            names.append(tag)
-    return names
+
+    # Format 1: list of inbounds [{"tag":"...", "protocol":"vless"}]
+    if isinstance(data, list):
+        for inbound in data:
+            if not isinstance(inbound, dict):
+                continue
+            tag = inbound.get("tag") or inbound.get("name")
+            protocol = str(inbound.get("protocol") or "").lower()
+            if tag and protocol == "vless":
+                names.append(str(tag))
+        return names
+
+    if not isinstance(data, dict):
+        return names
+
+    # Format 2: {"inbounds":[...]}
+    inbounds = data.get("inbounds")
+    if isinstance(inbounds, list):
+        for inbound in inbounds:
+            if not isinstance(inbound, dict):
+                continue
+            tag = inbound.get("tag") or inbound.get("name")
+            protocol = str(inbound.get("protocol") or "").lower()
+            if tag and protocol == "vless":
+                names.append(str(tag))
+
+    # Format 3: {"vless":[{"tag":"..."}, "TAG"]} or {"vless":{"TAG": {...}}}
+    vless_block = data.get("vless")
+    if isinstance(vless_block, list):
+        for item in vless_block:
+            if isinstance(item, str):
+                names.append(item)
+            elif isinstance(item, dict):
+                tag = item.get("tag") or item.get("name")
+                if tag:
+                    names.append(str(tag))
+    elif isinstance(vless_block, dict):
+        for key, value in vless_block.items():
+            if isinstance(value, dict):
+                tag = value.get("tag") or value.get("name") or key
+                if tag:
+                    names.append(str(tag))
+            elif isinstance(key, str):
+                names.append(key)
+
+    # De-duplicate preserving order
+    return list(dict.fromkeys([n for n in names if n]))
 
 
 async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, Any]:

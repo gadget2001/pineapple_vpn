@@ -21,6 +21,12 @@ app = FastAPI(
         "Сервис не предназначен для противоправной деятельности."
     ),
     version="1.0.0",
+    servers=[
+        {
+            "url": "/api",
+            "description": "Основной префикс API за reverse proxy",
+        }
+    ],
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
