@@ -40,11 +40,16 @@ export default function App() {
 
   useEffect(() => {
     const authenticate = async () => {
-      if (!tg?.initData) {
-        setAuthError("Откройте приложение через Telegram MiniApp, иначе авторизация недоступна.");
+      if (!tg) {
+        setAuthError("Откройте приложение в Telegram, иначе авторизация недоступна.");
+        return;
+      }
+      if (!tg.initData) {
+        setAuthError("Telegram не передал initData. Откройте MiniApp через кнопку бота.");
         return;
       }
       if (token) return;
+
       const res = await fetch(`${API_BASE}/auth/telegram`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -53,10 +58,19 @@ export default function App() {
           referral_code: startParam || null,
         }),
       });
+
       if (!res.ok) {
-        setAuthError("Не удалось пройти авторизацию. Откройте MiniApp внутри Telegram.");
+        let detail = "Не удалось пройти авторизацию.";
+        try {
+          const data = await res.json();
+          if (data?.detail) detail = data.detail;
+        } catch {
+          // ignore
+        }
+        setAuthError(`Ошибка авторизации: ${detail}`);
         return;
       }
+
       const data = await res.json();
       if (data.access_token) {
         localStorage.setItem("token", data.access_token);
@@ -363,6 +377,9 @@ export default function App() {
       {authError && (
         <div className="alert">
           {authError}
+          <div className="muted" style={{ marginTop: 8 }}>
+            initData length: {tg?.initData?.length || 0}
+          </div>
         </div>
       )}
 
