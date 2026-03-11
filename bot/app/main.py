@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import os
 from datetime import datetime, timezone
 
@@ -40,13 +40,16 @@ async def cmd_start(message: Message):
     await send_admin_log("запуск бота пользователем", message)
 
     keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="Открыть Pineapple VPN", web_app=WebAppInfo(url=MINIAPP_URL))]
-        ],
+        keyboard=[[KeyboardButton(text="Открыть Pineapple VPN", web_app=WebAppInfo(url=MINIAPP_URL))]],
         resize_keyboard=True,
     )
     await message.answer(
-        "Добро пожаловать в Pineapple VPN. Откройте MiniApp для управления подпиской.",
+        "Pineapple VPN — защищенный доступ к российскому IP из-за границы.\n\n"
+        "Возможности:\n"
+        "• подписка и оплата\n"
+        "• VPN конфигурация\n"
+        "• реферальная система\n\n"
+        "Нажмите кнопку ниже, чтобы открыть MiniApp.",
         reply_markup=keyboard,
     )
 

@@ -25,11 +25,12 @@ def health():
     return {"status": "ok"}
 
 
-app.include_router(auth.router, prefix="/api")
-app.include_router(users.router, prefix="/api")
-app.include_router(subscriptions.router, prefix="/api")
-app.include_router(payments.router, prefix="/api")
-app.include_router(vpn.router, prefix="/api")
-app.include_router(referral.router, prefix="/api")
-app.include_router(admin.router, prefix="/api")
-app.include_router(webhooks.router, prefix="/api")
+for prefix in ("", "/api"):
+    app.include_router(auth.router, prefix=prefix)
+    app.include_router(users.router, prefix=prefix)
+    app.include_router(subscriptions.router, prefix=prefix)
+    app.include_router(payments.router, prefix=prefix)
+    app.include_router(vpn.router, prefix=prefix)
+    app.include_router(referral.router, prefix=prefix)
+    app.include_router(admin.router, prefix=prefix)
+    app.include_router(webhooks.router, prefix=prefix)

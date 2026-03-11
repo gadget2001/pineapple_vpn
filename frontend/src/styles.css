@@ -1,4 +1,4 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap");
 
 :root {
   --green-dark: #237227;
@@ -7,6 +7,7 @@
   --peach: #FFD786;
   --bg: #f6f4ec;
   --text: #1e1e1e;
+  --card: #ffffff;
 }
 
 * {
@@ -15,75 +16,122 @@
 
 body {
   margin: 0;
-  font-family: "Montserrat", "Segoe UI", sans-serif;
+  font-family: "Montserrat", sans-serif;
   color: var(--text);
-  background: radial-gradient(circle at top left, #fff3d6, var(--bg));
+  background:
+    radial-gradient(circle at top left, #fff3d6, var(--bg)),
+    repeating-linear-gradient(135deg, rgba(255, 215, 134, 0.2), rgba(255, 215, 134, 0.2) 20px, transparent 20px, transparent 40px);
+}
+
+a {
+  color: var(--green-dark);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 .app {
-  padding: 24px;
-  max-width: 980px;
+  padding: 20px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
 .hero {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 16px;
   background: linear-gradient(135deg, var(--green-dark), var(--green));
   color: white;
-  padding: 20px;
-  border-radius: 16px;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  padding: 24px;
+  border-radius: 20px;
 }
 
 .logo {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   background: var(--orange);
   color: var(--green-dark);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  border-radius: 12px;
+  border-radius: 16px;
+  margin-bottom: 12px;
 }
 
-.status-card {
+.hero-text h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+.tagline {
+  margin: 0 0 12px;
+  opacity: 0.9;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chips span {
   background: rgba(255, 255, 255, 0.15);
-  padding: 12px;
-  border-radius: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
 }
 
-section {
+.hero-card {
+  background: rgba(255, 255, 255, 0.18);
+  padding: 16px;
+  border-radius: 16px;
+}
+
+.status-pill {
+  display: inline-block;
+  margin: 6px 0 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+}
+
+.section {
   margin-top: 28px;
 }
 
-.plan-grid,
-.instruction-grid,
-.admin-grid {
+.grid {
   display: grid;
   gap: 16px;
 }
 
-.plan-grid {
+.grid.two {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.grid.three {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
+.card {
+  background: var(--card);
+  border: 1px solid #efe6cf;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 20px rgba(35, 114, 39, 0.08);
+}
+
 .plan {
-  background: white;
+  background: var(--card);
   border: 2px solid var(--peach);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 16px;
 }
 
 .price {
-  font-size: 24px;
+  font-size: 26px;
   color: var(--green-dark);
   margin: 12px 0;
 }
@@ -92,7 +140,7 @@ button {
   background: var(--orange);
   border: none;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -101,11 +149,13 @@ input {
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid #e6e0d0;
+  width: 100%;
 }
 
 .device-form {
-  display: flex;
+  display: grid;
   gap: 12px;
+  grid-template-columns: 1fr auto;
   align-items: center;
   margin-bottom: 12px;
 }
@@ -114,12 +164,17 @@ ul {
   padding-left: 20px;
 }
 
-.vpn-box {
+.actions {
   margin-top: 12px;
-  background: white;
-  border: 1px solid #e6e0d0;
+  display: flex;
+  gap: 8px;
+}
+
+.stat {
+  background: #fff9e8;
   border-radius: 12px;
   padding: 12px;
+  text-align: center;
 }
 
 .footer {
@@ -129,9 +184,12 @@ ul {
   border-radius: 12px;
 }
 
-@media (min-width: 720px) {
+@media (min-width: 900px) {
   .hero {
-    flex-direction: row;
-    justify-content: space-between;
+    grid-template-columns: 1.2fr 0.8fr;
+    align-items: center;
+  }
+  .hero-text h1 {
+    font-size: 36px;
   }
 }
