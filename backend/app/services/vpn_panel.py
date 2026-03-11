@@ -19,6 +19,8 @@ def _extract_profile(response_data: Dict[str, Any]) -> Dict[str, Any]:
 
     if not subscription_url:
         subscription_url = response_data.get("subscription_url", "")
+    if subscription_url and subscription_url.startswith("/"):
+        subscription_url = f"{_normalize_panel_url()}{subscription_url}"
 
     return {
         "uuid": response_data.get("proxies", {}).get("vless", {}).get("id", "")

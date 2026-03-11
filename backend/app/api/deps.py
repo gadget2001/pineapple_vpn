@@ -6,13 +6,22 @@ from app.core.security import decode_token
 from app.db.session import get_db
 from app.models.user import User
 
-security = HTTPBearer()
+security = HTTPBearer(
+    auto_error=False,
+    scheme_name="BearerAuth",
+    description="JWT токен пользователя. Получите токен через /auth/telegram и вставьте: Bearer <token>.",
+)
 
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ) -> User:
+    if not credentials or not credentials.credentials:
+        raise HTTPException(
+            status_code=401,
+            detail="Требуется Bearer токен. Сначала вызовите /auth/telegram.",
+        )
     try:
         payload = decode_token(credentials.credentials)
     except Exception as exc:
