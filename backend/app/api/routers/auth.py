@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.core.logging import send_admin_log
 from app.core.security import create_access_token, verify_telegram_init_data
 from app.db.session import get_db
