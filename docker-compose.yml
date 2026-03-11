@@ -52,14 +52,16 @@ services:
       - redis
     restart: unless-stopped
 
-  panel:
-    image: gozargah/marzban:latest
-    container_name: pineapple_panel
-    environment:
-      - DATABASE_URL=${MARZBAN_DB_URL}
-    ports:
-      - "19090:19090"
-    restart: unless-stopped
+  # Marzban уже установлен системно на сервере.
+  # Если захотите поднять Marzban в Docker, раскомментируйте этот блок.
+  # panel:
+  #   image: gozargah/marzban:latest
+  #   container_name: pineapple_panel
+  #   environment:
+  #     - DATABASE_URL=${MARZBAN_DB_URL}
+  #   ports:
+  #     - "19090:19090"
+  #   restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -71,18 +73,20 @@ services:
       - redis_data:/data
     restart: unless-stopped
 
-  nginx:
-    image: nginx:1.25-alpine
-    container_name: pineapple_nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-    depends_on:
-      - backend
-      - frontend
-    restart: unless-stopped
+  # Внешний nginx уже настроен на сервере.
+  # Если захотите использовать nginx в Docker, раскомментируйте этот блок.
+  # nginx:
+  #   image: nginx:1.25-alpine
+  #   container_name: pineapple_nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/conf.d:/etc/nginx/conf.d:ro
+  #   depends_on:
+  #     - backend
+  #     - frontend
+  #   restart: unless-stopped
 
 volumes:
   redis_data:
