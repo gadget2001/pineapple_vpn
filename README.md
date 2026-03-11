@@ -105,6 +105,7 @@ cp .env.example .env
 - `DB_NAME` — имя БД
 - `DB_USER` — пользователь
 - `DB_PASSWORD` — пароль
+- `DB_SSLMODE` — режим SSL для PostgreSQL (`require`, `prefer`, `disable`)
 
 ### Redis
 - `REDIS_URL` — `redis://redis:16379/0`
@@ -154,6 +155,10 @@ docker compose exec backend alembic upgrade head
 ```bash
 docker compose exec backend alembic downgrade -1
 ```
+
+### Частая ошибка подключения к PostgreSQL
+Если видите `no pg_hba.conf entry for host ...`, это не ошибка приложения.
+Нужно разрешить IP сервера приложения в `pg_hba.conf` на сервере PostgreSQL для пользователя/БД и нужного режима SSL.
 
 ## 9) Проверка работоспособности
 

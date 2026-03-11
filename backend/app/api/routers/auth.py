@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -37,61 +38,64 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
     first_name = user_data.get("first_name")
     last_name = user_data.get("last_name")
 
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
-    is_new = False
-    if not user:
-        is_new = True
-        referral_code = f"ref_{telegram_id}"
-        user = User(
-            telegram_id=telegram_id,
-            username=username,
-            first_name=first_name,
-            last_name=last_name,
-            referral_code=referral_code,
-        )
-        inviter = None
-        if payload.referral_code:
-            inviter = db.query(User).filter(User.referral_code == payload.referral_code).first()
-            if inviter:
-                user.referred_by_id = inviter.id
-                user.trial_days = 7
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-
-        if inviter:
-            db.add(Referral(inviter_id=inviter.id, invitee_id=user.id))
-            db.commit()
-            await send_admin_log(
-                "??????? ?? ??????????? ??????",
-                user.telegram_id,
-                username,
-                {"Inviter": inviter.telegram_id},
+    try:
+        user = db.query(User).filter(User.telegram_id == telegram_id).first()
+        is_new = False
+        if not user:
+            is_new = True
+            referral_code = f"ref_{telegram_id}"
+            user = User(
+                telegram_id=telegram_id,
+                username=username,
+                first_name=first_name,
+                last_name=last_name,
+                referral_code=referral_code,
             )
+            inviter = None
+            if payload.referral_code:
+                inviter = db.query(User).filter(User.referral_code == payload.referral_code).first()
+                if inviter:
+                    user.referred_by_id = inviter.id
+                    user.trial_days = 7
+            db.add(user)
+            db.commit()
+            db.refresh(user)
 
-        ends_at = datetime.utcnow() + timedelta(days=user.trial_days)
-        trial = Subscription(
-            user_id=user.id,
-            plan="trial",
-            status="active",
-            price_rub=0,
-            starts_at=datetime.utcnow(),
-            ends_at=ends_at,
+            if inviter:
+                db.add(Referral(inviter_id=inviter.id, invitee_id=user.id))
+                db.commit()
+                await send_admin_log(
+                    "referral_open",
+                    user.telegram_id,
+                    username,
+                    {"Inviter": inviter.telegram_id},
+                )
+
+            ends_at = datetime.utcnow() + timedelta(days=user.trial_days)
+            trial = Subscription(
+                user_id=user.id,
+                plan="trial",
+                status="active",
+                price_rub=0,
+                starts_at=datetime.utcnow(),
+                ends_at=ends_at,
+            )
+            db.add(trial)
+            db.commit()
+
+        token = create_access_token(str(user.id), user.is_admin)
+
+        log_audit(db, user.id, "registration" if is_new else "login", {"username": username})
+        await send_admin_log(
+            "registration" if is_new else "login",
+            user.telegram_id,
+            username,
+            {"Trial": "activated" if is_new else "-"},
         )
-        db.add(trial)
-        db.commit()
 
-    token = create_access_token(str(user.id), user.is_admin)
-
-    log_audit(db, user.id, "registration" if is_new else "login", {"username": username})
-    await send_admin_log(
-        "??????????? ????????????" if is_new else "???????????",
-        user.telegram_id,
-        username,
-        {"Trial": "???????????" if is_new else "-"},
-    )
-
-    return Token(access_token=token)
+        return Token(access_token=token)
+    except OperationalError as exc:
+        raise HTTPException(status_code=503, detail="Database unavailable") from exc
 
 
 @router.get("/me", response_model=UserOut)

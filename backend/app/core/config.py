@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from urllib.parse import quote_plus
 
 
 class Settings(BaseSettings):
@@ -18,6 +19,7 @@ class Settings(BaseSettings):
     db_name: str
     db_user: str
     db_password: str
+    db_sslmode: str = "prefer"
 
     redis_url: str = "redis://redis:16379/0"
 
@@ -48,9 +50,13 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
+        user = quote_plus(self.db_user)
+        password = quote_plus(self.db_password)
+        db_name = quote_plus(self.db_name)
         return (
-            f"postgresql+psycopg2://{self.db_user}:{self.db_password}"
-            f"@{self.db_host}:{self.db_port}/{self.db_name}"
+            f"postgresql+psycopg2://{user}:{password}"
+            f"@{self.db_host}:{self.db_port}/{db_name}"
+            f"?sslmode={self.db_sslmode}"
         )
 
 
