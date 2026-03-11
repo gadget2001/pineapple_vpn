@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routers import admin, auth, payments, referral, subscriptions, users, vpn, webhooks
@@ -12,6 +14,9 @@ app = FastAPI(
         "trial activation, subscriptions, referrals, and VPN profile issuance via Marzban."
     ),
     version="1.0.0",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
     openapi_tags=[
         {"name": "Auth", "description": "Telegram MiniApp authorization"},
         {"name": "Users", "description": "Profile, dashboard and devices"},
@@ -40,6 +45,30 @@ if settings.allowed_origins:
 @app.get("/health", summary="Health check")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/openapi.json", include_in_schema=False)
+@app.get("/api/openapi.json", include_in_schema=False)
+def openapi_json():
+    return JSONResponse(app.openapi())
+
+
+@app.get("/docs", include_in_schema=False)
+@app.get("/api/docs", include_in_schema=False)
+def swagger_docs():
+    return get_swagger_ui_html(
+        openapi_url="/api/openapi.json",
+        title=f"{settings.project_name} API Docs",
+    )
+
+
+@app.get("/redoc", include_in_schema=False)
+@app.get("/api/redoc", include_in_schema=False)
+def redoc_docs():
+    return get_redoc_html(
+        openapi_url="/api/openapi.json",
+        title=f"{settings.project_name} ReDoc",
+    )
 
 
 for prefix in ("", "/api"):

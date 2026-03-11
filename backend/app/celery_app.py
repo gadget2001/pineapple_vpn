@@ -9,6 +9,7 @@ celery_app = Celery(
 )
 celery_app.conf.timezone = settings.sched_tz
 celery_app.conf.enable_utc = True
+celery_app.conf.broker_connection_retry_on_startup = True
 celery_app.conf.beat_schedule = {
     "check-expired-subscriptions": {
         "task": "app.tasks.check_expired_subscriptions",

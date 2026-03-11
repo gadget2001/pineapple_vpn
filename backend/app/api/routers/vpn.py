@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+import httpx
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -30,7 +31,11 @@ async def get_config(
 
     profile = db.query(VPNProfile).filter(VPNProfile.user_id == user.id).first()
     if not profile:
-        panel_data = await create_vpn_user(user.telegram_id, user.username)
+        try:
+            panel_data = await create_vpn_user(user.telegram_id, user.username)
+        except httpx.HTTPStatusError as exc:
+            detail = exc.response.text if exc.response is not None else str(exc)
+            raise HTTPException(status_code=502, detail=f"Marzban API error: {detail}") from exc
         profile = VPNProfile(
             user_id=user.id,
             uuid=panel_data.get("uuid", ""),

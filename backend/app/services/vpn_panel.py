@@ -18,7 +18,7 @@ def _extract_profile(response_data: Dict[str, Any]) -> Dict[str, Any]:
         vless_url = links[0]
 
     if not subscription_url:
-        subscription_url = response_data.get("sub_updated_at", "")
+        subscription_url = response_data.get("subscription_url", "")
 
     return {
         "uuid": response_data.get("proxies", {}).get("vless", {}).get("id", "")
@@ -30,52 +30,80 @@ def _extract_profile(response_data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+async def _get_existing_user(client: httpx.AsyncClient, username: str) -> Dict[str, Any] | None:
+    response = await client.get(
+        f"{_normalize_panel_url()}/api/user/{username}",
+        headers={"Authorization": f"Bearer {settings.panel_token}"},
+    )
+    if response.is_success:
+        return response.json()
+    return None
+
+
+async def _get_vless_inbounds(client: httpx.AsyncClient) -> list[str]:
+    response = await client.get(
+        f"{_normalize_panel_url()}/api/inbounds",
+        headers={"Authorization": f"Bearer {settings.panel_token}"},
+    )
+    if not response.is_success:
+        return []
+
+    data = response.json()
+    inbounds = data if isinstance(data, list) else data.get("inbounds", [])
+
+    names: list[str] = []
+    for inbound in inbounds:
+        tag = inbound.get("tag") or inbound.get("name")
+        protocol = (inbound.get("protocol") or "").lower()
+        if tag and protocol == "vless":
+            names.append(tag)
+    return names
+
+
 async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, Any]:
-    inbound_candidates = [settings.panel_inbound_name, "reality", "VLESS TCP REALITY"]
-    base_payload = {
-        "username": f"tg_{telegram_id}",
-        "inbounds": {"vless": []},
-        "status": "active",
-        "data_limit": 0,
-        "expire": 0,
-        "note": username or "",
-        "on_hold_timeout": "0",
-        "on_hold_expire_duration": 0,
-        "auto_delete_in_days": 0,
-        "proxies": {"vless": {"flow": "xtls-rprx-vision"}},
-        "inbound_limit": settings.vpn_max_connections,
-    }
+    uname = f"tg_{telegram_id}"
 
     async with httpx.AsyncClient(timeout=20) as client:
-        data = None
-        last_exc = None
-        for inbound_name in inbound_candidates:
+        existing = await _get_existing_user(client, uname)
+        if existing:
+            return _extract_profile(existing)
+
+        inbound_candidates = [settings.panel_inbound_name]
+        inbound_candidates.extend(await _get_vless_inbounds(client))
+        inbound_candidates.extend(["reality", "VLESS TCP REALITY"])
+
+        # Remove duplicates while preserving order
+        unique_inbounds = list(dict.fromkeys([i for i in inbound_candidates if i]))
+
+        base_payload = {
+            "username": uname,
+            "note": username or "",
+            "status": "active",
+            "expire": 0,
+            "data_limit": 0,
+            "data_limit_reset_strategy": "no_reset",
+            "inbounds": {"vless": []},
+            "proxies": {"vless": {}},
+        }
+
+        last_error: str | None = None
+        for inbound_name in unique_inbounds:
             payload = {**base_payload, "inbounds": {"vless": [inbound_name]}}
-            try:
-                response = await client.post(
-                    f"{_normalize_panel_url()}/api/user",
-                    headers={"Authorization": f"Bearer {settings.panel_token}"},
-                    json=payload,
-                )
-                response.raise_for_status()
-                data = response.json()
-                break
-            except httpx.HTTPStatusError as exc:
-                last_exc = exc
-                continue
+            response = await client.post(
+                f"{_normalize_panel_url()}/api/user",
+                headers={"Authorization": f"Bearer {settings.panel_token}"},
+                json=payload,
+            )
+            if response.is_success:
+                details = await _get_existing_user(client, uname)
+                return _extract_profile(details or response.json())
+            last_error = response.text
 
-        if data is None and last_exc:
-            raise last_exc
-
-        # Fetch fresh user details to ensure links/subscription are present.
-        details = await client.get(
-            f"{_normalize_panel_url()}/api/user/tg_{telegram_id}",
-            headers={"Authorization": f"Bearer {settings.panel_token}"},
+        raise httpx.HTTPStatusError(
+            f"Failed to create Marzban user. Last response: {last_error}",
+            request=httpx.Request("POST", f"{_normalize_panel_url()}/api/user"),
+            response=httpx.Response(422, text=last_error or "Unprocessable Entity"),
         )
-        if details.is_success:
-            data = details.json()
-
-        return _extract_profile(data)
 
 
 async def disable_vpn_user(telegram_id: int):
