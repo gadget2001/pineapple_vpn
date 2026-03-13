@@ -1,13 +1,13 @@
-import React, { useEffect, useMemo, useState } from "react";
+п»їimport React, { useEffect, useMemo, useState } from "react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 const TABS = [
-  { id: "home", label: "Главная", title: "Главная" },
-  { id: "wallet", label: "Кошелек", title: "Кошелек" },
-  { id: "setup", label: "Настройка", title: "Настройка VPN" },
-  { id: "referral", label: "Рефералы", title: "Реферальная система" },
-  { id: "help", label: "Помощь", title: "Документы и помощь" },
+  { id: "home", label: "Р“Р»Р°РІРЅР°СЏ", title: "Р“Р»Р°РІРЅР°СЏ" },
+  { id: "wallet", label: "РљРѕС€РµР»РµРє", title: "РљРѕС€РµР»РµРє" },
+  { id: "setup", label: "РќР°СЃС‚СЂРѕР№РєР°", title: "РќР°СЃС‚СЂРѕР№РєР° VPN" },
+  { id: "referral", label: "Р РµС„РµСЂР°Р»С‹", title: "Р РµС„РµСЂР°Р»СЊРЅР°СЏ СЃРёСЃС‚РµРјР°" },
+  { id: "help", label: "РџРѕРјРѕС‰СЊ", title: "Р”РѕРєСѓРјРµРЅС‚С‹ Рё РїРѕРјРѕС‰СЊ" },
 ];
 
 const OS_OPTIONS = [
@@ -22,7 +22,7 @@ function useTelegram() {
 }
 
 function formatDate(dt) {
-  if (!dt) return "—";
+  if (!dt) return "вЂ”";
   return new Date(dt).toLocaleString("ru-RU", {
     day: "2-digit",
     month: "2-digit",
@@ -39,23 +39,23 @@ function daysLeft(dt) {
 }
 
 function statusRu(status) {
-  if (status === "active") return "Активна";
-  if (status === "expired") return "Истекла";
-  return "Нет подписки";
+  if (status === "active") return "РђРєС‚РёРІРЅР°";
+  if (status === "expired") return "РСЃС‚РµРєР»Р°";
+  return "РќРµС‚ РїРѕРґРїРёСЃРєРё";
 }
 
 function planRu(plan) {
-  if (plan === "week") return "Неделя";
-  if (plan === "month") return "Месяц";
-  if (plan === "trial") return "Пробный период";
-  return "—";
+  if (plan === "week") return "РќРµРґРµР»СЏ";
+  if (plan === "month") return "РњРµСЃСЏС†";
+  if (plan === "trial") return "РџСЂРѕР±РЅС‹Р№ РїРµСЂРёРѕРґ";
+  return "вЂ”";
 }
 
 function operationMeta(item) {
-  if (item.kind === "topup") return { title: "Пополнение ЮKassa", sign: "+", cls: "credit" };
-  if (item.kind === "referral_bonus") return { title: "Реферальное начисление", sign: "+", cls: "credit" };
-  if (item.kind === "subscription_debit") return { title: "Списание за тариф", sign: "-", cls: "debit" };
-  return { title: "Операция", sign: "", cls: "neutral" };
+  if (item.kind === "topup") return { title: "РџРѕРїРѕР»РЅРµРЅРёРµ Р®Kassa", sign: "+", cls: "credit" };
+  if (item.kind === "referral_bonus") return { title: "Р РµС„РµСЂР°Р»СЊРЅРѕРµ РЅР°С‡РёСЃР»РµРЅРёРµ", sign: "+", cls: "credit" };
+  if (item.kind === "subscription_debit") return { title: "РЎРїРёСЃР°РЅРёРµ Р·Р° С‚Р°СЂРёС„", sign: "-", cls: "debit" };
+  return { title: "РћРїРµСЂР°С†РёСЏ", sign: "", cls: "neutral" };
 }
 
 function iconForTab(id, active) {
@@ -68,37 +68,37 @@ function iconForTab(id, active) {
 }
 
 function getInstruction(os, subscriptionUrl) {
-  const urlLine = subscriptionUrl ? `Вставьте Subscription URL: ${subscriptionUrl}` : "Получите Subscription URL ниже.";
+  const urlLine = subscriptionUrl ? `Р’СЃС‚Р°РІСЊС‚Рµ Subscription URL: ${subscriptionUrl}` : "РџРѕР»СѓС‡РёС‚Рµ Subscription URL РЅРёР¶Рµ.";
   if (os === "windows") {
     return [
-      "Скачайте NekoRay по ссылке из раздела инструкции.",
-      "Распакуйте архив и запустите приложение.",
-      "Откройте Import / Subscription.",
+      "РЎРєР°С‡Р°Р№С‚Рµ NekoRay РїРѕ СЃСЃС‹Р»РєРµ РёР· СЂР°Р·РґРµР»Р° РёРЅСЃС‚СЂСѓРєС†РёРё.",
+      "Р Р°СЃРїР°РєСѓР№С‚Рµ Р°СЂС…РёРІ Рё Р·Р°РїСѓСЃС‚РёС‚Рµ РїСЂРёР»РѕР¶РµРЅРёРµ.",
+      "РћС‚РєСЂРѕР№С‚Рµ Import / Subscription.",
       urlLine,
-      "Сохраните и нажмите Connect.",
+      "РЎРѕС…СЂР°РЅРёС‚Рµ Рё РЅР°Р¶РјРёС‚Рµ Connect.",
     ];
   }
   if (os === "ios") {
     return [
-      "Установите Streisand из App Store.",
-      "Откройте приложение и нажмите Add Subscription.",
+      "РЈСЃС‚Р°РЅРѕРІРёС‚Рµ Streisand РёР· App Store.",
+      "РћС‚РєСЂРѕР№С‚Рµ РїСЂРёР»РѕР¶РµРЅРёРµ Рё РЅР°Р¶РјРёС‚Рµ Add Subscription.",
       urlLine,
-      "Сохраните профиль и включите VPN.",
+      "РЎРѕС…СЂР°РЅРёС‚Рµ РїСЂРѕС„РёР»СЊ Рё РІРєР»СЋС‡РёС‚Рµ VPN.",
     ];
   }
   if (os === "android") {
     return [
-      "Установите v2rayNG из официального источника.",
-      "Откройте меню Subscription Group Settings.",
+      "РЈСЃС‚Р°РЅРѕРІРёС‚Рµ v2rayNG РёР· РѕС„РёС†РёР°Р»СЊРЅРѕРіРѕ РёСЃС‚РѕС‡РЅРёРєР°.",
+      "РћС‚РєСЂРѕР№С‚Рµ РјРµРЅСЋ Subscription Group Settings.",
       urlLine,
-      "Обновите подписку и подключитесь.",
+      "РћР±РЅРѕРІРёС‚Рµ РїРѕРґРїРёСЃРєСѓ Рё РїРѕРґРєР»СЋС‡РёС‚РµСЃСЊ.",
     ];
   }
   return [
-    "Установите клиент (NekoRay/Stash) на macOS.",
-    "Добавьте Subscription в менеджере профилей.",
+    "РЈСЃС‚Р°РЅРѕРІРёС‚Рµ РєР»РёРµРЅС‚ (NekoRay/Stash) РЅР° macOS.",
+    "Р”РѕР±Р°РІСЊС‚Рµ Subscription РІ РјРµРЅРµРґР¶РµСЂРµ РїСЂРѕС„РёР»РµР№.",
     urlLine,
-    "Примените профиль и включите подключение.",
+    "РџСЂРёРјРµРЅРёС‚Рµ РїСЂРѕС„РёР»СЊ Рё РІРєР»СЋС‡РёС‚Рµ РїРѕРґРєР»СЋС‡РµРЅРёРµ.",
   ];
 }
 
@@ -159,7 +159,7 @@ export default function App() {
   useEffect(() => {
     const auth = async () => {
       if (!tg?.initData) {
-        setAuthError("Откройте приложение через кнопку в Telegram-боте.");
+        setAuthError("РћС‚РєСЂРѕР№С‚Рµ РїСЂРёР»РѕР¶РµРЅРёРµ С‡РµСЂРµР· РєРЅРѕРїРєСѓ РІ Telegram-Р±РѕС‚Рµ.");
         return;
       }
       if (token) return;
@@ -267,7 +267,7 @@ export default function App() {
   const copy = async (text) => {
     if (!text) return;
     await navigator.clipboard.writeText(text);
-    tg?.showPopup?.({ title: "Скопировано", message: "Текст скопирован", buttons: [{ type: "ok" }] });
+    tg?.showPopup?.({ title: "РЎРєРѕРїРёСЂРѕРІР°РЅРѕ", message: "РўРµРєСЃС‚ СЃРєРѕРїРёСЂРѕРІР°РЅ", buttons: [{ type: "ok" }] });
   };
 
   const normalizeSubscriptionUrl = (url) => {
@@ -311,25 +311,25 @@ export default function App() {
           <section className="page">
             <div className="hero">
               <div className="hero-title">Pineapple VPN</div>
-              <p>Защищенный удаленный доступ к российским сервисам из-за границы</p>
+              <p>Р—Р°С‰РёС‰РµРЅРЅС‹Р№ СѓРґР°Р»РµРЅРЅС‹Р№ РґРѕСЃС‚СѓРї Рє СЂРѕСЃСЃРёР№СЃРєРёРј СЃРµСЂРІРёСЃР°Рј РёР·-Р·Р° РіСЂР°РЅРёС†С‹</p>
               <div className="hero-status-grid">
                 <div className="hero-status-item">
-                  <span>Статус</span>
+                  <span>РЎС‚Р°С‚СѓСЃ</span>
                   <strong>{statusRu(status?.status)}</strong>
                 </div>
                 {hasPlanInfo && (
                   <>
                     <div className="hero-status-item">
-                      <span>Тариф</span>
+                      <span>РўР°СЂРёС„</span>
                       <strong>{planRu(status?.plan)}</strong>
                     </div>
                     <div className="hero-status-item">
-                      <span>Окончание</span>
+                      <span>РћРєРѕРЅС‡Р°РЅРёРµ</span>
                       <strong>{formatDate(subEndsAt)}</strong>
                     </div>
                     <div className="hero-status-item">
-                      <span>Осталось</span>
-                      <strong>{subDaysLeft === null ? "—" : `${subDaysLeft} дн.`}</strong>
+                      <span>РћСЃС‚Р°Р»РѕСЃСЊ</span>
+                      <strong>{subDaysLeft === null ? "вЂ”" : `${subDaysLeft} РґРЅ.`}</strong>
                     </div>
                   </>
                 )}
@@ -338,15 +338,15 @@ export default function App() {
 
             {!termsAccepted && (
               <article className="card intro-card pulse-in">
-                <h3>Перед началом — правила сервиса</h3>
+                <h3>РџРµСЂРµРґ РЅР°С‡Р°Р»РѕРј вЂ” РїСЂР°РІРёР»Р° СЃРµСЂРІРёСЃР°</h3>
                 <p>
-                  Pineapple VPN предназначен для безопасного доступа к российским сервисам из-за границы.
-                  Использование сервиса для незаконной деятельности запрещено.
+                  Pineapple VPN РїСЂРµРґРЅР°Р·РЅР°С‡РµРЅ РґР»СЏ Р±РµР·РѕРїР°СЃРЅРѕРіРѕ РґРѕСЃС‚СѓРїР° Рє СЂРѕСЃСЃРёР№СЃРєРёРј СЃРµСЂРІРёСЃР°Рј РёР·-Р·Р° РіСЂР°РЅРёС†С‹.
+                  РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ СЃРµСЂРІРёСЃР° РґР»СЏ РЅРµР·Р°РєРѕРЅРЅРѕР№ РґРµСЏС‚РµР»СЊРЅРѕСЃС‚Рё Р·Р°РїСЂРµС‰РµРЅРѕ.
                 </p>
                 <div className="doc-links inline-links">
-                  <button className="link-btn" onClick={() => openDoc("terms", "Пользовательское соглашение")}>Соглашение</button>
-                  <button className="link-btn" onClick={() => openDoc("privacy", "Политика конфиденциальности")}>Политика</button>
-                  <button className="link-btn" onClick={() => openDoc("acceptable_use", "Правила использования")}>Правила</button>
+                  <button className="link-btn" onClick={() => openDoc("terms", "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРµ СЃРѕРіР»Р°С€РµРЅРёРµ")}>РЎРѕРіР»Р°С€РµРЅРёРµ</button>
+                  <button className="link-btn" onClick={() => openDoc("privacy", "РџРѕР»РёС‚РёРєР° РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё")}>РџРѕР»РёС‚РёРєР°</button>
+                  <button className="link-btn" onClick={() => openDoc("acceptable_use", "РџСЂР°РІРёР»Р° РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ")}>РџСЂР°РІРёР»Р°</button>
                 </div>
                 <div className="row os-pills">
                   {OS_OPTIONS.map((os) => (
@@ -359,36 +359,36 @@ export default function App() {
                     </button>
                   ))}
                 </div>
-                <button disabled={loading} onClick={acceptTerms}>Я ознакомился и принимаю правила</button>
+                <button disabled={loading} onClick={acceptTerms}>РЇ РѕР·РЅР°РєРѕРјРёР»СЃСЏ Рё РїСЂРёРЅРёРјР°СЋ РїСЂР°РІРёР»Р°</button>
               </article>
             )}
 
             {termsAccepted && trialAvailable && (
               <article className="card accent pulse-in">
-                <h3>Пробный период</h3>
+                <h3>РџСЂРѕР±РЅС‹Р№ РїРµСЂРёРѕРґ</h3>
                 <p>
-                  Вам доступен пробный период <strong>{trialDays} дней</strong>
-                  {trialDays > 3 ? " (увеличен по реферальной ссылке)" : ""}.
+                  Р’Р°Рј РґРѕСЃС‚СѓРїРµРЅ РїСЂРѕР±РЅС‹Р№ РїРµСЂРёРѕРґ <strong>{trialDays} РґРЅРµР№</strong>
+                  {trialDays > 3 ? " (СѓРІРµР»РёС‡РµРЅ РїРѕ СЂРµС„РµСЂР°Р»СЊРЅРѕР№ СЃСЃС‹Р»РєРµ)" : ""}.
                 </p>
                 <div className="row">
-                  <button disabled={loading} onClick={activateTrial}>Попробовать VPN</button>
-                  <button className="soft-btn" onClick={() => setTab("setup")}>Перейти к настройке</button>
+                  <button disabled={loading} onClick={activateTrial}>РџРѕРїСЂРѕР±РѕРІР°С‚СЊ VPN</button>
+                  <button className="soft-btn" onClick={() => setTab("setup")}>РџРµСЂРµР№С‚Рё Рє РЅР°СЃС‚СЂРѕР№РєРµ</button>
                 </div>
               </article>
             )}
 
             <article className="card tariffs-card">
-              <h3>Тарифы</h3>
+              <h3>РўР°СЂРёС„С‹</h3>
               <div className="grid two">
                 {plans.map((plan) => (
                   <div className="price-card modern" key={plan.code}>
                     <div className="price-head">
                       <div className="price-name">{planRu(plan.code)}</div>
-                      <div className="price-badge">{plan.duration_days} дней</div>
+                      <div className="price-badge">{plan.duration_days} РґРЅРµР№</div>
                     </div>
-                    <div className="price-value">{plan.price_rub} ?</div>
-                    <p className="muted">Оплата из кошелька, продление без смены ключа.</p>
-                    <button disabled={loading} onClick={() => buyPlan(plan.code)}>Оформить</button>
+                    <div className="price-value">{plan.price_rub} в‚Ѕ</div>
+                    <p className="muted">РћРїР»Р°С‚Р° РёР· РєРѕС€РµР»СЊРєР°, РїСЂРѕРґР»РµРЅРёРµ Р±РµР· СЃРјРµРЅС‹ РєР»СЋС‡Р°.</p>
+                    <button disabled={loading} onClick={() => buyPlan(plan.code)}>РћС„РѕСЂРјРёС‚СЊ</button>
                   </div>
                 ))}
               </div>
@@ -399,22 +399,22 @@ export default function App() {
         {tab === "wallet" && (
           <section className="page">
             <article className="card wallet-balance">
-              <h3>Кошелек</h3>
-              <div className="balance-value">{wallet} ?</div>
-              <small>Используется для оплаты подписок</small>
+              <h3>РљРѕС€РµР»РµРє</h3>
+              <div className="balance-value">{wallet} в‚Ѕ</div>
+              <small>РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РґР»СЏ РѕРїР»Р°С‚С‹ РїРѕРґРїРёСЃРѕРє</small>
             </article>
 
             <article className="card">
-              <h3>Пополнение кошелька</h3>
+              <h3>РџРѕРїРѕР»РЅРµРЅРёРµ РєРѕС€РµР»СЊРєР°</h3>
               <div className="row">
                 <input type="number" min="50" value={topupAmount} onChange={(e) => setTopupAmount(e.target.value)} />
-                <button disabled={loading} onClick={topup}>Пополнить</button>
+                <button disabled={loading} onClick={topup}>РџРѕРїРѕР»РЅРёС‚СЊ</button>
               </div>
-              <small>Минимальная сумма 50 ?</small>
+              <small>РњРёРЅРёРјР°Р»СЊРЅР°СЏ СЃСѓРјРјР° 50 в‚Ѕ</small>
             </article>
 
             <article className="card">
-              <h3>История операций</h3>
+              <h3>РСЃС‚РѕСЂРёСЏ РѕРїРµСЂР°С†РёР№</h3>
               <div className="ops-list">
                 {payments.map((item) => {
                   const meta = operationMeta(item);
@@ -424,11 +424,11 @@ export default function App() {
                         <div className="op-title">{meta.title}</div>
                         <div className="op-date">{formatDate(item.created_at)}</div>
                       </div>
-                      <div className="op-amount">{meta.sign}{item.amount_rub} ?</div>
+                      <div className="op-amount">{meta.sign}{item.amount_rub} в‚Ѕ</div>
                     </div>
                   );
                 })}
-                {!payments.length && <div className="empty">Операций пока нет</div>}
+                {!payments.length && <div className="empty">РћРїРµСЂР°С†РёР№ РїРѕРєР° РЅРµС‚</div>}
               </div>
             </article>
           </section>
@@ -437,8 +437,8 @@ export default function App() {
         {tab === "setup" && (
           <section className="page">
             <article className="card">
-              <h3>Настройка VPN</h3>
-              <p className="muted">Выберите устройство, затем импортируйте Subscription URL в клиент.</p>
+              <h3>РќР°СЃС‚СЂРѕР№РєР° VPN</h3>
+              <p className="muted">Р’С‹Р±РµСЂРёС‚Рµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ, Р·Р°С‚РµРј РёРјРїРѕСЂС‚РёСЂСѓР№С‚Рµ Subscription URL РІ РєР»РёРµРЅС‚.</p>
               <div className="row os-pills">
                 {OS_OPTIONS.map((os) => (
                   <button
@@ -456,9 +456,9 @@ export default function App() {
             </article>
 
             <article className="card">
-              <h3>Активный ключ (Subscription URL)</h3>
-              <button onClick={loadVpnConfig} disabled={loading || status?.status !== "active"}>Получить / обновить ключ</button>
-              {status?.status !== "active" && <p className="muted">Для получения ключа активируйте trial или платный тариф.</p>}
+              <h3>РђРєС‚РёРІРЅС‹Р№ РєР»СЋС‡ (Subscription URL)</h3>
+              <button onClick={loadVpnConfig} disabled={loading || status?.status !== "active"}>РџРѕР»СѓС‡РёС‚СЊ / РѕР±РЅРѕРІРёС‚СЊ РєР»СЋС‡</button>
+              {status?.status !== "active" && <p className="muted">Р”Р»СЏ РїРѕР»СѓС‡РµРЅРёСЏ РєР»СЋС‡Р° Р°РєС‚РёРІРёСЂСѓР№С‚Рµ trial РёР»Рё РїР»Р°С‚РЅС‹Р№ С‚Р°СЂРёС„.</p>}
               {!!subscriptionUrl && (
                 <>
                   <div className="config-box">
@@ -467,17 +467,17 @@ export default function App() {
                       <textarea readOnly value={subscriptionUrl} rows={3} />
                     </div>
                     <div className="row">
-                      <button onClick={() => copy(subscriptionUrl)}>Скопировать ключ</button>
+                      <button onClick={() => copy(subscriptionUrl)}>РЎРєРѕРїРёСЂРѕРІР°С‚СЊ РєР»СЋС‡</button>
                     </div>
                   </div>
-                  <div className="done-banner">Настройка завершена. VPN готов к использованию.</div>
+                  <div className="done-banner">РќР°СЃС‚СЂРѕР№РєР° Р·Р°РІРµСЂС€РµРЅР°. VPN РіРѕС‚РѕРІ Рє РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЋ.</div>
                 </>
               )}
             </article>
 
             <article className="card">
-              <h3>Подключение на другом устройстве</h3>
-              <p className="muted">Используйте тот же активный ключ. Выберите ОС выше и повторите шаги импорта.</p>
+              <h3>РџРѕРґРєР»СЋС‡РµРЅРёРµ РЅР° РґСЂСѓРіРѕРј СѓСЃС‚СЂРѕР№СЃС‚РІРµ</h3>
+              <p className="muted">РСЃРїРѕР»СЊР·СѓР№С‚Рµ С‚РѕС‚ Р¶Рµ Р°РєС‚РёРІРЅС‹Р№ РєР»СЋС‡. Р’С‹Р±РµСЂРёС‚Рµ РћРЎ РІС‹С€Рµ Рё РїРѕРІС‚РѕСЂРёС‚Рµ С€Р°РіРё РёРјРїРѕСЂС‚Р°.</p>
             </article>
           </section>
         )}
@@ -485,31 +485,31 @@ export default function App() {
         {tab === "referral" && (
           <section className="page">
             <article className="card">
-              <h3>Реферальная система</h3>
-              <p>Ссылка в Telegram-бот:</p>
-              <div className="ref-link">{referralInfo?.bot_deep_link || referralStats?.bot_deep_link || "—"}</div>
+              <h3>Р РµС„РµСЂР°Р»СЊРЅР°СЏ СЃРёСЃС‚РµРјР°</h3>
+              <p>РЎСЃС‹Р»РєР° РІ Telegram-Р±РѕС‚:</p>
+              <div className="ref-link">{referralInfo?.bot_deep_link || referralStats?.bot_deep_link || "вЂ”"}</div>
               <div className="row">
-                <button onClick={() => copy(referralInfo?.bot_deep_link || referralStats?.bot_deep_link)}>Скопировать ссылку</button>
+                <button onClick={() => copy(referralInfo?.bot_deep_link || referralStats?.bot_deep_link)}>РЎРєРѕРїРёСЂРѕРІР°С‚СЊ СЃСЃС‹Р»РєСѓ</button>
               </div>
-              <p>Готовое сообщение-приглашение:</p>
-              <div className="ref-link">{referralInfo?.invite_message || referralStats?.invite_message || "—"}</div>
+              <p>Р“РѕС‚РѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ-РїСЂРёРіР»Р°С€РµРЅРёРµ:</p>
+              <div className="ref-link">{referralInfo?.invite_message || referralStats?.invite_message || "вЂ”"}</div>
               <div className="row">
-                <button onClick={() => copy(referralInfo?.invite_message || referralStats?.invite_message)}>Скопировать сообщение</button>
+                <button onClick={() => copy(referralInfo?.invite_message || referralStats?.invite_message)}>РЎРєРѕРїРёСЂРѕРІР°С‚СЊ СЃРѕРѕР±С‰РµРЅРёРµ</button>
               </div>
               <div className="grid three">
-                <div className="stat">Приглашено: {referralStats?.invited_count || 0}</div>
-                <div className="stat">Начислено: {referralStats?.earned_rub || 0} ?</div>
-                <div className="stat">Комиссия: {referralStats?.commission_percent || 10}%</div>
+                <div className="stat">РџСЂРёРіР»Р°С€РµРЅРѕ: {referralStats?.invited_count || 0}</div>
+                <div className="stat">РќР°С‡РёСЃР»РµРЅРѕ: {referralStats?.earned_rub || 0} в‚Ѕ</div>
+                <div className="stat">РљРѕРјРёСЃСЃРёСЏ: {referralStats?.commission_percent || 10}%</div>
               </div>
             </article>
 
             <article className="card">
-              <h3>Список рефералов</h3>
+              <h3>РЎРїРёСЃРѕРє СЂРµС„РµСЂР°Р»РѕРІ</h3>
               <ul className="list">
                 {referralList.map((r, i) => (
-                  <li key={`${r.invitee_id}-${i}`}>@{r.username || "-"} +{r.earned_rub} ?</li>
+                  <li key={`${r.invitee_id}-${i}`}>@{r.username || "-"} +{r.earned_rub} в‚Ѕ</li>
                 ))}
-                {!referralList.length && <li>Рефералов пока нет</li>}
+                {!referralList.length && <li>Р РµС„РµСЂР°Р»РѕРІ РїРѕРєР° РЅРµС‚</li>}
               </ul>
             </article>
           </section>
@@ -519,11 +519,11 @@ export default function App() {
           <section className="page">
             {!docHtml && (
               <article className="card">
-                <h3>Документы</h3>
+                <h3>Р”РѕРєСѓРјРµРЅС‚С‹</h3>
                 <div className="doc-links">
-                  <button className="link-btn" onClick={() => openDoc("terms", "Пользовательское соглашение")}>Пользовательское соглашение</button>
-                  <button className="link-btn" onClick={() => openDoc("privacy", "Политика конфиденциальности")}>Политика конфиденциальности</button>
-                  <button className="link-btn" onClick={() => openDoc("acceptable_use", "Правила использования")}>Правила использования</button>
+                  <button className="link-btn" onClick={() => openDoc("terms", "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРµ СЃРѕРіР»Р°С€РµРЅРёРµ")}>РџРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРµ СЃРѕРіР»Р°С€РµРЅРёРµ</button>
+                  <button className="link-btn" onClick={() => openDoc("privacy", "РџРѕР»РёС‚РёРєР° РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё")}>РџРѕР»РёС‚РёРєР° РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё</button>
+                  <button className="link-btn" onClick={() => openDoc("acceptable_use", "РџСЂР°РІРёР»Р° РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ")}>РџСЂР°РІРёР»Р° РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ</button>
                 </div>
               </article>
             )}
@@ -531,7 +531,7 @@ export default function App() {
               <article className="card">
                 <div className="row between">
                   <h3>{docTitle}</h3>
-                  <button onClick={() => { setDocHtml(""); setDocTitle(""); }}>Назад</button>
+                  <button onClick={() => { setDocHtml(""); setDocTitle(""); }}>РќР°Р·Р°Рґ</button>
                 </div>
                 <div className="doc-view" dangerouslySetInnerHTML={{ __html: docHtml }} />
               </article>
