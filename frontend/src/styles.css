@@ -691,7 +691,7 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 .intro-cards-grid {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-bottom: 14px;
 }
 
@@ -704,24 +704,6 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 
 .intro-chip-card h4 { margin: 0 0 6px; font-size: 14px; }
 .intro-chip-card .value { font-weight: 800; font-size: 24px; }
-.service-chip-card {
-  background: linear-gradient(165deg, #f6fbf1, #eef7e7);
-  border-color: #d1e2c7;
-}
-
-.service-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.service-tags span {
-  border-radius: 999px;
-  border: 1px solid #cfe0c6;
-  padding: 4px 8px;
-  font-size: 12px;
-  background: #ffffff;
-}
 .trial-highlight {
   background: linear-gradient(160deg, #fffaf0, #ffe7aa);
   border-color: #efc661;
