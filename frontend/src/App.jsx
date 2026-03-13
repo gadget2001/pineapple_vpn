@@ -22,22 +22,22 @@ const OS_OPTIONS = [
 
 const INTRO_SLIDES = [
   {
-    badge: "\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u044c",
-    title: "\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u044b\u0439 \u0434\u043e\u0441\u0442\u0443\u043f \u043a \u0440\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0438\u043c \u0441\u0435\u0440\u0432\u0438\u0441\u0430\u043c \u0438\u0437 \u043b\u044e\u0431\u043e\u0439 \u0442\u043e\u0447\u043a\u0438 \u043c\u0438\u0440\u0430",
-    text: "\u0414\u043e\u0441\u0442\u0443\u043f \u043a \u0432\u0430\u0436\u043d\u044b\u043c \u0440\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0438\u043c \u0441\u0435\u0440\u0432\u0438\u0441\u0430\u043c \u043f\u0440\u0438 \u043f\u043e\u0435\u0437\u0434\u043a\u0430\u0445 \u0438 \u0436\u0438\u0437\u043d\u0438 \u0437\u0430 \u0433\u0440\u0430\u043d\u0438\u0446\u0435\u0439.",
-    points: ["\u0421\u0442\u0430\u0431\u0438\u043b\u044c\u043d\u044b\u0439 \u0434\u043e\u0441\u0442\u0443\u043f", "\u0417\u0430\u0449\u0438\u0449\u0435\u043d\u043d\u044b\u0439 \u043a\u0430\u043d\u0430\u043b", "\u0414\u043b\u044f \u0435\u0436\u0435\u0434\u043d\u0435\u0432\u043d\u043e\u0433\u043e \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0438\u044f"],
+    badge: "Безопасность",
+    title: "Безопасный доступ из любой точки мира",
+    text: "Доступ к важным российским сервисам при поездках и жизни за границей.",
+    points: ["Стабильный доступ", "Защищенный канал", "Для ежедневного использования"],
   },
   {
-    badge: "\u0421\u0435\u0440\u0432\u0438\u0441\u044b",
-    title: "\u0420\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0441 \u0431\u0430\u043d\u043a\u0430\u043c\u0438, \u0413\u043e\u0441\u0443\u0441\u043b\u0443\u0433\u0430\u043c\u0438 \u0438 \u0416\u041a\u0425",
-    text: "\u041f\u043e\u0434\u0445\u043e\u0434\u0438\u0442 \u0434\u043b\u044f \u0444\u0438\u043d\u0430\u043d\u0441\u043e\u0432\u044b\u0445, \u0433\u043e\u0441\u0443\u0434\u0430\u0440\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0445 \u0438 \u0440\u0430\u0431\u043e\u0447\u0438\u0445 \u0437\u0430\u0434\u0430\u0447.",
-    points: ["\u0411\u0430\u043d\u043a\u0438", "\u0413\u043e\u0441\u0443\u0441\u043b\u0443\u0433\u0438", "\u0416\u041a\u0425-\u0441\u0435\u0440\u0432\u0438\u0441\u044b"],
+    badge: "Сервисы",
+    title: "Работает со всеми сервисами РФ",
+    text: "Подходит для финансовых, государственных и рабочих задач.",
+    points: ["Банки", "Госуслуги", "ЖКХ-сервисы"],
   },
   {
-    badge: "\u0411\u044b\u0441\u0442\u0440\u044b\u0439 \u0441\u0442\u0430\u0440\u0442",
-    title: "\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u0437\u0430\u043d\u0438\u043c\u0430\u0435\u0442 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u043c\u0438\u043d\u0443\u0442",
-    text: "\u041c\u0430\u0441\u0442\u0435\u0440 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f \u043f\u043e\u043c\u043e\u0436\u0435\u0442 \u043f\u0440\u043e\u0439\u0442\u0438 \u0432\u0441\u0435 \u0448\u0430\u0433\u0438 \u0431\u0435\u0437 \u0441\u043b\u043e\u0436\u043d\u043e\u0441\u0442\u0435\u0439.",
-    points: ["\u041f\u043e\u0448\u0430\u0433\u043e\u0432\u044b\u0439 \u043c\u0430\u0441\u0442\u0435\u0440", "\u041a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u0441\u0441\u044b\u043b\u043a\u0438 \u0438 QR", "\u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430 \u0432 \u043e\u0434\u0438\u043d \u043a\u043b\u0438\u043a"],
+    badge: "Быстрый старт",
+    title: "Подключение занимает несколько минут",
+    text: "Мастер подключения поможет пройти все шаги без сложностей.",
+    points: ["Пошаговый мастер", "Копирование ссылки и QR", "Поддержка в один клик"],
   },
 ];
 
@@ -112,29 +112,29 @@ function onboardingTitle(step) {
 function configInstructionByOs(os) {
   if (os === "iphone") {
     return [
-      "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435 Streisand.",
-      "\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u00ab\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e\u00bb.",
-      "\u0412\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u0441\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u0443\u044e \u0441\u0441\u044b\u043b\u043a\u0443 \u0438 \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u0435.",
+      "Откройте приложение Streisand.",
+      "Нажмите «Добавить конфигурацию».",
+      "Вставьте скопированную ссылку и сохраните.",
     ];
   }
   if (os === "windows") {
     return [
-      "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 NekoRay.",
-      "\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 subscription \u0441\u0441\u044b\u043b\u043a\u0443.",
-      "\u041e\u0431\u043d\u043e\u0432\u0438\u0442\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438 \u0438 \u0432\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435.",
+      "Откройте NekoRay.",
+      "Добавьте subscription ссылку.",
+      "Обновите конфигурации и включите подключение.",
     ];
   }
   if (os === "android") {
     return [
-      "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 v2rayNG.",
-      "\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 subscription \u0441\u0441\u044b\u043b\u043a\u0443.",
-      "\u041e\u0431\u043d\u043e\u0432\u0438\u0442\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438 \u0438 \u0432\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435.",
+      "Откройте v2rayNG.",
+      "Добавьте subscription ссылку.",
+      "Обновите конфигурации и включите подключение.",
     ];
   }
   return [
-    "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043a\u043b\u0438\u0435\u043d\u0442 \u0434\u043b\u044f \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f.",
-    "\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 subscription \u0441\u0441\u044b\u043b\u043a\u0443.",
-    "\u041e\u0431\u043d\u043e\u0432\u0438\u0442\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e \u0438 \u0432\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435.",
+    "Откройте клиент для подключения.",
+    "Добавьте subscription ссылку.",
+    "Обновите конфигурацию и включите подключение.",
   ];
 }
 
@@ -298,7 +298,7 @@ export default function App() {
     loadVpnConfig().catch(() => {});
   }, [tab, token, status, vpnConfig]);
 
-  const copy = async (text, notice = "\u0421\u0441\u044b\u043b\u043a\u0430 \u0441\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0430") => {
+  const copy = async (text, notice = "Ссылка скопирована") => {
     if (!text) return;
     await navigator.clipboard.writeText(text);
     setCopyNotice(notice);
@@ -584,21 +584,21 @@ export default function App() {
               </div>
               <div className="intro-cards-grid">
                 <div className="intro-chip-card trial-highlight">
-                  <h4>{"\u041f\u0440\u043e\u0431\u043d\u044b\u0439 \u043f\u0435\u0440\u0438\u043e\u0434"}</h4>
-                  <div className="value">{trialDays} {"\u0434\u043d."}</div>
-                  <small>{trialDays > 3 ? "\u041f\u043e \u0440\u0435\u0444\u0435\u0440\u0430\u043b\u044c\u043d\u043e\u0439 \u0441\u0441\u044b\u043b\u043a\u0435" : "\u0421\u0442\u0430\u043d\u0434\u0430\u0440\u0442\u043d\u044b\u0439 \u0434\u043e\u0441\u0442\u0443\u043f"}</small>
+                  <h4>{"Пробный период"}</h4>
+                  <div className="value">{trialDays} {"дн."}</div>
+                  <small>{trialDays > 3 ? "По реферальной ссылке" : "Стандартный доступ"}</small>
                 </div>
                 <div className="intro-chip-card">
-                  <h4>{"\u0422\u0430\u0440\u0438\u0444\u044b"}</h4>
-                  <div className="tariff-line"><span>{"\u041d\u0435\u0434\u0435\u043b\u044f"}</span><strong>74 {"\u20BD"}</strong></div>
-                  <div className="tariff-line"><span>{"\u041c\u0435\u0441\u044f\u0446"}</span><strong>149 {"\u20BD"}</strong></div>
+                  <h4>{"Тарифы"}</h4>
+                  <div className="tariff-line"><span>{"Неделя"}</span><strong>74 {"₽"}</strong></div>
+                  <div className="tariff-line"><span>{"Месяц"}</span><strong>149 {"₽"}</strong></div>
                 </div>
                 <div className="intro-chip-card">
-                  <h4>{"\u0421\u043f\u043e\u0441\u043e\u0431\u044b \u043e\u043f\u043b\u0430\u0442\u044b"}</h4>
-                  <div className="pay-icons"><span>{"\u0421\u0411\u041f"}</span><span>{"\u041a\u0430\u0440\u0442\u0430"}</span><span>SberPay</span></div>
+                  <h4>{"Способы оплаты"}</h4>
+                  <div className="pay-icons"><span>{"СБП"}</span><span>{"Карта"}</span><span>SberPay</span></div>
                 </div>
               </div>
-              <button className="cta-main" onClick={startIntroFlow}>{"\u041d\u0430\u0447\u0430\u0442\u044c \u043f\u0440\u043e\u0431\u043d\u044b\u0439 \u043f\u0435\u0440\u0438\u043e\u0434"}</button>
+              <button className="cta-main" onClick={startIntroFlow}>{"Начать пробный период"}</button>
             </article>
           </section>
         )}
@@ -693,31 +693,31 @@ export default function App() {
                   {configGenerating && (
                     <div className="config-loader-screen">
                       <div className="loader-spinner" />
-                      <h3>{"\u0413\u043e\u0442\u043e\u0432\u0438\u043c \u0432\u0430\u0448\u0443 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e VPN"}</h3>
-                      <p>{"\u042d\u0442\u043e \u043c\u043e\u0436\u0435\u0442 \u0437\u0430\u043d\u044f\u0442\u044c \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u0441\u0435\u043a\u0443\u043d\u0434"}</p>
+                      <h3>{"Готовим вашу конфигурацию VPN"}</h3>
+                      <p>{"Это может занять несколько секунд"}</p>
                     </div>
                   )}
 
                   {!configGenerating && !setupSubscriptionUrl && (
                     <>
-                      <p>{"\u041e\u0441\u0442\u0430\u043b\u043e\u0441\u044c \u043f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u043b\u044c\u043d\u0443\u044e \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e \u0438 \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0435\u0435 \u0432 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435."}</p>
-                      <button disabled={loading} onClick={onboardingGetConfig}>{"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e"}</button>
+                      <p>{"Осталось получить персональную конфигурацию и добавить ее в приложение."}</p>
+                      <button disabled={loading} onClick={onboardingGetConfig}>{"Получить конфигурацию"}</button>
                     </>
                   )}
 
                   {!configGenerating && !!setupSubscriptionUrl && (
                     <div className="vpn-ready-layout">
-                      <h3>{"\u0412\u0430\u0448 VPN \u0433\u043e\u0442\u043e\u0432"}</h3>
-                      <p className="muted">{"\u041e\u0441\u0442\u0430\u043b\u043e\u0441\u044c \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e \u0432 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435"}</p>
+                      <h3>{"Ваш VPN готов"}</h3>
+                      <p className="muted">{"Осталось добавить конфигурацию в приложение"}</p>
 
                       <div className="config-box">
                         <div className="config-item">
-                          <label>{"\u041a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044f VPN"}</label>
+                          <label>{"Конфигурация VPN"}</label>
                           <textarea readOnly value={setupSubscriptionUrl} rows={4} />
                         </div>
                         <div className="row wrap-row">
-                          <button onClick={() => copy(setupSubscriptionUrl)}>{"\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e"}</button>
-                          <button className="soft-btn" onClick={() => setShowQr((v) => !v)}>{showQr ? "\u0421\u043a\u0440\u044b\u0442\u044c QR \u043a\u043e\u0434" : "\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c QR \u043a\u043e\u0434"}</button>
+                          <button onClick={() => copy(setupSubscriptionUrl)}>{"Скопировать конфигурацию"}</button>
+                          <button className="soft-btn" onClick={() => setShowQr((v) => !v)}>{showQr ? "Скрыть QR код" : "Показать QR код"}</button>
                         </div>
                         {showQr && (
                           <div className="qr-wrap">
@@ -727,7 +727,7 @@ export default function App() {
                       </div>
 
                       <article className="mini-instruction">
-                        <h4>{"\u041a\u0430\u043a \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u044c VPN"}</h4>
+                        <h4>{"Как подключить VPN"}</h4>
                         <ol className="steps clean">
                           {configHelp.map((line, idx) => (
                             <li key={idx} className="pending">{line}</li>
@@ -735,13 +735,13 @@ export default function App() {
                         </ol>
                       </article>
 
-                      <button onClick={onboardingComplete} disabled={loading}>{"\u042f \u0434\u043e\u0431\u0430\u0432\u0438\u043b \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e"}</button>
+                      <button onClick={onboardingComplete} disabled={loading}>{"Я добавил конфигурацию"}</button>
 
                       <div className="help-box">
-                        <strong>{"\u041d\u0435 \u043f\u043e\u043b\u0443\u0447\u0430\u0435\u0442\u0441\u044f \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u044c\u0441\u044f?"}</strong>
+                        <strong>{"Не получается подключиться?"}</strong>
                         <div className="row wrap-row">
-                          <button className="soft-btn" onClick={() => setTab("help")}>{"\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0438\u043d\u0441\u0442\u0440\u0443\u043a\u0446\u0438\u044e"}</button>
-                          <a className="soft-link" href={SUPPORT_URL} target="_blank" rel="noreferrer">{"\u041d\u0430\u043f\u0438\u0441\u0430\u0442\u044c \u0432 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0443"}</a>
+                          <button className="soft-btn" onClick={() => setTab("help")}>{"Открыть инструкцию"}</button>
+                          <a className="soft-link" href={SUPPORT_URL} target="_blank" rel="noreferrer">{"Написать в поддержку"}</a>
                         </div>
                       </div>
                     </div>
