@@ -58,6 +58,7 @@ async def accept_consent(
     if payload.os:
         user.onboarding_os = payload.os.strip().lower()[:32]
 
+    user.onboarding_step = "trial_offer"
     db.commit()
 
     log_audit(db, user.id, "terms_accepted", {"os": user.onboarding_os})
@@ -125,11 +126,24 @@ def account_overview(
     referral_link = f"{settings.telegram_miniapp_url}?startapp={user.referral_code}"
 
     onboarding = {
+        "step": user.onboarding_step or "welcome",
+        "step_index": {
+            "welcome": 1,
+            "trial_offer": 2,
+            "device_select": 3,
+            "install_app": 4,
+            "get_config": 5,
+            "complete": 6,
+            "done": 6,
+        }.get(user.onboarding_step or "welcome", 1),
+        "total_steps": 6,
         "terms_accepted": user.terms_accepted_at is not None,
         "terms_accepted_at": user.terms_accepted_at,
         "os": user.onboarding_os,
         "trial_available": not trial_used,
-        "wallet_ready": user.wallet_balance_rub >= 74,
+        "install_confirmed": user.onboarding_install_confirmed_at is not None,
+        "completed": user.onboarding_completed_at is not None,
+        "completed_at": user.onboarding_completed_at,
         "has_active_subscription": active,
         "vpn_ready": bool(vpn_profile),
     }

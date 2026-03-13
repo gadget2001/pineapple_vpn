@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+﻿from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -37,8 +37,8 @@ PLAN_DAYS = {
 )
 def list_plans():
     return [
-        SubscriptionPlan(code="week", title="Week", price_rub=74, duration_days=7),
-        SubscriptionPlan(code="month", title="Month", price_rub=149, duration_days=30),
+        SubscriptionPlan(code="week", title="Неделя", price_rub=74, duration_days=7),
+        SubscriptionPlan(code="month", title="Месяц", price_rub=149, duration_days=30),
     ]
 
 
@@ -89,7 +89,6 @@ async def activate_trial(
         is not None
     )
     if user.trial_activated_at or trial_exists:
-        # Backfill marker for legacy users where trial_activated_at is still NULL.
         if not user.trial_activated_at and trial_exists:
             first_trial = (
                 db.query(Subscription)
@@ -121,6 +120,8 @@ async def activate_trial(
         ends_at=ends_at,
     )
     user.trial_activated_at = now
+    if user.onboarding_step in ("welcome", "trial_offer"):
+        user.onboarding_step = "device_select"
     db.add(trial_sub)
     db.commit()
 

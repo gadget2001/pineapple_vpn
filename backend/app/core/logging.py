@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+﻿from datetime import datetime, timezone
 from typing import Any, Dict
 from urllib.parse import unquote
 
@@ -10,13 +10,21 @@ from app.core.config import settings
 ACTION_TITLES = {
     "first_start": "Первый запуск бота",
     "registration": "Регистрация пользователя",
+    "terms_accepted": "Согласие с правилами",
     "trial_activated": "Активация пробного периода",
     "wallet_topup": "Пополнение кошелька",
     "subscription_activated": "Активация подписки",
     "subscription_expired": "Окончание подписки",
     "vpn_disabled": "Отключение VPN",
     "vpn_config_created": "Создан VPN-конфиг",
+    "onboarding_platform_selected": "Выбор устройства в onboarding",
+    "onboarding_instruction_viewed": "Просмотр инструкции подключения",
+    "onboarding_app_installed": "Подтверждена установка приложения",
+    "onboarding_config_received": "Получена VPN-конфигурация",
+    "onboarding_completed": "Onboarding завершен",
+    "onboarding_restarted": "Повторная настройка устройства",
     "payment_error": "Ошибка платежа",
+    "user_purged": "Пользователь удален для теста",
 }
 
 
@@ -99,5 +107,3 @@ def send_admin_log_sync(action: str, user_id: int | None, username: str | None, 
         json={"chat_id": settings.admin_chat_id, "text": text, "disable_web_page_preview": True},
         timeout=10,
     )
-
-

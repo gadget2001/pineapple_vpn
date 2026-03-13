@@ -7,9 +7,8 @@ from app.core.logging import send_admin_log
 from app.db.session import get_db
 from app.models.subscription import Subscription
 from app.models.user import User
-from app.models.vpn_profile import VPNProfile
 from app.schemas.vpn import VPNConfigOut
-from app.services.vpn_panel import create_vpn_user
+from app.services.vpn_profile import get_or_create_vpn_profile, marzban_error
 from app.utils.audit import log_audit
 
 router = APIRouter(prefix="/vpn", tags=["VPN"])
@@ -37,24 +36,12 @@ async def get_config(
     if not sub:
         raise HTTPException(status_code=402, detail="Subscription required")
 
-    profile = db.query(VPNProfile).filter(VPNProfile.user_id == user.id).first()
-    if not profile:
-        try:
-            panel_data = await create_vpn_user(user.telegram_id, user.username)
-        except httpx.HTTPStatusError as exc:
-            detail = exc.response.text if exc.response is not None else str(exc)
-            raise HTTPException(status_code=502, detail=f"Marzban API error: {detail}") from exc
-        profile = VPNProfile(
-            user_id=user.id,
-            uuid=panel_data.get("uuid", ""),
-            vless_url=panel_data.get("vless_url", ""),
-            subscription_url=panel_data.get("subscription_url", ""),
-            reality_public_key=panel_data.get("reality_public_key"),
-        )
-        db.add(profile)
-        db.commit()
-        db.refresh(profile)
+    try:
+        profile, created = await get_or_create_vpn_profile(db, user)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=502, detail=marzban_error(exc)) from exc
 
+    if created:
         await send_admin_log(
             "vpn_config_created",
             user.telegram_id,

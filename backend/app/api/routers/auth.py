@@ -1,4 +1,4 @@
-import json
+﻿import json
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -27,7 +27,7 @@ class TelegramAuthRequest(BaseModel):
     "/telegram",
     response_model=Token,
     summary="Авторизация через Telegram MiniApp",
-    description="Принимает `init_data` из Telegram WebApp, проверяет подпись и выдает JWT токен для работы с API.",
+    description="Принимает init_data из Telegram WebApp, проверяет подпись и выдает JWT-токен.",
 )
 async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_db)):
     try:
@@ -52,6 +52,7 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
                 first_name=first_name,
                 last_name=last_name,
                 referral_code=f"ref_{telegram_id}",
+                onboarding_step="welcome",
             )
             inviter = None
             if payload.referral_code:
@@ -91,7 +92,7 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
     "/me",
     response_model=UserOut,
     summary="Текущий пользователь",
-    description="Возвращает данные авторизованного пользователя по JWT токену.",
+    description="Возвращает данные авторизованного пользователя по JWT-токену.",
 )
 def get_me(user: User = Depends(get_current_user)):
     return user
