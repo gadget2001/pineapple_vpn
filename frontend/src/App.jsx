@@ -256,11 +256,8 @@ export default function App() {
       setShowIntro(false);
       return;
     }
-    const userId = overview?.user?.telegram_id;
-    if (!userId) return;
-    const key = `pineapple_intro_seen_${userId}`;
-    setShowIntro(localStorage.getItem(key) !== "1");
-  }, [showOnboarding, onboarding?.step, overview?.user?.telegram_id]);
+    setShowIntro(true);
+  }, [showOnboarding, onboarding?.step]);
 
   useEffect(() => {
     const loadInstructionIfNeeded = async () => {
@@ -301,8 +298,6 @@ export default function App() {
   };
 
   const startIntroFlow = () => {
-    const userId = overview?.user?.telegram_id;
-    if (userId) localStorage.setItem(`pineapple_intro_seen_${userId}`, "1");
     setShowIntro(false);
   };
 
@@ -662,15 +657,13 @@ export default function App() {
                       <h3>{"\u0412\u0430\u0448 VPN \u0433\u043e\u0442\u043e\u0432"}</h3>
                       <p className="muted">{"\u041e\u0441\u0442\u0430\u043b\u043e\u0441\u044c \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e \u0432 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435"}</p>
 
-                      <button className="cta-main" onClick={() => copy(setupSubscriptionUrl, "\u0421\u0441\u044b\u043b\u043a\u0430 \u0441\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0430")}>{"\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e"}</button>
-
                       <div className="config-box">
                         <div className="config-item">
                           <label>{"\u041a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044f VPN"}</label>
                           <textarea readOnly value={setupSubscriptionUrl} rows={4} />
                         </div>
                         <div className="row wrap-row">
-                          <button onClick={() => copy(setupSubscriptionUrl)}>{"\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u0441\u044b\u043b\u043a\u0443"}</button>
+                          <button onClick={() => copy(setupSubscriptionUrl)}>{"\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e"}</button>
                           <button className="soft-btn" onClick={() => setShowQr((v) => !v)}>{showQr ? "\u0421\u043a\u0440\u044b\u0442\u044c QR \u043a\u043e\u0434" : "\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c QR \u043a\u043e\u0434"}</button>
                         </div>
                         {showQr && (
@@ -836,7 +829,8 @@ export default function App() {
 
             <article className="card">
               <h3>Подключить новое устройство</h3>
-              <p className="muted">Запустите короткий мастер: выбор устройства, инструкция и импорт ссылки.</p>
+              <p className="muted">Поможем быстро настроить VPN на новом устройстве: выбор ОС, установка клиента и импорт конфигурации.</p>
+              <p className="muted">Доступные ОС: Windows, iPhone, Android, macOS.</p>
               <button disabled={loading} onClick={startDeviceFlow}>Запустить мастер подключения</button>
             </article>
           </section>
