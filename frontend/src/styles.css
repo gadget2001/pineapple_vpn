@@ -640,7 +640,7 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 .intro-carousel {
   position: relative;
   margin-bottom: 2px;
-  min-height: 250px;
+  min-height: 220px;
 }
 
 .intro-copy {
@@ -775,7 +775,7 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   border: 1px solid #e2dcc6;
   background: linear-gradient(180deg, #fffef9, #fffaf0);
   padding: 14px 14px 12px;
-  min-height: 238px;
+  min-height: 205px;
   display: grid;
   grid-template-rows: auto auto auto 1fr;
   gap: 8px;
@@ -820,8 +820,8 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 @media (max-width: 640px) {
   .intro-illustration { height: 148px; }
   .intro-copy { padding: 0 38px; }
-  .intro-carousel { min-height: 285px; }
-  .intro-slide-card { min-height: 270px; }
+  .intro-carousel { min-height: 245px; }
+  .intro-slide-card { min-height: 225px; }
   .intro-slide-card h2 { font-size: 18px; }
   .intro-visual strong { font-size: 28px; }
   .intro-visual span { font-size: 14px; }
