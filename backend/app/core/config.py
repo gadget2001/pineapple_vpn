@@ -34,7 +34,9 @@ class Settings(BaseSettings):
     yookassa_webhook_secret: str
 
     panel_url: str
-    panel_token: str
+    panel_token: str = ""
+    panel_username: str = ""
+    panel_password: str = ""
     panel_inbound_name: str = "VLESS TCP REALITY"
     vpn_limit_mbps: int = 50
     vpn_max_connections: int = 2

@@ -1,12 +1,71 @@
-from typing import Any, Dict
+﻿from typing import Any, Dict
 
 import httpx
 
 from app.core.config import settings
 
 
+_cached_panel_token: str = settings.panel_token or ""
+
+
 def _normalize_panel_url() -> str:
     return settings.panel_url.rstrip("/")
+
+
+def _auth_headers(token: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {token}"}
+
+
+async def _refresh_panel_token(client: httpx.AsyncClient) -> str:
+    global _cached_panel_token
+
+    if not settings.panel_username or not settings.panel_password:
+        raise httpx.HTTPStatusError(
+            "Could not validate credentials. Configure PANEL_TOKEN or PANEL_USERNAME/PANEL_PASSWORD.",
+            request=httpx.Request("POST", f"{_normalize_panel_url()}/api/admin/token"),
+            response=httpx.Response(401, text="Missing panel credentials"),
+        )
+
+    response = await client.post(
+        f"{_normalize_panel_url()}/api/admin/token",
+        data={
+            "username": settings.panel_username,
+            "password": settings.panel_password,
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    response.raise_for_status()
+
+    payload = response.json() if response.content else {}
+    token = payload.get("access_token") or payload.get("token")
+    if not token:
+        raise httpx.HTTPStatusError(
+            "Marzban token response does not contain access_token",
+            request=response.request,
+            response=httpx.Response(401, text=str(payload)),
+        )
+
+    _cached_panel_token = str(token)
+    return _cached_panel_token
+
+
+async def _request_with_auth(
+    client: httpx.AsyncClient,
+    method: str,
+    path: str,
+    *,
+    retry_on_401: bool = True,
+    **kwargs,
+) -> httpx.Response:
+    global _cached_panel_token
+
+    token = _cached_panel_token or settings.panel_token
+    response = await client.request(method, f"{_normalize_panel_url()}{path}", headers=_auth_headers(token), **kwargs)
+    if response.status_code != 401 or not retry_on_401:
+        return response
+
+    token = await _refresh_panel_token(client)
+    return await client.request(method, f"{_normalize_panel_url()}{path}", headers=_auth_headers(token), **kwargs)
 
 
 def _extract_profile(response_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -33,27 +92,20 @@ def _extract_profile(response_data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 async def _get_existing_user(client: httpx.AsyncClient, username: str) -> Dict[str, Any] | None:
-    response = await client.get(
-        f"{_normalize_panel_url()}/api/user/{username}",
-        headers={"Authorization": f"Bearer {settings.panel_token}"},
-    )
+    response = await _request_with_auth(client, "GET", f"/api/user/{username}")
     if response.is_success:
         return response.json()
     return None
 
 
 async def _get_vless_inbounds(client: httpx.AsyncClient) -> list[str]:
-    response = await client.get(
-        f"{_normalize_panel_url()}/api/inbounds",
-        headers={"Authorization": f"Bearer {settings.panel_token}"},
-    )
+    response = await _request_with_auth(client, "GET", "/api/inbounds")
     if not response.is_success:
         return []
 
     data = response.json()
     names: list[str] = []
 
-    # Format 1: list of inbounds [{"tag":"...", "protocol":"vless"}]
     if isinstance(data, list):
         for inbound in data:
             if not isinstance(inbound, dict):
@@ -67,7 +119,6 @@ async def _get_vless_inbounds(client: httpx.AsyncClient) -> list[str]:
     if not isinstance(data, dict):
         return names
 
-    # Format 2: {"inbounds":[...]}
     inbounds = data.get("inbounds")
     if isinstance(inbounds, list):
         for inbound in inbounds:
@@ -78,7 +129,6 @@ async def _get_vless_inbounds(client: httpx.AsyncClient) -> list[str]:
             if tag and protocol == "vless":
                 names.append(str(tag))
 
-    # Format 3: {"vless":[{"tag":"..."}, "TAG"]} or {"vless":{"TAG": {...}}}
     vless_block = data.get("vless")
     if isinstance(vless_block, list):
         for item in vless_block:
@@ -97,7 +147,6 @@ async def _get_vless_inbounds(client: httpx.AsyncClient) -> list[str]:
             elif isinstance(key, str):
                 names.append(key)
 
-    # De-duplicate preserving order
     return list(dict.fromkeys([n for n in names if n]))
 
 
@@ -112,8 +161,6 @@ async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, A
         discovered_inbounds = await _get_vless_inbounds(client)
         inbound_candidates = [settings.panel_inbound_name]
         inbound_candidates.extend(discovered_inbounds)
-
-        # Remove duplicates while preserving order
         unique_inbounds = list(dict.fromkeys([i for i in inbound_candidates if i]))
 
         base_payload = {
@@ -130,11 +177,7 @@ async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, A
         last_error: str | None = None
         for inbound_name in unique_inbounds:
             payload = {**base_payload, "inbounds": {"vless": [inbound_name]}}
-            response = await client.post(
-                f"{_normalize_panel_url()}/api/user",
-                headers={"Authorization": f"Bearer {settings.panel_token}"},
-                json=payload,
-            )
+            response = await _request_with_auth(client, "POST", "/api/user", json=payload)
             if response.is_success:
                 details = await _get_existing_user(client, uname)
                 return _extract_profile(details or response.json())
@@ -156,7 +199,4 @@ async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, A
 
 async def disable_vpn_user(telegram_id: int):
     async with httpx.AsyncClient(timeout=15) as client:
-        await client.post(
-            f"{_normalize_panel_url()}/api/user/disable/tg_{telegram_id}",
-            headers={"Authorization": f"Bearer {settings.panel_token}"},
-        )
+        await _request_with_auth(client, "POST", f"/api/user/disable/tg_{telegram_id}")
