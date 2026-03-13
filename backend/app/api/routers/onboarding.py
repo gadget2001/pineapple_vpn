@@ -362,7 +362,8 @@ async def get_onboarding_config(
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=502, detail=marzban_error(exc)) from exc
 
-    user.onboarding_step = "complete"
+    # Keep user on config step until manual confirmation
+    user.onboarding_step = "get_config"
     db.commit()
 
     if created:
@@ -444,3 +445,4 @@ async def restart_device_flow(
     )
 
     return _state(db, user)
+

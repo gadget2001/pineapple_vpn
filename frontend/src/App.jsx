@@ -1,4 +1,5 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 const PANEL_BASE = import.meta.env.VITE_PANEL_BASE_URL || "https://panelpineapple.ambot24.ru";
@@ -17,6 +18,12 @@ const OS_OPTIONS = [
   { id: "iphone", title: "iPhone", app: "Streisand" },
   { id: "android", title: "Android", app: "v2rayNG" },
   { id: "macos", title: "macOS", app: "Streisand" },
+];
+
+const INTRO_SLIDES = [
+  { title: "\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u044b\u0439 \u0434\u043e\u0441\u0442\u0443\u043f \u043a \u0440\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0438\u043c \u0441\u0435\u0440\u0432\u0438\u0441\u0430\u043c \u0438\u0437 \u043b\u044e\u0431\u043e\u0439 \u0442\u043e\u0447\u043a\u0438 \u043c\u0438\u0440\u0430", text: "\u0414\u043e\u0441\u0442\u0443\u043f \u043a \u0432\u0430\u0436\u043d\u044b\u043c \u0440\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0438\u043c \u0441\u0435\u0440\u0432\u0438\u0441\u0430\u043c \u043f\u0440\u0438 \u043f\u043e\u0435\u0437\u0434\u043a\u0430\u0445 \u0438 \u0436\u0438\u0437\u043d\u0438 \u0437\u0430 \u0433\u0440\u0430\u043d\u0438\u0446\u0435\u0439." },
+  { title: "\u0420\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0441 \u0431\u0430\u043d\u043a\u0430\u043c\u0438, \u0413\u043e\u0441\u0443\u0441\u043b\u0443\u0433\u0430\u043c\u0438 \u0438 \u0416\u041a\u0425", text: "\u041f\u043e\u0434\u0445\u043e\u0434\u0438\u0442 \u0434\u043b\u044f \u0444\u0438\u043d\u0430\u043d\u0441\u043e\u0432\u044b\u0445, \u0433\u043e\u0441\u0443\u0434\u0430\u0440\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0445 \u0438 \u0440\u0430\u0431\u043e\u0447\u0438\u0445 \u0437\u0430\u0434\u0430\u0447." },
+  { title: "\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u0437\u0430\u043d\u0438\u043c\u0430\u0435\u0442 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u043c\u0438\u043d\u0443\u0442", text: "\u041c\u0430\u0441\u0442\u0435\u0440 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f \u043f\u043e\u043c\u043e\u0436\u0435\u0442 \u043f\u0440\u043e\u0439\u0442\u0438 \u0432\u0441\u0435 \u0448\u0430\u0433\u0438 \u0431\u0435\u0437 \u0441\u043b\u043e\u0436\u043d\u043e\u0441\u0442\u0435\u0439." },
 ];
 
 function useTelegram() {
@@ -86,6 +93,36 @@ function onboardingTitle(step) {
   return "Готово";
 }
 
+
+function configInstructionByOs(os) {
+  if (os === "iphone") {
+    return [
+      "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435 Streisand.",
+      "\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u00ab\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e\u00bb.",
+      "\u0412\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u0441\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u0443\u044e \u0441\u0441\u044b\u043b\u043a\u0443 \u0438 \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u0435.",
+    ];
+  }
+  if (os === "windows") {
+    return [
+      "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 NekoRay.",
+      "\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 subscription \u0441\u0441\u044b\u043b\u043a\u0443.",
+      "\u041e\u0431\u043d\u043e\u0432\u0438\u0442\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438 \u0438 \u0432\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435.",
+    ];
+  }
+  if (os === "android") {
+    return [
+      "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 v2rayNG.",
+      "\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 subscription \u0441\u0441\u044b\u043b\u043a\u0443.",
+      "\u041e\u0431\u043d\u043e\u0432\u0438\u0442\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u0438 \u0438 \u0432\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435.",
+    ];
+  }
+  return [
+    "\u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u043a\u043b\u0438\u0435\u043d\u0442 \u0434\u043b\u044f \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f.",
+    "\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 subscription \u0441\u0441\u044b\u043b\u043a\u0443.",
+    "\u041e\u0431\u043d\u043e\u0432\u0438\u0442\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e \u0438 \u0432\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435.",
+  ];
+}
+
 export default function App() {
   const tg = useTelegram();
 
@@ -107,6 +144,11 @@ export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingInstruction, setOnboardingInstruction] = useState(null);
   const [onboardingConfig, setOnboardingConfig] = useState(null);
+  const [configGenerating, setConfigGenerating] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const [copyNotice, setCopyNotice] = useState("");
+  const [showIntro, setShowIntro] = useState(false);
+  const [introSlide, setIntroSlide] = useState(0);
   const [consentChecked, setConsentChecked] = useState(false);
 
   const [topupAmount, setTopupAmount] = useState(100);
@@ -203,6 +245,17 @@ export default function App() {
   }, [token]);
 
   useEffect(() => {
+    if (!showOnboarding || onboarding?.step !== "welcome") {
+      setShowIntro(false);
+      return;
+    }
+    const userId = overview?.user?.telegram_id;
+    if (!userId) return;
+    const key = `pineapple_intro_seen_${userId}`;
+    setShowIntro(localStorage.getItem(key) !== "1");
+  }, [showOnboarding, onboarding?.step, overview?.user?.telegram_id]);
+
+  useEffect(() => {
     const loadInstructionIfNeeded = async () => {
       if (!showOnboarding || !token) return;
       if (onboarding?.step !== "install_app") return;
@@ -225,10 +278,11 @@ export default function App() {
     loadVpnConfig().catch(() => {});
   }, [tab, token, status, vpnConfig]);
 
-  const copy = async (text) => {
+  const copy = async (text, notice = "\u0421\u0441\u044b\u043b\u043a\u0430 \u0441\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0430") => {
     if (!text) return;
     await navigator.clipboard.writeText(text);
-    tg?.showPopup?.({ title: "Скопировано", message: "Текст скопирован", buttons: [{ type: "ok" }] });
+    setCopyNotice(notice);
+    window.setTimeout(() => setCopyNotice(""), 2000);
   };
 
   const openDoc = async (name, title) => {
@@ -237,6 +291,12 @@ export default function App() {
     const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     setDocTitle(title);
     setDocHtml(body ? body[1] : html);
+  };
+
+  const startIntroFlow = () => {
+    const userId = overview?.user?.telegram_id;
+    if (userId) localStorage.setItem(`pineapple_intro_seen_${userId}`, "1");
+    setShowIntro(false);
   };
 
   const topup = async () => {
@@ -371,6 +431,7 @@ export default function App() {
   };
 
   const onboardingGetConfig = async () => {
+    setConfigGenerating(true);
     setLoading(true);
     try {
       const config = await request("/onboarding/config", { method: "POST", headers: authHeaders });
@@ -381,6 +442,7 @@ export default function App() {
     } catch (e) {
       setAuthError(String(e.message));
     } finally {
+      setConfigGenerating(false);
       setLoading(false);
     }
   };
@@ -391,6 +453,7 @@ export default function App() {
       await request("/onboarding/complete", { method: "POST", headers: authHeaders });
       await loadAll();
       setShowOnboarding(false);
+      setShowQr(false);
       setTab("home");
     } catch (e) {
       setAuthError(String(e.message));
@@ -407,10 +470,12 @@ export default function App() {
   const onboardingStep = onboarding?.step || "welcome";
   const onboardingStepIndex = onboarding?.step_index || 1;
   const onboardingTotal = onboarding?.total_steps || 6;
+  const trialDays = onboarding?.trial_days || overview?.trial?.days || 3;
 
   const setupSubscriptionUrl = normalizeSubscriptionUrl(
     onboardingConfig?.subscription_url || vpnConfig?.subscription_url,
   );
+  const configHelp = configInstructionByOs(selectedOs);
 
   return (
     <div className="app-shell">
@@ -419,8 +484,49 @@ export default function App() {
 
       <main className="app-main">
         {authError && <div className="alert">{authError}</div>}
+        {copyNotice && <div className="toast-ok">{copyNotice}</div>}
 
-        {showOnboarding && (
+        {showOnboarding && showIntro && (
+          <section className="onboarding-shell pulse-in">
+            <article className="card intro-hero-card">
+              <div className="intro-illustration">
+                <span className="intro-bubble a" />
+                <span className="intro-bubble b" />
+                <span className="intro-bubble c" />
+              </div>
+              <h2>{INTRO_SLIDES[introSlide].title}</h2>
+              <p>{INTRO_SLIDES[introSlide].text}</p>
+              <div className="intro-dots">
+                {INTRO_SLIDES.map((_, idx) => (
+                  <button key={idx} className={`dot ${introSlide === idx ? "active" : ""}`} onClick={() => setIntroSlide(idx)} aria-label={`Слайд ${idx + 1}`} />
+                ))}
+              </div>
+              <div className="row wrap-row intro-nav">
+                <button className="soft-btn" disabled={introSlide === 0} onClick={() => setIntroSlide((v) => Math.max(0, v - 1))}>{"\u041d\u0430\u0437\u0430\u0434"}</button>
+                <button className="soft-btn" disabled={introSlide === INTRO_SLIDES.length - 1} onClick={() => setIntroSlide((v) => Math.min(INTRO_SLIDES.length - 1, v + 1))}>{"\u0414\u0430\u043b\u0435\u0435"}</button>
+              </div>
+              <div className="intro-cards-grid">
+                <div className="intro-chip-card">
+                  <h4>{"\u041f\u0440\u043e\u0431\u043d\u044b\u0439 \u043f\u0435\u0440\u0438\u043e\u0434"}</h4>
+                  <div className="value">{trialDays} {"\u0434\u043d."}</div>
+                  <small>{trialDays > 3 ? "\u041f\u043e \u0440\u0435\u0444\u0435\u0440\u0430\u043b\u044c\u043d\u043e\u0439 \u0441\u0441\u044b\u043b\u043a\u0435" : "\u0421\u0442\u0430\u043d\u0434\u0430\u0440\u0442\u043d\u044b\u0439 \u0434\u043e\u0441\u0442\u0443\u043f"}</small>
+                </div>
+                <div className="intro-chip-card">
+                  <h4>{"\u0422\u0430\u0440\u0438\u0444\u044b"}</h4>
+                  <div className="tariff-line"><span>{"\u041d\u0435\u0434\u0435\u043b\u044f"}</span><strong>74 {"\u20BD"}</strong></div>
+                  <div className="tariff-line"><span>{"\u041c\u0435\u0441\u044f\u0446"}</span><strong>149 {"\u20BD"}</strong></div>
+                </div>
+                <div className="intro-chip-card">
+                  <h4>{"\u0421\u043f\u043e\u0441\u043e\u0431\u044b \u043e\u043f\u043b\u0430\u0442\u044b"}</h4>
+                  <div className="pay-icons"><span>{"\u0421\u0411\u041f"}</span><span>{"\u041a\u0430\u0440\u0442\u0430"}</span><span>SberPay</span></div>
+                </div>
+              </div>
+              <button className="cta-main" onClick={startIntroFlow}>{"\u041d\u0430\u0447\u0430\u0442\u044c \u043f\u0440\u043e\u0431\u043d\u044b\u0439 \u043f\u0435\u0440\u0438\u043e\u0434"}</button>
+            </article>
+          </section>
+        )}
+
+        {showOnboarding && !showIntro && (
           <section className="onboarding-shell pulse-in">
             <article className="card onboarding-card">
               <div className="onboarding-progress-wrap">
@@ -507,19 +613,62 @@ export default function App() {
 
               {onboardingStep === "get_config" && (
                 <>
-                  <p>
-                    Последний шаг: получите персональную ссылку подключения и импортируйте ее в установленное приложение.
-                  </p>
-                  {!setupSubscriptionUrl && (
-                    <button disabled={loading} onClick={onboardingGetConfig}>Получить конфигурацию</button>
+                  {configGenerating && (
+                    <div className="config-loader-screen">
+                      <div className="loader-spinner" />
+                      <h3>{"\u0413\u043e\u0442\u043e\u0432\u0438\u043c \u0432\u0430\u0448\u0443 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e VPN"}</h3>
+                      <p>{"\u042d\u0442\u043e \u043c\u043e\u0436\u0435\u0442 \u0437\u0430\u043d\u044f\u0442\u044c \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u0441\u0435\u043a\u0443\u043d\u0434"}</p>
+                    </div>
                   )}
-                  {!!setupSubscriptionUrl && (
-                    <div className="config-box">
-                      <div className="config-item">
-                        <label>Ссылка подключения</label>
-                        <textarea readOnly value={setupSubscriptionUrl} rows={4} />
+
+                  {!configGenerating && !setupSubscriptionUrl && (
+                    <>
+                      <p>{"\u041e\u0441\u0442\u0430\u043b\u043e\u0441\u044c \u043f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u043b\u044c\u043d\u0443\u044e \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e \u0438 \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0435\u0435 \u0432 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435."}</p>
+                      <button disabled={loading} onClick={onboardingGetConfig}>{"\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e"}</button>
+                    </>
+                  )}
+
+                  {!configGenerating && !!setupSubscriptionUrl && (
+                    <div className="vpn-ready-layout">
+                      <h3>{"\u0412\u0430\u0448 VPN \u0433\u043e\u0442\u043e\u0432"}</h3>
+                      <p className="muted">{"\u041e\u0441\u0442\u0430\u043b\u043e\u0441\u044c \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e \u0432 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435"}</p>
+
+                      <button className="cta-main" onClick={() => copy(setupSubscriptionUrl, "\u0421\u0441\u044b\u043b\u043a\u0430 \u0441\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0430")}>{"\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e"}</button>
+
+                      <div className="config-box">
+                        <div className="config-item">
+                          <label>{"\u041a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044f VPN"}</label>
+                          <textarea readOnly value={setupSubscriptionUrl} rows={4} />
+                        </div>
+                        <div className="row wrap-row">
+                          <button onClick={() => copy(setupSubscriptionUrl)}>{"\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u0441\u044b\u043b\u043a\u0443"}</button>
+                          <button className="soft-btn" onClick={() => setShowQr((v) => !v)}>{showQr ? "\u0421\u043a\u0440\u044b\u0442\u044c QR \u043a\u043e\u0434" : "\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c QR \u043a\u043e\u0434"}</button>
+                        </div>
+                        {showQr && (
+                          <div className="qr-wrap">
+                            <QRCodeSVG value={setupSubscriptionUrl} size={210} level="M" includeMargin />
+                          </div>
+                        )}
                       </div>
-                      <button onClick={() => copy(setupSubscriptionUrl)}>Скопировать ссылку</button>
+
+                      <article className="mini-instruction">
+                        <h4>{"\u041a\u0430\u043a \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u044c VPN"}</h4>
+                        <ol className="steps clean">
+                          {configHelp.map((line, idx) => (
+                            <li key={idx} className="pending">{line}</li>
+                          ))}
+                        </ol>
+                      </article>
+
+                      <button onClick={onboardingComplete} disabled={loading}>{"\u042f \u0434\u043e\u0431\u0430\u0432\u0438\u043b \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e"}</button>
+
+                      <div className="help-box">
+                        <strong>{"\u041d\u0435 \u043f\u043e\u043b\u0443\u0447\u0430\u0435\u0442\u0441\u044f \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u044c\u0441\u044f?"}</strong>
+                        <div className="row wrap-row">
+                          <button className="soft-btn" onClick={() => setTab("help")}>{"\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0438\u043d\u0441\u0442\u0440\u0443\u043a\u0446\u0438\u044e"}</button>
+                          <a className="soft-link" href={SUPPORT_URL} target="_blank" rel="noreferrer">{"\u041d\u0430\u043f\u0438\u0441\u0430\u0442\u044c \u0432 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0443"}</a>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>
@@ -734,3 +883,4 @@ export default function App() {
     </div>
   );
 }
+
