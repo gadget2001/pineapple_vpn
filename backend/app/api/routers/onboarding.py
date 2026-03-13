@@ -79,6 +79,15 @@ INSTRUCTIONS = {
 }
 
 
+def _normalize_os(value: str | None) -> str | None:
+    if not value:
+        return None
+    raw = value.strip().lower()
+    if raw == "ios":
+        return "iphone"
+    return raw
+
+
 def _trial_used(db: Session, user: User) -> bool:
     if user.trial_activated_at:
         return True
@@ -101,6 +110,11 @@ def _active_subscription(db: Session, user: User) -> Subscription | None:
 
 
 def _resolve_step(db: Session, user: User) -> str:
+    normalized_os = _normalize_os(user.onboarding_os)
+    if normalized_os != user.onboarding_os:
+        user.onboarding_os = normalized_os
+        db.commit()
+
     if user.onboarding_completed_at:
         return "done"
     if not user.terms_accepted_at:
@@ -110,7 +124,7 @@ def _resolve_step(db: Session, user: User) -> str:
     if not active_sub and not user.trial_activated_at and not _trial_used(db, user):
         return "trial_offer"
 
-    if not user.onboarding_os:
+    if not normalized_os:
         return "device_select"
 
     if not user.onboarding_install_confirmed_at:
@@ -127,6 +141,7 @@ def _state(db: Session, user: User) -> OnboardingStateOut:
     step = _resolve_step(db, user)
     active_sub = _active_subscription(db, user)
     has_profile = db.query(VPNProfile.id).filter(VPNProfile.user_id == user.id).first() is not None
+    normalized_os = _normalize_os(user.onboarding_os)
 
     return OnboardingStateOut(
         step=step,
@@ -137,7 +152,7 @@ def _state(db: Session, user: User) -> OnboardingStateOut:
         trial_available=not _trial_used(db, user),
         trial_activated_at=user.trial_activated_at,
         trial_days=user.trial_days,
-        os=user.onboarding_os,
+        os=normalized_os,
         install_confirmed=user.onboarding_install_confirmed_at is not None,
         has_active_subscription=active_sub is not None,
         vpn_ready=has_profile,
@@ -247,7 +262,7 @@ async def select_device(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    user.onboarding_os = payload.os
+    user.onboarding_os = _normalize_os(payload.os)
     user.onboarding_step = "install_app"
     db.commit()
 
@@ -273,7 +288,7 @@ async def get_instructions(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    target_os = (os or user.onboarding_os or "").lower()
+    target_os = _normalize_os(os or user.onboarding_os) or ""
     if target_os not in INSTRUCTIONS:
         raise HTTPException(status_code=400, detail="Choose device first")
 
@@ -312,7 +327,7 @@ async def confirm_install(
     db: Session = Depends(get_db),
 ):
     if payload.os:
-        user.onboarding_os = payload.os
+        user.onboarding_os = _normalize_os(payload.os)
 
     user.onboarding_install_confirmed_at = datetime.utcnow()
     user.onboarding_step = "get_config"

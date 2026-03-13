@@ -23,6 +23,15 @@ class ConsentAcceptRequest(BaseModel):
     os: str | None = None
 
 
+def _normalize_os(value: str | None) -> str | None:
+    if not value:
+        return None
+    raw = value.strip().lower()[:32]
+    if raw == "ios":
+        return "iphone"
+    return raw
+
+
 @router.get(
     "/me",
     summary="Профиль пользователя",
@@ -56,7 +65,7 @@ async def accept_consent(
         user.terms_accepted_at = datetime.utcnow()
 
     if payload.os:
-        user.onboarding_os = payload.os.strip().lower()[:32]
+        user.onboarding_os = _normalize_os(payload.os)
 
     user.onboarding_step = "trial_offer"
     db.commit()
@@ -123,6 +132,11 @@ def account_overview(
     )
     vpn_profile = db.query(VPNProfile).filter(VPNProfile.user_id == user.id).first()
 
+    normalized_os = _normalize_os(user.onboarding_os)
+    if normalized_os != user.onboarding_os:
+        user.onboarding_os = normalized_os
+        db.commit()
+
     referral_link = f"{settings.telegram_miniapp_url}?startapp={user.referral_code}"
 
     onboarding = {
@@ -139,7 +153,7 @@ def account_overview(
         "total_steps": 6,
         "terms_accepted": user.terms_accepted_at is not None,
         "terms_accepted_at": user.terms_accepted_at,
-        "os": user.onboarding_os,
+        "os": normalized_os,
         "trial_available": not trial_used,
         "install_confirmed": user.onboarding_install_confirmed_at is not None,
         "completed": user.onboarding_completed_at is not None,
