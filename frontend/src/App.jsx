@@ -529,23 +529,27 @@ export default function App() {
           <section className="onboarding-shell pulse-in">
             <article className="card intro-hero-card" onTouchStart={onIntroTouchStart} onTouchEnd={onIntroTouchEnd}>
               <div className="intro-illustration">
-                <button className="intro-arrow left" onClick={introPrev} disabled={introSlide === 0} aria-label="Предыдущий слайд">
-                  <svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" /></svg>
-                </button>
-                <button className="intro-arrow right" onClick={introNext} disabled={introSlide === INTRO_SLIDES.length - 1} aria-label="Следующий слайд">
-                  <svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7" /></svg>
-                </button>
                 <span className="intro-bubble a" />
                 <span className="intro-bubble b" />
                 <span className="intro-bubble c" />
+                <span className="intro-bubble d" />
+                <span className="intro-bubble e" />
                 <div className="intro-visual">
                   <strong>Pineapple VPN</strong>
                   <span>Защищенный доступ к важным сервисам из любой точки мира</span>
                 </div>
               </div>
-              <div key={introSlide} className="intro-copy">
-                <h2>{INTRO_SLIDES[introSlide].title}</h2>
-                <p>{INTRO_SLIDES[introSlide].text}</p>
+              <div className="intro-carousel">
+                <button className="intro-arrow left" onClick={introPrev} disabled={introSlide === 0} aria-label="Предыдущий слайд">
+                  <svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" /></svg>
+                </button>
+                <div key={introSlide} className="intro-copy">
+                  <h2>{INTRO_SLIDES[introSlide].title}</h2>
+                  <p>{INTRO_SLIDES[introSlide].text}</p>
+                </div>
+                <button className="intro-arrow right" onClick={introNext} disabled={introSlide === INTRO_SLIDES.length - 1} aria-label="Следующий слайд">
+                  <svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7" /></svg>
+                </button>
               </div>
               <div className="intro-dots">
                 {INTRO_SLIDES.map((_, idx) => (
