@@ -21,9 +21,24 @@ const OS_OPTIONS = [
 ];
 
 const INTRO_SLIDES = [
-  { title: "\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u044b\u0439 \u0434\u043e\u0441\u0442\u0443\u043f \u043a \u0440\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0438\u043c \u0441\u0435\u0440\u0432\u0438\u0441\u0430\u043c \u0438\u0437 \u043b\u044e\u0431\u043e\u0439 \u0442\u043e\u0447\u043a\u0438 \u043c\u0438\u0440\u0430", text: "\u0414\u043e\u0441\u0442\u0443\u043f \u043a \u0432\u0430\u0436\u043d\u044b\u043c \u0440\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0438\u043c \u0441\u0435\u0440\u0432\u0438\u0441\u0430\u043c \u043f\u0440\u0438 \u043f\u043e\u0435\u0437\u0434\u043a\u0430\u0445 \u0438 \u0436\u0438\u0437\u043d\u0438 \u0437\u0430 \u0433\u0440\u0430\u043d\u0438\u0446\u0435\u0439." },
-  { title: "\u0420\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0441 \u0431\u0430\u043d\u043a\u0430\u043c\u0438, \u0413\u043e\u0441\u0443\u0441\u043b\u0443\u0433\u0430\u043c\u0438 \u0438 \u0416\u041a\u0425", text: "\u041f\u043e\u0434\u0445\u043e\u0434\u0438\u0442 \u0434\u043b\u044f \u0444\u0438\u043d\u0430\u043d\u0441\u043e\u0432\u044b\u0445, \u0433\u043e\u0441\u0443\u0434\u0430\u0440\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0445 \u0438 \u0440\u0430\u0431\u043e\u0447\u0438\u0445 \u0437\u0430\u0434\u0430\u0447." },
-  { title: "\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u0437\u0430\u043d\u0438\u043c\u0430\u0435\u0442 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u043c\u0438\u043d\u0443\u0442", text: "\u041c\u0430\u0441\u0442\u0435\u0440 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f \u043f\u043e\u043c\u043e\u0436\u0435\u0442 \u043f\u0440\u043e\u0439\u0442\u0438 \u0432\u0441\u0435 \u0448\u0430\u0433\u0438 \u0431\u0435\u0437 \u0441\u043b\u043e\u0436\u043d\u043e\u0441\u0442\u0435\u0439." },
+  {
+    badge: "Безопасность",
+    title: "\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u044b\u0439 \u0434\u043e\u0441\u0442\u0443\u043f \u043a \u0440\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0438\u043c \u0441\u0435\u0440\u0432\u0438\u0441\u0430\u043c \u0438\u0437 \u043b\u044e\u0431\u043e\u0439 \u0442\u043e\u0447\u043a\u0438 \u043c\u0438\u0440\u0430",
+    text: "\u0414\u043e\u0441\u0442\u0443\u043f \u043a \u0432\u0430\u0436\u043d\u044b\u043c \u0440\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0438\u043c \u0441\u0435\u0440\u0432\u0438\u0441\u0430\u043c \u043f\u0440\u0438 \u043f\u043e\u0435\u0437\u0434\u043a\u0430\u0445 \u0438 \u0436\u0438\u0437\u043d\u0438 \u0437\u0430 \u0433\u0440\u0430\u043d\u0438\u0446\u0435\u0439.",
+    points: ["Стабильный доступ", "Защищенный канал", "Для ежедневного использования"],
+  },
+  {
+    badge: "Сервисы",
+    title: "\u0420\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0441 \u0431\u0430\u043d\u043a\u0430\u043c\u0438, \u0413\u043e\u0441\u0443\u0441\u043b\u0443\u0433\u0430\u043c\u0438 \u0438 \u0416\u041a\u0425",
+    text: "\u041f\u043e\u0434\u0445\u043e\u0434\u0438\u0442 \u0434\u043b\u044f \u0444\u0438\u043d\u0430\u043d\u0441\u043e\u0432\u044b\u0445, \u0433\u043e\u0441\u0443\u0434\u0430\u0440\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0445 \u0438 \u0440\u0430\u0431\u043e\u0447\u0438\u0445 \u0437\u0430\u0434\u0430\u0447.",
+    points: ["Банки", "Госуслуги", "ЖКХ-сервисы"],
+  },
+  {
+    badge: "Быстрый старт",
+    title: "\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u0437\u0430\u043d\u0438\u043c\u0430\u0435\u0442 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u043c\u0438\u043d\u0443\u0442",
+    text: "\u041c\u0430\u0441\u0442\u0435\u0440 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f \u043f\u043e\u043c\u043e\u0436\u0435\u0442 \u043f\u0440\u043e\u0439\u0442\u0438 \u0432\u0441\u0435 \u0448\u0430\u0433\u0438 \u0431\u0435\u0437 \u0441\u043b\u043e\u0436\u043d\u043e\u0441\u0442\u0435\u0439.",
+    points: ["Пошаговый мастер", "Копирование ссылки и QR", "Поддержка в один клик"],
+  },
 ];
 
 function useTelegram() {
@@ -547,8 +562,16 @@ export default function App() {
                   <svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" /></svg>
                 </button>
                 <div key={introSlide} className="intro-copy">
-                  <h2>{INTRO_SLIDES[introSlide].title}</h2>
-                  <p>{INTRO_SLIDES[introSlide].text}</p>
+                  <article className="intro-slide-card">
+                    <span className="intro-slide-badge">{INTRO_SLIDES[introSlide].badge}</span>
+                    <h2>{INTRO_SLIDES[introSlide].title}</h2>
+                    <p>{INTRO_SLIDES[introSlide].text}</p>
+                    <ul className="intro-slide-points">
+                      {INTRO_SLIDES[introSlide].points.map((point) => (
+                        <li key={point}>{point}</li>
+                      ))}
+                    </ul>
+                  </article>
                 </div>
                 <button className="intro-arrow right" onClick={introNext} aria-label="Следующий слайд">
                   <svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7" /></svg>
@@ -569,6 +592,17 @@ export default function App() {
                   <h4>{"\u0422\u0430\u0440\u0438\u0444\u044b"}</h4>
                   <div className="tariff-line"><span>{"\u041d\u0435\u0434\u0435\u043b\u044f"}</span><strong>74 {"\u20BD"}</strong></div>
                   <div className="tariff-line"><span>{"\u041c\u0435\u0441\u044f\u0446"}</span><strong>149 {"\u20BD"}</strong></div>
+                </div>
+                <div className="intro-chip-card service-chip-card">
+                  <h4>Доступные сервисы</h4>
+                  <div className="service-tags">
+                    <span>Госуслуги</span>
+                    <span>Мой налог</span>
+                    <span>ФНС</span>
+                    <span>ЖКХ</span>
+                    <span>Банки</span>
+                    <span>и др.</span>
+                  </div>
                 </div>
                 <div className="intro-chip-card">
                   <h4>{"\u0421\u043f\u043e\u0441\u043e\u0431\u044b \u043e\u043f\u043b\u0430\u0442\u044b"}</h4>
