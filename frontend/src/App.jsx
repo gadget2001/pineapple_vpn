@@ -259,7 +259,7 @@ export default function App() {
     { id: "trial", title: "Активируйте пробный период", done: overview?.trial?.active || !trialAvailable },
     { id: "wallet", title: "Пополните кошелек", done: wallet >= 50 },
     { id: "sub", title: "Оформите подписку", done: status?.status === "active" && !status?.trial },
-    { id: "vpn", title: "Получите Subscription URL", done: !!vpnConfig?.subscription_url },
+    { id: "vpn", title: "Получите конфигурацию ВПН", done: !!vpnConfig?.subscription_url },
   ];
 
   return (
@@ -378,7 +378,7 @@ export default function App() {
             </article>
 
             <article className="card">
-              <h3>Subscription URL</h3>
+              <h3>Конфигурация VPN</h3>
               <p className="muted">Используйте ссылку в NekoRay или Streisand. В браузере открывать не нужно.</p>
               <button onClick={loadVpnConfig} disabled={loading}>Получить ссылку</button>
               {vpnConfig && (
@@ -389,7 +389,7 @@ export default function App() {
                   </div>
                   <div className="row">
                     <button onClick={() => copy(normalizeSubscriptionUrl(vpnConfig.subscription_url))}>
-                      Скопировать Subscription URL
+                      Скопировать конфигурацию VPN
                     </button>
                   </div>
                 </div>
@@ -401,7 +401,7 @@ export default function App() {
                 <h3>Windows (NekoRay)</h3>
                 <ol>
                   <li>Установите NekoRay.</li>
-                  <li>Добавьте профиль по Subscription URL.</li>
+                  <li>Добавьте профиль по конфигурацию VPN.</li>
                   <li>Выберите профиль и подключитесь.</li>
                 </ol>
               </article>
@@ -409,7 +409,7 @@ export default function App() {
                 <h3>iPhone (Streisand)</h3>
                 <ol>
                   <li>Установите Streisand.</li>
-                  <li>Импортируйте профиль по Subscription URL.</li>
+                  <li>Импортируйте профиль по конфигурации ВПН.</li>
                   <li>Включите VPN в приложении.</li>
                 </ol>
               </article>

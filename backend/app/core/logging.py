@@ -38,7 +38,7 @@ def _present_details(action: str, details: Dict[str, Any]) -> list[str]:
         items = [
             ("UUID", details.get("uuid")),
             ("VLESS", vless_url),
-            ("Subscription URL", details.get("subscription_url")),
+            ("Конфигурация VPN", details.get("subscription_url")),
             ("Reality key", details.get("reality_public_key")),
         ]
         return [f"{k}: {v}" for k, v in items if v not in (None, "", "None")]
