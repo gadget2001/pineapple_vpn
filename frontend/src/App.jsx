@@ -68,7 +68,9 @@ function iconForTab(id, active) {
 }
 
 function getInstruction(os, subscriptionUrl) {
-  const urlLine = subscriptionUrl ? `Вставьте Subscription URL: ${subscriptionUrl}` : "Получите Subscription URL ниже.";
+  const urlLine = subscriptionUrl
+    ? "Вставьте ваш Subscription URL из блока ниже."
+    : "Получите Subscription URL ниже.";
   if (os === "windows") {
     return [
       "Скачайте NekoRay по ссылке из раздела инструкции.",
@@ -550,3 +552,6 @@ export default function App() {
     </div>
   );
 }
+
+
+

@@ -483,3 +483,40 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
     min-height: 88px;
   }
 }
+
+/* Prevent horizontal overflow on long technical text in setup/help cards */
+.card,
+.steps li,
+.ref-link,
+.muted,
+.op-title {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.steps {
+  padding-left: 18px;
+}
+
+@media (max-width: 640px) {
+  .page {
+    gap: 12px;
+  }
+
+  .card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .steps {
+    padding-left: 16px;
+  }
+
+  .tabbar {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .app-main {
+    padding-bottom: calc(124px + env(safe-area-inset-bottom));
+  }
+}
