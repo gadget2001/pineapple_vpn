@@ -1,16 +1,28 @@
-from fastapi import APIRouter, Depends
+﻿from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+import httpx
 
 from app.api.deps import get_admin_user
+from app.core.config import settings
+from app.core.logging import send_admin_log
 from app.db.session import get_db
+from app.models.audit_log import AuditLog
+from app.models.connection_log import ConnectionLog
+from app.models.device import Device
 from app.models.payment import Payment
 from app.models.referral import Referral
 from app.models.subscription import Subscription
 from app.models.user import User
+from app.models.vpn_profile import VPNProfile
 from app.schemas.admin import AdminMetrics
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+class PurgeUserRequest(BaseModel):
+    telegram_id: int
 
 
 @router.get(
@@ -135,3 +147,54 @@ def list_referrals(
         }
         for r in rows
     ]
+
+
+@router.post(
+    "/users/purge",
+    summary="Полное удаление пользователя",
+    description="Полностью удаляет пользователя по Telegram ID вместе со связанными записями и пытается удалить его из Marzban.",
+)
+async def purge_user(
+    payload: PurgeUserRequest,
+    admin: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.telegram_id == payload.telegram_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user_id = user.id
+    username = user.username
+
+    db.query(ConnectionLog).filter(ConnectionLog.user_id == user_id).delete(synchronize_session=False)
+    db.query(AuditLog).filter(AuditLog.user_id == user_id).delete(synchronize_session=False)
+    db.query(Device).filter(Device.user_id == user_id).delete(synchronize_session=False)
+    db.query(VPNProfile).filter(VPNProfile.user_id == user_id).delete(synchronize_session=False)
+    db.query(Subscription).filter(Subscription.user_id == user_id).delete(synchronize_session=False)
+    db.query(Payment).filter(Payment.user_id == user_id).delete(synchronize_session=False)
+    db.query(Referral).filter(
+        (Referral.inviter_id == user_id) | (Referral.invitee_id == user_id)
+    ).delete(synchronize_session=False)
+    db.delete(user)
+    db.commit()
+
+    panel_base = settings.panel_url.rstrip("/")
+    marzban_username = f"tg_{payload.telegram_id}"
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            await client.delete(
+                f"{panel_base}/api/user/{marzban_username}",
+                headers={"Authorization": f"Bearer {settings.panel_token}"},
+            )
+    except Exception:
+        # Purge in local DB is already done; panel cleanup is best effort.
+        pass
+
+    await send_admin_log(
+        "user_purged",
+        payload.telegram_id,
+        username,
+        {"by_admin": admin.telegram_id},
+    )
+
+    return {"status": "ok", "telegram_id": payload.telegram_id, "username": username}

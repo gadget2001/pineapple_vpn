@@ -132,6 +132,11 @@ export default function App() {
     const res = await fetch(`${API_BASE}${path}`, options);
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        setToken(null);
+        throw new Error("Сессия истекла. Выполняю повторную авторизацию...");
+      }
       throw new Error(body?.detail || `HTTP ${res.status}`);
     }
     return res.json();
@@ -552,6 +557,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
