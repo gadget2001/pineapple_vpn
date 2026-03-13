@@ -620,17 +620,21 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 
 .intro-visual strong {
   display: block;
-  font-size: 28px;
+  font-size: 34px;
   line-height: 1.1;
   letter-spacing: 0.01em;
+  font-weight: 800;
 }
 
 .intro-visual span {
   display: block;
-  margin-top: 8px;
-  font-size: 13px;
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 600;
   max-width: 520px;
-  opacity: 0.94;
+  opacity: 1;
+  color: #173818;
 }
 
 .intro-carousel {
@@ -819,8 +823,8 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   .intro-carousel { min-height: 285px; }
   .intro-slide-card { min-height: 270px; }
   .intro-slide-card h2 { font-size: 18px; }
-  .intro-visual strong { font-size: 24px; }
-  .intro-visual span { font-size: 11px; }
+  .intro-visual strong { font-size: 28px; }
+  .intro-visual span { font-size: 14px; }
   .intro-arrow.left { left: -8px; }
   .intro-arrow.right { right: -8px; }
   .intro-cards-grid { grid-template-columns: 1fr; }
