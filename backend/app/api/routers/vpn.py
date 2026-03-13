@@ -68,12 +68,6 @@ async def get_config(
         )
 
     log_audit(db, user.id, "vpn_config_get", {"uuid": profile.uuid})
-    await send_admin_log(
-        "vpn_config_delivered",
-        user.telegram_id,
-        user.username,
-        {"uuid": profile.uuid},
-    )
 
     return VPNConfigOut(
         uuid=profile.uuid,

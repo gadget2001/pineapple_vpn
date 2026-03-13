@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap");
 
 :root {
   --bg: #f8f6ef;
@@ -441,4 +441,45 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   color: #1f6d2a;
   padding: 10px 12px;
   font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .app-main {
+    padding: 14px 12px 108px;
+  }
+
+  .row {
+    flex-wrap: wrap;
+  }
+
+  .row > input,
+  .row > button {
+    width: 100%;
+  }
+
+  .inline-links {
+    grid-template-columns: 1fr;
+  }
+
+  .os-pills {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .os-pills .soft-btn {
+    width: 100%;
+  }
+
+  .hero {
+    padding: 18px;
+  }
+
+  .hero-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .config-item textarea {
+    min-height: 88px;
+  }
 }
