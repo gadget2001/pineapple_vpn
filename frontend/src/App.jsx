@@ -3,11 +3,18 @@ import React, { useEffect, useMemo, useState } from "react";
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 const TABS = [
-  { id: "home", label: "Р“Р»Р°РІРЅР°СЏ", title: "Р“Р»Р°РІРЅР°СЏ" },
-  { id: "wallet", label: "РљРѕС€РµР»РµРє", title: "РљРѕС€РµР»РµРє" },
-  { id: "setup", label: "РќР°СЃС‚СЂРѕР№РєР°", title: "РќР°СЃС‚СЂРѕР№РєР° VPN" },
-  { id: "referral", label: "Р РµС„РµСЂР°Р»С‹", title: "Р РµС„РµСЂР°Р»СЊРЅР°СЏ СЃРёСЃС‚РµРјР°" },
-  { id: "help", label: "РџРѕРјРѕС‰СЊ", title: "Р”РѕРєСѓРјРµРЅС‚С‹ Рё РїРѕРјРѕС‰СЊ" },
+  { id: "home", label: "Главная", title: "Главная" },
+  { id: "wallet", label: "Кошелек", title: "Кошелек" },
+  { id: "setup", label: "Настройка", title: "Настройка VPN" },
+  { id: "referral", label: "Рефералы", title: "Реферальная система" },
+  { id: "help", label: "Помощь", title: "Документы и помощь" },
+];
+
+const OS_OPTIONS = [
+  { id: "windows", title: "Windows", app: "NekoRay" },
+  { id: "ios", title: "iPhone", app: "Streisand" },
+  { id: "android", title: "Android", app: "v2rayNG" },
+  { id: "macos", title: "macOS", app: "NekoRay / Stash" },
 ];
 
 function useTelegram() {
@@ -15,7 +22,7 @@ function useTelegram() {
 }
 
 function formatDate(dt) {
-  if (!dt) return "вЂ”";
+  if (!dt) return "—";
   return new Date(dt).toLocaleString("ru-RU", {
     day: "2-digit",
     month: "2-digit",
@@ -32,64 +39,67 @@ function daysLeft(dt) {
 }
 
 function statusRu(status) {
-  if (status === "active") return "РђРєС‚РёРІРЅР°";
-  if (status === "expired") return "РСЃС‚РµРєР»Р°";
-  return "РќРµС‚ РїРѕРґРїРёСЃРєРё";
+  if (status === "active") return "Активна";
+  if (status === "expired") return "Истекла";
+  return "Нет подписки";
 }
 
 function planRu(plan) {
-  if (plan === "week") return "РќРµРґРµР»СЏ";
-  if (plan === "month") return "РњРµСЃСЏС†";
-  if (plan === "trial") return "РџСЂРѕР±РЅС‹Р№ РїРµСЂРёРѕРґ";
-  return "вЂ”";
+  if (plan === "week") return "Неделя";
+  if (plan === "month") return "Месяц";
+  if (plan === "trial") return "Пробный период";
+  return "—";
 }
 
 function operationMeta(item) {
-  if (item.kind === "topup") return { title: "РџРѕРїРѕР»РЅРµРЅРёРµ Р®Kassa", sign: "+", cls: "credit" };
-  if (item.kind === "referral_bonus") return { title: "Р РµС„РµСЂР°Р»СЊРЅРѕРµ РЅР°С‡РёСЃР»РµРЅРёРµ", sign: "+", cls: "credit" };
-  if (item.kind === "subscription_debit") return { title: "РЎРїРёСЃР°РЅРёРµ Р·Р° С‚Р°СЂРёС„", sign: "-", cls: "debit" };
-  return { title: "РћРїРµСЂР°С†РёСЏ", sign: "", cls: "neutral" };
+  if (item.kind === "topup") return { title: "Пополнение ЮKassa", sign: "+", cls: "credit" };
+  if (item.kind === "referral_bonus") return { title: "Реферальное начисление", sign: "+", cls: "credit" };
+  if (item.kind === "subscription_debit") return { title: "Списание за тариф", sign: "-", cls: "debit" };
+  return { title: "Операция", sign: "", cls: "neutral" };
 }
 
 function iconForTab(id, active) {
   const cls = `tab-icon ${active ? "active" : ""}`;
-  if (id === "home") {
-    return (
-      <svg className={cls} viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />
-      </svg>
-    );
+  if (id === "home") return <svg className={cls} viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" /></svg>;
+  if (id === "wallet") return <svg className={cls} viewBox="0 0 24 24"><path d="M3 8a3 3 0 0 1 3-3h11a2 2 0 0 1 2 2v1h1a2 2 0 0 1 2 2v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z" /><circle cx="17" cy="13" r="1.7" /></svg>;
+  if (id === "setup") return <svg className={cls} viewBox="0 0 24 24"><path d="M11 3h2l.5 2.1a7.9 7.9 0 0 1 1.7.7l1.9-1.1 1.4 1.4-1.1 1.9c.3.6.5 1.1.7 1.7L21 11v2l-2.1.5a7.9 7.9 0 0 1-.7 1.7l1.1 1.9-1.4 1.4-1.9-1.1c-.6.3-1.1.5-1.7.7L13 21h-2l-.5-2.1a7.9 7.9 0 0 1-1.7-.7l-1.9 1.1-1.4-1.4 1.1-1.9a7.9 7.9 0 0 1-.7-1.7L3 13v-2l2.1-.5c.2-.6.4-1.1.7-1.7L4.7 6.9l1.4-1.4L8 6.6c.6-.3 1.1-.5 1.7-.7z" /><circle cx="12" cy="12" r="3.2" /></svg>;
+  if (id === "referral") return <svg className={cls} viewBox="0 0 24 24"><circle cx="8" cy="8" r="3" /><circle cx="16" cy="8" r="3" /><path d="M3 20a5 5 0 0 1 10 0zM11 20a5 5 0 0 1 10 0z" /></svg>;
+  return <svg className={cls} viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9zm1 14h-2v-2h2zm0-4h-2V7h2z" /></svg>;
+}
+
+function getInstruction(os, subscriptionUrl) {
+  const urlLine = subscriptionUrl ? `Вставьте Subscription URL: ${subscriptionUrl}` : "Получите Subscription URL ниже.";
+  if (os === "windows") {
+    return [
+      "Скачайте NekoRay по ссылке из раздела инструкции.",
+      "Распакуйте архив и запустите приложение.",
+      "Откройте Import / Subscription.",
+      urlLine,
+      "Сохраните и нажмите Connect.",
+    ];
   }
-  if (id === "wallet") {
-    return (
-      <svg className={cls} viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M3 8a3 3 0 0 1 3-3h11a2 2 0 0 1 2 2v1h1a2 2 0 0 1 2 2v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z" />
-        <circle cx="17" cy="13" r="1.7" />
-      </svg>
-    );
+  if (os === "ios") {
+    return [
+      "Установите Streisand из App Store.",
+      "Откройте приложение и нажмите Add Subscription.",
+      urlLine,
+      "Сохраните профиль и включите VPN.",
+    ];
   }
-  if (id === "setup") {
-    return (
-      <svg className={cls} viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M11 3h2l.5 2.1a7.9 7.9 0 0 1 1.7.7l1.9-1.1 1.4 1.4-1.1 1.9c.3.6.5 1.1.7 1.7L21 11v2l-2.1.5a7.9 7.9 0 0 1-.7 1.7l1.1 1.9-1.4 1.4-1.9-1.1c-.6.3-1.1.5-1.7.7L13 21h-2l-.5-2.1a7.9 7.9 0 0 1-1.7-.7l-1.9 1.1-1.4-1.4 1.1-1.9a7.9 7.9 0 0 1-.7-1.7L3 13v-2l2.1-.5c.2-.6.4-1.1.7-1.7L4.7 6.9l1.4-1.4L8 6.6c.6-.3 1.1-.5 1.7-.7z" />
-        <circle cx="12" cy="12" r="3.2" />
-      </svg>
-    );
+  if (os === "android") {
+    return [
+      "Установите v2rayNG из официального источника.",
+      "Откройте меню Subscription Group Settings.",
+      urlLine,
+      "Обновите подписку и подключитесь.",
+    ];
   }
-  if (id === "referral") {
-    return (
-      <svg className={cls} viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="8" cy="8" r="3" />
-        <circle cx="16" cy="8" r="3" />
-        <path d="M3 20a5 5 0 0 1 10 0zM11 20a5 5 0 0 1 10 0z" />
-      </svg>
-    );
-  }
-  return (
-    <svg className={cls} viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9zm1 14h-2v-2h2zm0-4h-2V7h2z" />
-    </svg>
-  );
+  return [
+    "Установите клиент (NekoRay/Stash) на macOS.",
+    "Добавьте Subscription в менеджере профилей.",
+    urlLine,
+    "Примените профиль и включите подключение.",
+  ];
 }
 
 export default function App() {
@@ -105,11 +115,13 @@ export default function App() {
   const [payments, setPayments] = useState([]);
   const [referralStats, setReferralStats] = useState(null);
   const [referralList, setReferralList] = useState([]);
+  const [referralInfo, setReferralInfo] = useState(null);
   const [vpnConfig, setVpnConfig] = useState(null);
 
   const [topupAmount, setTopupAmount] = useState(100);
   const [docHtml, setDocHtml] = useState("");
   const [docTitle, setDocTitle] = useState("");
+  const [selectedOs, setSelectedOs] = useState("windows");
 
   const authHeaders = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token]);
   const startParam = tg?.initDataUnsafe?.start_param || "";
@@ -125,13 +137,14 @@ export default function App() {
 
   const loadAll = async () => {
     if (!token) return;
-    const [ov, st, pl, pay, rs, rl] = await Promise.all([
+    const [ov, st, pl, pay, rs, rl, ri] = await Promise.all([
       request("/users/overview", { headers: authHeaders }),
       request("/subscriptions/status", { headers: authHeaders }),
       request("/subscriptions/plans", { headers: authHeaders }),
       request("/payments/history", { headers: authHeaders }),
       request("/referral/stats", { headers: authHeaders }),
       request("/referral/list", { headers: authHeaders }),
+      request("/referral/info", { headers: authHeaders }),
     ]);
     setOverview(ov);
     setStatus(st);
@@ -139,12 +152,14 @@ export default function App() {
     setPayments(pay);
     setReferralStats(rs);
     setReferralList(rl);
+    setReferralInfo(ri);
+    if (ov?.onboarding?.os) setSelectedOs(ov.onboarding.os);
   };
 
   useEffect(() => {
     const auth = async () => {
       if (!tg?.initData) {
-        setAuthError("РћС‚РєСЂРѕР№С‚Рµ РїСЂРёР»РѕР¶РµРЅРёРµ С‡РµСЂРµР· РєРЅРѕРїРєСѓ РІ Telegram-Р±РѕС‚Рµ.");
+        setAuthError("Откройте приложение через кнопку в Telegram-боте.");
         return;
       }
       if (token) return;
@@ -166,6 +181,30 @@ export default function App() {
   useEffect(() => {
     loadAll().catch((e) => setAuthError(String(e.message)));
   }, [token]);
+
+  useEffect(() => {
+    if (tab !== "setup") return;
+    if (!token) return;
+    if (status?.status !== "active") return;
+    if (vpnConfig?.subscription_url) return;
+    loadVpnConfig().catch(() => {});
+  }, [tab, token, status, vpnConfig]);
+
+  const acceptTerms = async () => {
+    setLoading(true);
+    try {
+      await request("/users/consent", {
+        method: "POST",
+        headers: { ...authHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ os: selectedOs }),
+      });
+      await loadAll();
+    } catch (e) {
+      setAuthError(String(e.message));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const activateTrial = async () => {
     setLoading(true);
@@ -228,7 +267,7 @@ export default function App() {
   const copy = async (text) => {
     if (!text) return;
     await navigator.clipboard.writeText(text);
-    tg?.showPopup?.({ title: "РЎРєРѕРїРёСЂРѕРІР°РЅРѕ", message: "РЎСЃС‹Р»РєР° СЃРєРѕРїРёСЂРѕРІР°РЅР°", buttons: [{ type: "ok" }] });
+    tg?.showPopup?.({ title: "Скопировано", message: "Текст скопирован", buttons: [{ type: "ok" }] });
   };
 
   const normalizeSubscriptionUrl = (url) => {
@@ -251,16 +290,14 @@ export default function App() {
 
   const wallet = overview?.user?.wallet_balance_rub || 0;
   const trialAvailable = !!overview?.trial?.available;
+  const trialDays = overview?.trial?.days || 3;
   const subEndsAt = overview?.subscription?.ends_at;
   const subDaysLeft = daysLeft(subEndsAt);
   const hasPlanInfo = Boolean(status?.plan);
+  const termsAccepted = !!overview?.onboarding?.terms_accepted;
 
-  const setupSteps = [
-    { id: "trial", title: "РђРєС‚РёРІРёСЂСѓР№С‚Рµ РїСЂРѕР±РЅС‹Р№ РїРµСЂРёРѕРґ", done: overview?.trial?.active || !trialAvailable },
-    { id: "wallet", title: "РџРѕРїРѕР»РЅРёС‚Рµ РєРѕС€РµР»РµРє", done: wallet >= 50 },
-    { id: "sub", title: "РћС„РѕСЂРјРёС‚Рµ РїРѕРґРїРёСЃРєСѓ", done: status?.status === "active" && !status?.trial },
-    { id: "vpn", title: "РџРѕР»СѓС‡РёС‚Рµ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ Р’РџРќ", done: !!vpnConfig?.subscription_url },
-  ];
+  const subscriptionUrl = normalizeSubscriptionUrl(vpnConfig?.subscription_url);
+  const instructions = getInstruction(selectedOs, subscriptionUrl);
 
   return (
     <div className="app-shell">
@@ -274,48 +311,84 @@ export default function App() {
           <section className="page">
             <div className="hero">
               <div className="hero-title">Pineapple VPN</div>
-              <p>Р—Р°С‰РёС‰РµРЅРЅС‹Р№ СѓРґР°Р»РµРЅРЅС‹Р№ РґРѕСЃС‚СѓРї Рє СЂРѕСЃСЃРёР№СЃРєРѕРјСѓ IP РёР·-Р·Р° РіСЂР°РЅРёС†С‹</p>
+              <p>Защищенный удаленный доступ к российским сервисам из-за границы</p>
               <div className="hero-status-grid">
                 <div className="hero-status-item">
-                  <span>РЎС‚Р°С‚СѓСЃ</span>
+                  <span>Статус</span>
                   <strong>{statusRu(status?.status)}</strong>
                 </div>
                 {hasPlanInfo && (
                   <>
                     <div className="hero-status-item">
-                      <span>РўР°СЂРёС„</span>
+                      <span>Тариф</span>
                       <strong>{planRu(status?.plan)}</strong>
                     </div>
                     <div className="hero-status-item">
-                      <span>РћРєРѕРЅС‡Р°РЅРёРµ</span>
+                      <span>Окончание</span>
                       <strong>{formatDate(subEndsAt)}</strong>
                     </div>
                     <div className="hero-status-item">
-                      <span>РћСЃС‚Р°Р»РѕСЃСЊ</span>
-                      <strong>{subDaysLeft === null ? "вЂ”" : `${subDaysLeft} РґРЅ.`}</strong>
+                      <span>Осталось</span>
+                      <strong>{subDaysLeft === null ? "—" : `${subDaysLeft} дн.`}</strong>
                     </div>
                   </>
                 )}
               </div>
             </div>
 
-            {trialAvailable && (
-              <article className="card accent">
-                <h3>РџСЂРѕР±РЅС‹Р№ РїРµСЂРёРѕРґ</h3>
-                <p>Р”РѕСЃС‚СѓРїРЅРѕ {overview?.trial?.days || 3} РґРЅ. РђРєС‚РёРІРёСЂСѓР№С‚Рµ, РєРѕРіРґР° Р±СѓРґРµС‚Рµ РіРѕС‚РѕРІС‹ Рє РЅР°СЃС‚СЂРѕР№РєРµ.</p>
-                <button disabled={loading} onClick={activateTrial}>РђРєС‚РёРІРёСЂРѕРІР°С‚СЊ РїСЂРѕР±РЅС‹Р№ РїРµСЂРёРѕРґ</button>
+            {!termsAccepted && (
+              <article className="card intro-card pulse-in">
+                <h3>Перед началом — правила сервиса</h3>
+                <p>
+                  Pineapple VPN предназначен для безопасного доступа к российским сервисам из-за границы.
+                  Использование сервиса для незаконной деятельности запрещено.
+                </p>
+                <div className="doc-links inline-links">
+                  <button className="link-btn" onClick={() => openDoc("terms", "Пользовательское соглашение")}>Соглашение</button>
+                  <button className="link-btn" onClick={() => openDoc("privacy", "Политика конфиденциальности")}>Политика</button>
+                  <button className="link-btn" onClick={() => openDoc("acceptable_use", "Правила использования")}>Правила</button>
+                </div>
+                <div className="row os-pills">
+                  {OS_OPTIONS.map((os) => (
+                    <button
+                      key={os.id}
+                      className={`soft-btn ${selectedOs === os.id ? "soft-btn-active" : ""}`}
+                      onClick={() => setSelectedOs(os.id)}
+                    >
+                      {os.title}
+                    </button>
+                  ))}
+                </div>
+                <button disabled={loading} onClick={acceptTerms}>Я ознакомился и принимаю правила</button>
               </article>
             )}
 
-            <article className="card">
-              <h3>РўР°СЂРёС„С‹</h3>
+            {termsAccepted && trialAvailable && (
+              <article className="card accent pulse-in">
+                <h3>Пробный период</h3>
+                <p>
+                  Вам доступен пробный период <strong>{trialDays} дней</strong>
+                  {trialDays > 3 ? " (увеличен по реферальной ссылке)" : ""}.
+                </p>
+                <div className="row">
+                  <button disabled={loading} onClick={activateTrial}>Попробовать VPN</button>
+                  <button className="soft-btn" onClick={() => setTab("setup")}>Перейти к настройке</button>
+                </div>
+              </article>
+            )}
+
+            <article className="card tariffs-card">
+              <h3>Тарифы</h3>
               <div className="grid two">
                 {plans.map((plan) => (
-                  <div className="price-card" key={plan.code}>
-                    <div className="price-name">{planRu(plan.code)}</div>
-                    <div className="price-value">{plan.price_rub} в‚Ѕ</div>
-                    <div className="price-meta">{plan.duration_days} РґРЅРµР№</div>
-                    <button disabled={loading} onClick={() => buyPlan(plan.code)}>РћС„РѕСЂРјРёС‚СЊ</button>
+                  <div className="price-card modern" key={plan.code}>
+                    <div className="price-head">
+                      <div className="price-name">{planRu(plan.code)}</div>
+                      <div className="price-badge">{plan.duration_days} дней</div>
+                    </div>
+                    <div className="price-value">{plan.price_rub} ?</div>
+                    <p className="muted">Оплата из кошелька, продление без смены ключа.</p>
+                    <button disabled={loading} onClick={() => buyPlan(plan.code)}>Оформить</button>
                   </div>
                 ))}
               </div>
@@ -326,27 +399,22 @@ export default function App() {
         {tab === "wallet" && (
           <section className="page">
             <article className="card wallet-balance">
-              <h3>РљРѕС€РµР»РµРє</h3>
-              <div className="balance-value">{wallet} в‚Ѕ</div>
-              <small>РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РґР»СЏ РѕРїР»Р°С‚С‹ РїРѕРґРїРёСЃРѕРє</small>
+              <h3>Кошелек</h3>
+              <div className="balance-value">{wallet} ?</div>
+              <small>Используется для оплаты подписок</small>
             </article>
 
             <article className="card">
-              <h3>РџРѕРїРѕР»РЅРµРЅРёРµ РєРѕС€РµР»СЊРєР°</h3>
+              <h3>Пополнение кошелька</h3>
               <div className="row">
-                <input
-                  type="number"
-                  min="50"
-                  value={topupAmount}
-                  onChange={(e) => setTopupAmount(e.target.value)}
-                />
-                <button disabled={loading} onClick={topup}>РџРѕРїРѕР»РЅРёС‚СЊ</button>
+                <input type="number" min="50" value={topupAmount} onChange={(e) => setTopupAmount(e.target.value)} />
+                <button disabled={loading} onClick={topup}>Пополнить</button>
               </div>
-              <small>РњРёРЅРёРјР°Р»СЊРЅР°СЏ СЃСѓРјРјР° 50 в‚Ѕ</small>
+              <small>Минимальная сумма 50 ?</small>
             </article>
 
             <article className="card">
-              <h3>РСЃС‚РѕСЂРёСЏ РѕРїРµСЂР°С†РёР№</h3>
+              <h3>История операций</h3>
               <div className="ops-list">
                 {payments.map((item) => {
                   const meta = operationMeta(item);
@@ -356,11 +424,11 @@ export default function App() {
                         <div className="op-title">{meta.title}</div>
                         <div className="op-date">{formatDate(item.created_at)}</div>
                       </div>
-                      <div className="op-amount">{meta.sign}{item.amount_rub} в‚Ѕ</div>
+                      <div className="op-amount">{meta.sign}{item.amount_rub} ?</div>
                     </div>
                   );
                 })}
-                {!payments.length && <div className="empty">РћРїРµСЂР°С†РёР№ РїРѕРєР° РЅРµС‚</div>}
+                {!payments.length && <div className="empty">Операций пока нет</div>}
               </div>
             </article>
           </section>
@@ -369,79 +437,79 @@ export default function App() {
         {tab === "setup" && (
           <section className="page">
             <article className="card">
-              <h3>РџРѕС€Р°РіРѕРІР°СЏ РЅР°СЃС‚СЂРѕР№РєР°</h3>
-              <ol className="steps">
-                {setupSteps.map((s) => (
-                  <li key={s.id} className={s.done ? "done" : "pending"}>{s.title}</li>
+              <h3>Настройка VPN</h3>
+              <p className="muted">Выберите устройство, затем импортируйте Subscription URL в клиент.</p>
+              <div className="row os-pills">
+                {OS_OPTIONS.map((os) => (
+                  <button
+                    key={os.id}
+                    className={`soft-btn ${selectedOs === os.id ? "soft-btn-active" : ""}`}
+                    onClick={() => setSelectedOs(os.id)}
+                  >
+                    {os.title}
+                  </button>
                 ))}
+              </div>
+              <ol className="steps">
+                {instructions.map((line, idx) => <li key={idx} className="pending">{line}</li>)}
               </ol>
             </article>
 
             <article className="card">
-              <h3>РљРѕРЅС„РёРіСѓСЂР°С†РёСЏ VPN</h3>
-              <p className="muted">РСЃРїРѕР»СЊР·СѓР№С‚Рµ СЃСЃС‹Р»РєСѓ РІ NekoRay РёР»Рё Streisand. Р’ Р±СЂР°СѓР·РµСЂРµ РѕС‚РєСЂС‹РІР°С‚СЊ РЅРµ РЅСѓР¶РЅРѕ.</p>
-              <button onClick={loadVpnConfig} disabled={loading}>РџРѕР»СѓС‡РёС‚СЊ СЃСЃС‹Р»РєСѓ</button>
-              {vpnConfig && (
-                <div className="config-box">
-                  <div className="config-item">
-                    <label>РЎСЃС‹Р»РєР° РїРѕРґРїРёСЃРєРё</label>
-                    <textarea readOnly value={normalizeSubscriptionUrl(vpnConfig.subscription_url)} rows={3} />
+              <h3>Активный ключ (Subscription URL)</h3>
+              <button onClick={loadVpnConfig} disabled={loading || status?.status !== "active"}>Получить / обновить ключ</button>
+              {status?.status !== "active" && <p className="muted">Для получения ключа активируйте trial или платный тариф.</p>}
+              {!!subscriptionUrl && (
+                <>
+                  <div className="config-box">
+                    <div className="config-item">
+                      <label>Subscription URL</label>
+                      <textarea readOnly value={subscriptionUrl} rows={3} />
+                    </div>
+                    <div className="row">
+                      <button onClick={() => copy(subscriptionUrl)}>Скопировать ключ</button>
+                    </div>
                   </div>
-                  <div className="row">
-                    <button onClick={() => copy(normalizeSubscriptionUrl(vpnConfig.subscription_url))}>
-                      РЎРєРѕРїРёСЂРѕРІР°С‚СЊ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ VPN
-                    </button>
-                  </div>
-                </div>
+                  <div className="done-banner">Настройка завершена. VPN готов к использованию.</div>
+                </>
               )}
             </article>
 
-            <div className="grid two">
-              <article className="card">
-                <h3>Windows (NekoRay)</h3>
-                <ol>
-                  <li>РЈСЃС‚Р°РЅРѕРІРёС‚Рµ NekoRay.</li>
-                  <li>Р”РѕР±Р°РІСЊС‚Рµ РїСЂРѕС„РёР»СЊ РїРѕ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ VPN.</li>
-                  <li>Р’С‹Р±РµСЂРёС‚Рµ РїСЂРѕС„РёР»СЊ Рё РїРѕРґРєР»СЋС‡РёС‚РµСЃСЊ.</li>
-                </ol>
-              </article>
-              <article className="card">
-                <h3>iPhone (Streisand)</h3>
-                <ol>
-                  <li>РЈСЃС‚Р°РЅРѕРІРёС‚Рµ Streisand.</li>
-                  <li>РРјРїРѕСЂС‚РёСЂСѓР№С‚Рµ РїСЂРѕС„РёР»СЊ РїРѕ РєРѕРЅС„РёРіСѓСЂР°С†РёРё Р’РџРќ.</li>
-                  <li>Р’РєР»СЋС‡РёС‚Рµ VPN РІ РїСЂРёР»РѕР¶РµРЅРёРё.</li>
-                </ol>
-              </article>
-            </div>
+            <article className="card">
+              <h3>Подключение на другом устройстве</h3>
+              <p className="muted">Используйте тот же активный ключ. Выберите ОС выше и повторите шаги импорта.</p>
+            </article>
           </section>
         )}
 
         {tab === "referral" && (
           <section className="page">
             <article className="card">
-              <h3>Р РµС„РµСЂР°Р»СЊРЅР°СЏ СЃРёСЃС‚РµРјР°</h3>
-              <p>Р’Р°С€Р° СЃСЃС‹Р»РєР°:</p>
-              <div className="ref-link">{referralStats?.link || overview?.referral?.link || "вЂ”"}</div>
+              <h3>Реферальная система</h3>
+              <p>Ссылка в Telegram-бот:</p>
+              <div className="ref-link">{referralInfo?.bot_deep_link || referralStats?.bot_deep_link || "—"}</div>
               <div className="row">
-                <button onClick={() => copy(referralStats?.link || overview?.referral?.link)}>
-                  РЎРєРѕРїРёСЂРѕРІР°С‚СЊ СЃСЃС‹Р»РєСѓ
-                </button>
+                <button onClick={() => copy(referralInfo?.bot_deep_link || referralStats?.bot_deep_link)}>Скопировать ссылку</button>
+              </div>
+              <p>Готовое сообщение-приглашение:</p>
+              <div className="ref-link">{referralInfo?.invite_message || referralStats?.invite_message || "—"}</div>
+              <div className="row">
+                <button onClick={() => copy(referralInfo?.invite_message || referralStats?.invite_message)}>Скопировать сообщение</button>
               </div>
               <div className="grid three">
-                <div className="stat">РџСЂРёРіР»Р°С€РµРЅРѕ: {referralStats?.invited_count || 0}</div>
-                <div className="stat">РќР°С‡РёСЃР»РµРЅРѕ: {referralStats?.earned_rub || 0} в‚Ѕ</div>
-                <div className="stat">РљРѕРјРёСЃСЃРёСЏ: {referralStats?.commission_percent || 10}%</div>
+                <div className="stat">Приглашено: {referralStats?.invited_count || 0}</div>
+                <div className="stat">Начислено: {referralStats?.earned_rub || 0} ?</div>
+                <div className="stat">Комиссия: {referralStats?.commission_percent || 10}%</div>
               </div>
             </article>
 
             <article className="card">
-              <h3>РЎРїРёСЃРѕРє СЂРµС„РµСЂР°Р»РѕРІ</h3>
+              <h3>Список рефералов</h3>
               <ul className="list">
                 {referralList.map((r, i) => (
-                  <li key={`${r.invitee_id}-${i}`}>@{r.username || "-"} +{r.earned_rub} в‚Ѕ</li>
+                  <li key={`${r.invitee_id}-${i}`}>@{r.username || "-"} +{r.earned_rub} ?</li>
                 ))}
-                {!referralList.length && <li>Р РµС„РµСЂР°Р»РѕРІ РїРѕРєР° РЅРµС‚</li>}
+                {!referralList.length && <li>Рефералов пока нет</li>}
               </ul>
             </article>
           </section>
@@ -451,17 +519,11 @@ export default function App() {
           <section className="page">
             {!docHtml && (
               <article className="card">
-                <h3>Р”РѕРєСѓРјРµРЅС‚С‹</h3>
+                <h3>Документы</h3>
                 <div className="doc-links">
-                  <button className="link-btn" onClick={() => openDoc("terms", "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРµ СЃРѕРіР»Р°С€РµРЅРёРµ")}>
-                    РџРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРѕРµ СЃРѕРіР»Р°С€РµРЅРёРµ
-                  </button>
-                  <button className="link-btn" onClick={() => openDoc("privacy", "РџРѕР»РёС‚РёРєР° РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё")}>
-                    РџРѕР»РёС‚РёРєР° РєРѕРЅС„РёРґРµРЅС†РёР°Р»СЊРЅРѕСЃС‚Рё
-                  </button>
-                  <button className="link-btn" onClick={() => openDoc("acceptable_use", "РџСЂР°РІРёР»Р° РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ")}>
-                    РџСЂР°РІРёР»Р° РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ
-                  </button>
+                  <button className="link-btn" onClick={() => openDoc("terms", "Пользовательское соглашение")}>Пользовательское соглашение</button>
+                  <button className="link-btn" onClick={() => openDoc("privacy", "Политика конфиденциальности")}>Политика конфиденциальности</button>
+                  <button className="link-btn" onClick={() => openDoc("acceptable_use", "Правила использования")}>Правила использования</button>
                 </div>
               </article>
             )}
@@ -469,7 +531,7 @@ export default function App() {
               <article className="card">
                 <div className="row between">
                   <h3>{docTitle}</h3>
-                  <button onClick={() => { setDocHtml(""); setDocTitle(""); }}>РќР°Р·Р°Рґ</button>
+                  <button onClick={() => { setDocHtml(""); setDocTitle(""); }}>Назад</button>
                 </div>
                 <div className="doc-view" dangerouslySetInnerHTML={{ __html: docHtml }} />
               </article>
@@ -480,13 +542,7 @@ export default function App() {
 
       <nav className="tabbar">
         {TABS.map((item) => (
-          <button
-            key={item.id}
-            className={tab === item.id ? "active" : ""}
-            onClick={() => setTab(item.id)}
-            title={item.title}
-            aria-label={item.label}
-          >
+          <button key={item.id} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)} title={item.title} aria-label={item.label}>
             {iconForTab(item.id, tab === item.id)}
           </button>
         ))}

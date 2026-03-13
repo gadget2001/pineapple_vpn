@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -19,6 +19,8 @@ class User(Base):
     referred_by_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
     trial_days: Mapped[int] = mapped_column(Integer, default=3)
     trial_activated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    terms_accepted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    onboarding_os: Mapped[str | None] = mapped_column(String(32), nullable=True)
     wallet_balance_rub: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

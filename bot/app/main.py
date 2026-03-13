@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import os
 from datetime import datetime, timezone
 
@@ -26,11 +26,11 @@ async def send_admin_log(action: str, message: Message, details: dict | None = N
     lines = [
         "[ Pineapple VPN LOG ]",
         "",
-        f"New event: {action}",
+        f"Новое событие: {action}",
         "",
         f"User ID: {message.from_user.id}",
         f"Username: @{message.from_user.username or 'unknown'}",
-        f"Date: {timestamp}",
+        f"Дата: {timestamp}",
     ]
     for k, v in details.items():
         lines.append(f"{k}: {v}")
@@ -58,14 +58,21 @@ async def cmd_start(message: Message):
         await send_admin_log("bot_first_start", message, details)
 
     keyboard = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="Open Pineapple VPN", web_app=WebAppInfo(url=MINIAPP_URL))]],
+        keyboard=[[KeyboardButton(text="Открыть Pineapple VPN", web_app=WebAppInfo(url=MINIAPP_URL))]],
         resize_keyboard=True,
+    )
+
+    referral_note = (
+        "\n\nВы пришли по приглашению: для вас доступен расширенный пробный период."
+        if start_param.startswith("ref_")
+        else ""
     )
 
     await message.answer(
         "Pineapple VPN\n"
-        "Secure access to Russian IP from abroad.\n\n"
-        "Open MiniApp to activate trial, top up wallet, buy subscription and get ready VPN config.",
+        "Защищенный удаленный доступ к российским сервисам из-за границы.\n"
+        "В MiniApp вы сможете: принять правила, активировать пробный период,\n"
+        "пополнить кошелек, оформить подписку и получить настройку VPN." + referral_note,
         reply_markup=keyboard,
     )
 

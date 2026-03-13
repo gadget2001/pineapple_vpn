@@ -99,3 +99,5 @@ def send_admin_log_sync(action: str, user_id: int | None, username: str | None, 
         json={"chat_id": settings.admin_chat_id, "text": text, "disable_web_page_preview": True},
         timeout=10,
     )
+
+

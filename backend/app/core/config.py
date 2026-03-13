@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+﻿from pydantic_settings import BaseSettings, SettingsConfigDict
 from urllib.parse import quote_plus
 
 
@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     bot_token: str
     admin_chat_id: int
     telegram_miniapp_url: str
+    telegram_bot_username: str = ""
     telegram_debug_auth: bool = False
 
     yookassa_shop_id: str

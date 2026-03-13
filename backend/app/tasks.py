@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+﻿from datetime import datetime, timedelta
 
 import httpx
 from sqlalchemy.orm import Session
@@ -10,6 +10,13 @@ from app.db.session import SessionLocal
 from app.models.connection_log import ConnectionLog
 from app.models.subscription import Subscription
 from app.models.user import User
+
+
+PLANS_TEXT = "Тарифы Pineapple VPN:\n• Неделя — 74 ₽\n• Месяц — 149 ₽"
+
+
+def _panel_headers() -> dict:
+    return {"Authorization": f"Bearer {settings.panel_token}"}
 
 
 @celery_app.task
@@ -53,9 +60,14 @@ def send_renewal_reminders():
             user = db.query(User).filter(User.id == sub.user_id).first()
             if not user:
                 continue
+
+            is_trial = sub.plan == "trial"
+            title = "Пробный период заканчивается" if is_trial else "Подписка заканчивается"
             text = (
-                "Ваша подписка Pineapple VPN скоро истекает. "
-                "Откройте MiniApp и продлите доступ."
+                f"{title}.\n"
+                f"Окончание: {sub.ends_at.strftime('%d.%m.%Y %H:%M')} (UTC).\n"
+                "Продлите доступ в MiniApp заранее, чтобы не потерять подключение.\n\n"
+                f"{PLANS_TEXT}"
             )
             httpx.post(
                 f"https://api.telegram.org/bot{settings.bot_token}/sendMessage",
@@ -79,14 +91,24 @@ def cleanup_connection_logs():
 
 @celery_app.task
 def disable_vpn_user_task(telegram_id: int, username: str | None = None):
+    panel_base = settings.panel_url.rstrip("/")
+    uname = f"tg_{telegram_id}"
+
     httpx.post(
-        f"{settings.panel_url}/api/user/disable/tg_{telegram_id}",
-        headers={"Authorization": f"Bearer {settings.panel_token}"},
+        f"{panel_base}/api/user/disable/{uname}",
+        headers=_panel_headers(),
         timeout=15,
     )
+
+    httpx.delete(
+        f"{panel_base}/api/user/{uname}",
+        headers=_panel_headers(),
+        timeout=15,
+    )
+
     send_admin_log_sync(
         "vpn_disabled",
         telegram_id,
         username,
-        {},
+        {"deleted_from_panel": True},
     )

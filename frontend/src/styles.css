@@ -373,3 +373,72 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
     border-radius: 14px;
   }
 }
+
+.pulse-in {
+  animation: pulseIn 0.45s ease;
+}
+
+@keyframes pulseIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.intro-card p {
+  margin-top: 0;
+}
+
+.inline-links {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.os-pills {
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.soft-btn {
+  background: #f3f7ea;
+  color: var(--green-900);
+  border: 1px solid #d7e6c6;
+  box-shadow: none;
+}
+
+.soft-btn:hover {
+  box-shadow: none;
+}
+
+.soft-btn-active {
+  background: #e7f4e3;
+  border-color: #9fca98;
+}
+
+.tariffs-card .price-card.modern {
+  background: linear-gradient(165deg, #fffef9, #fff7e8);
+  border: 1px solid #e7dcc0;
+}
+
+.price-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.price-badge {
+  border-radius: 999px;
+  background: #f0f8ec;
+  border: 1px solid #cfe3c6;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #2d6730;
+}
+
+.done-banner {
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #bfe1c4;
+  background: #ecf9ef;
+  color: #1f6d2a;
+  padding: 10px 12px;
+  font-weight: 700;
+}

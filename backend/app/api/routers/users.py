@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.config import settings
+from app.core.logging import send_admin_log
 from app.db.session import get_db
-from app.models.device import Device
 from app.models.payment import Payment
 from app.models.referral import Referral
 from app.models.subscription import Subscription
@@ -19,8 +19,8 @@ from app.utils.audit import log_audit
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-class DeviceCreate(BaseModel):
-    name: str
+class ConsentAcceptRequest(BaseModel):
+    os: str | None = None
 
 
 @router.get(
@@ -43,39 +43,38 @@ def get_profile(
 
 
 @router.post(
-    "/devices",
-    summary="Добавить устройство",
-    description="Добавляет устройство пользователя (например, телефон/ноутбук) для учета в кабинете.",
+    "/consent",
+    summary="Согласие с правилами",
+    description="Фиксирует ознакомление пользователя с правилами сервиса и юридическими документами.",
 )
-def add_device(
-    payload: DeviceCreate,
+async def accept_consent(
+    payload: ConsentAcceptRequest,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    device = Device(user_id=user.id, name=payload.name)
-    db.add(device)
+    if not user.terms_accepted_at:
+        user.terms_accepted_at = datetime.utcnow()
+
+    if payload.os:
+        user.onboarding_os = payload.os.strip().lower()[:32]
+
     db.commit()
-    log_audit(db, user.id, "device_add", {"device": payload.name})
-    return {"status": "ok"}
 
+    log_audit(db, user.id, "terms_accepted", {"os": user.onboarding_os})
+    await send_admin_log(
+        "terms_accepted",
+        user.telegram_id,
+        user.username,
+        {"os": user.onboarding_os or "unknown", "accepted_at": user.terms_accepted_at.isoformat()},
+    )
 
-@router.get(
-    "/devices",
-    summary="Список устройств",
-    description="Возвращает список устройств, добавленных пользователем.",
-)
-def list_devices(
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    devices = db.query(Device).filter(Device.user_id == user.id).all()
-    return [{"id": d.id, "name": d.name, "last_seen_at": d.last_seen_at} for d in devices]
+    return {"status": "ok", "terms_accepted_at": user.terms_accepted_at, "os": user.onboarding_os}
 
 
 @router.get(
     "/overview",
     summary="Обзор личного кабинета",
-    description="Единая сводка для MiniApp: пользователь, trial, подписка, баланс, рефералы, устройства, VPN-готовность.",
+    description="Единая сводка для MiniApp: пользователь, trial, подписка, баланс, рефералы и onboarding.",
 )
 def account_overview(
     user: User = Depends(get_current_user),
@@ -121,17 +120,14 @@ def account_overview(
         .scalar()
         or 0
     )
-    devices_count = (
-        db.query(func.count(Device.id))
-        .filter(Device.user_id == user.id)
-        .scalar()
-        or 0
-    )
     vpn_profile = db.query(VPNProfile).filter(VPNProfile.user_id == user.id).first()
 
     referral_link = f"{settings.telegram_miniapp_url}?startapp={user.referral_code}"
 
     onboarding = {
+        "terms_accepted": user.terms_accepted_at is not None,
+        "terms_accepted_at": user.terms_accepted_at,
+        "os": user.onboarding_os,
         "trial_available": not trial_used,
         "wallet_ready": user.wallet_balance_rub >= 74,
         "has_active_subscription": active,
@@ -170,9 +166,6 @@ def account_overview(
         "payments": {
             "paid_count": payments_paid,
             "paid_total_rub": payments_total,
-        },
-        "devices": {
-            "count": devices_count,
         },
         "vpn": {
             "has_profile": bool(vpn_profile),
