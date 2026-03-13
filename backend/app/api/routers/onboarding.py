@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timedelta
+from datetime import datetime, timedelta
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -114,6 +114,10 @@ def _resolve_step(db: Session, user: User) -> str:
     if normalized_os != user.onboarding_os:
         user.onboarding_os = normalized_os
         db.commit()
+
+    # Respect explicit in-progress states (used by repeat device flow).
+    if user.onboarding_step in {"device_select", "install_app", "get_config", "complete"}:
+        return user.onboarding_step
 
     if user.onboarding_completed_at:
         return "done"
@@ -267,12 +271,6 @@ async def select_device(
     db.commit()
 
     log_audit(db, user.id, "onboarding_platform_selected", {"os": payload.os})
-    await send_admin_log(
-        "onboarding_platform_selected",
-        user.telegram_id,
-        user.username,
-        {"os": payload.os},
-    )
 
     return _state(db, user)
 
@@ -300,12 +298,6 @@ async def get_instructions(
     info = INSTRUCTIONS[target_os]
 
     log_audit(db, user.id, "onboarding_instruction_viewed", {"os": target_os})
-    await send_admin_log(
-        "onboarding_instruction_viewed",
-        user.telegram_id,
-        user.username,
-        {"os": target_os},
-    )
 
     return OnboardingInstructionOut(
         os=target_os,
@@ -334,12 +326,6 @@ async def confirm_install(
     db.commit()
 
     log_audit(db, user.id, "onboarding_app_installed", {"os": user.onboarding_os})
-    await send_admin_log(
-        "onboarding_app_installed",
-        user.telegram_id,
-        user.username,
-        {"os": user.onboarding_os},
-    )
 
     return _state(db, user)
 
@@ -433,6 +419,7 @@ async def restart_device_flow(
         raise HTTPException(status_code=400, detail="Terms must be accepted first")
 
     user.onboarding_step = "device_select"
+    user.onboarding_os = None
     user.onboarding_install_confirmed_at = None
     db.commit()
 

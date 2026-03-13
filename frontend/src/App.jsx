@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
@@ -130,6 +130,7 @@ export default function App() {
   const [tab, setTab] = useState("home");
   const [authError, setAuthError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isHydrating, setIsHydrating] = useState(true);
 
   const [overview, setOverview] = useState(null);
   const [status, setStatus] = useState(null);
@@ -220,6 +221,7 @@ export default function App() {
     const auth = async () => {
       if (!tg?.initData) {
         setAuthError("Откройте приложение через кнопку в Telegram-боте.");
+        setIsHydrating(false);
         return;
       }
       if (token) return;
@@ -234,6 +236,7 @@ export default function App() {
         setToken(data.access_token);
       } catch (e) {
         setAuthError(String(e.message));
+        setIsHydrating(false);
       }
     };
 
@@ -241,7 +244,11 @@ export default function App() {
   }, [tg, token, startParam]);
 
   useEffect(() => {
-    loadAll().catch((e) => setAuthError(String(e.message)));
+    if (!token) return;
+    setIsHydrating(true);
+    loadAll()
+      .catch((e) => setAuthError(String(e.message)))
+      .finally(() => setIsHydrating(false));
   }, [token]);
 
   useEffect(() => {
@@ -471,6 +478,17 @@ export default function App() {
   const onboardingStepIndex = onboarding?.step_index || 1;
   const onboardingTotal = onboarding?.total_steps || 6;
   const trialDays = onboarding?.trial_days || overview?.trial?.days || 3;
+  const isRepeatDeviceFlow =
+    Boolean(onboarding?.completed) &&
+    ["device_select", "install_app", "get_config", "complete"].includes(onboardingStep);
+  const repeatStepMap = {
+    device_select: 1,
+    install_app: 2,
+    get_config: 3,
+    complete: 4,
+  };
+  const progressStepIndex = isRepeatDeviceFlow ? (repeatStepMap[onboardingStep] || 1) : onboardingStepIndex;
+  const progressTotal = isRepeatDeviceFlow ? 4 : onboardingTotal;
 
   const setupSubscriptionUrl = normalizeSubscriptionUrl(
     onboardingConfig?.subscription_url || vpnConfig?.subscription_url,
@@ -485,8 +503,19 @@ export default function App() {
       <main className="app-main">
         {authError && <div className="alert">{authError}</div>}
         {copyNotice && <div className="toast-ok">{copyNotice}</div>}
+        {isHydrating && (
+          <section className="onboarding-shell pulse-in">
+            <article className="card onboarding-card">
+              <div className="config-loader-screen">
+                <div className="loader-spinner" />
+                <h3>Загружаем ваш кабинет</h3>
+                <p>Проверяем авторизацию и восстанавливаем шаг настройки</p>
+              </div>
+            </article>
+          </section>
+        )}
 
-        {showOnboarding && showIntro && (
+        {!isHydrating && showOnboarding && showIntro && (
           <section className="onboarding-shell pulse-in">
             <article className="card intro-hero-card">
               <div className="intro-illustration">
@@ -526,13 +555,13 @@ export default function App() {
           </section>
         )}
 
-        {showOnboarding && !showIntro && (
+        {!isHydrating && showOnboarding && !showIntro && (
           <section className="onboarding-shell pulse-in">
             <article className="card onboarding-card">
               <div className="onboarding-progress-wrap">
-                <div className="onboarding-progress-meta">Шаг {onboardingStepIndex} из {onboardingTotal}</div>
+                <div className="onboarding-progress-meta">Шаг {progressStepIndex} из {progressTotal}</div>
                 <div className="onboarding-progress">
-                  <span style={{ width: `${Math.round((onboardingStepIndex / onboardingTotal) * 100)}%` }} />
+                  <span style={{ width: `${Math.round((progressStepIndex / progressTotal) * 100)}%` }} />
                 </div>
               </div>
 
@@ -699,7 +728,7 @@ export default function App() {
           </section>
         )}
 
-        {!showOnboarding && tab === "home" && (
+        {!isHydrating && !showOnboarding && tab === "home" && (
           <section className="page">
             <div className="hero">
               <div className="hero-title">Pineapple VPN</div>
@@ -747,7 +776,7 @@ export default function App() {
           </section>
         )}
 
-        {!showOnboarding && tab === "wallet" && (
+        {!isHydrating && !showOnboarding && tab === "wallet" && (
           <section className="page">
             <article className="card wallet-balance">
               <h3>Кошелек</h3>
@@ -785,7 +814,7 @@ export default function App() {
           </section>
         )}
 
-        {!showOnboarding && tab === "setup" && (
+        {!isHydrating && !showOnboarding && tab === "setup" && (
           <section className="page">
             <article className="card">
               <h3>Ваша активная ссылка подключения</h3>
@@ -813,7 +842,7 @@ export default function App() {
           </section>
         )}
 
-        {!showOnboarding && tab === "referral" && (
+        {!isHydrating && !showOnboarding && tab === "referral" && (
           <section className="page">
             <article className="card">
               <h3>Реферальная система</h3>
@@ -846,7 +875,7 @@ export default function App() {
           </section>
         )}
 
-        {!showOnboarding && tab === "help" && (
+        {!isHydrating && !showOnboarding && tab === "help" && (
           <section className="page">
             {!docHtml && (
               <article className="card">
@@ -871,7 +900,7 @@ export default function App() {
         )}
       </main>
 
-      {!showOnboarding && (
+      {!isHydrating && !showOnboarding && (
         <nav className="tabbar">
           {TABS.map((item) => (
             <button key={item.id} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)} title={item.title} aria-label={item.label}>
