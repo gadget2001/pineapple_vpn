@@ -569,12 +569,21 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 
 .intro-illustration {
   position: relative;
-  height: 90px;
+  height: 130px;
   margin-bottom: 10px;
   overflow: hidden;
   border-radius: 14px;
-  background: linear-gradient(120deg, #e9f7e6, #fff5dc);
+  background: linear-gradient(120deg, #e8f8e6, #fff6dd);
   border: 1px solid #dbe8c7;
+}
+
+.intro-illustration::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.35) 50%, transparent 80%);
+  transform: translateX(-120%);
+  animation: introShine 4.8s ease-in-out infinite;
 }
 
 .intro-bubble {
@@ -589,12 +598,66 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 .intro-bubble.c { width: 64px; height: 64px; right: 22px; top: 14px; background: #ffd786; animation-delay: 1.5s; }
 
 @keyframes introFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes introShine { 0%, 55% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+
+.intro-visual {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 14px;
+  z-index: 2;
+  color: #1f4221;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.intro-visual strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+
+.intro-visual span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.92;
+}
+
+.intro-copy {
+  animation: introCopyIn 0.35s ease;
+}
+
+@keyframes introCopyIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .intro-dots { display: flex; gap: 8px; margin: 10px 0; }
 .dot { width: 9px; height: 9px; border-radius: 50%; border: none; background: #d4d4d4; padding: 0; }
 .dot.active { background: #237227; }
 
 .intro-nav { margin-bottom: 10px; }
+
+.intro-arrow {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(35, 114, 39, 0.22);
+  background: rgba(255, 255, 255, 0.88);
+  color: #1f5b24;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.intro-arrow.left { left: 10px; }
+.intro-arrow.right { right: 10px; }
+.intro-arrow svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.2; }
 
 .intro-cards-grid {
   display: grid;
@@ -612,6 +675,22 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 
 .intro-chip-card h4 { margin: 0 0 6px; font-size: 14px; }
 .intro-chip-card .value { font-weight: 800; font-size: 24px; }
+.trial-highlight {
+  background: linear-gradient(160deg, #fffaf0, #ffe7aa);
+  border-color: #efc661;
+  box-shadow: 0 0 0 0 rgba(255, 174, 51, 0.42);
+  animation: trialPulse 2.4s ease-in-out infinite;
+}
+
+.trial-highlight .value {
+  color: #6e4a00;
+}
+
+@keyframes trialPulse {
+  0% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(255, 174, 51, 0.32); }
+  60% { transform: translateY(-1px); box-shadow: 0 0 0 8px rgba(255, 174, 51, 0); }
+  100% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(255, 174, 51, 0); }
+}
 
 .tariff-line { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; }
 
@@ -659,5 +738,8 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 }
 
 @media (max-width: 640px) {
+  .intro-illustration { height: 120px; }
+  .intro-visual strong { font-size: 16px; }
+  .intro-visual span { font-size: 11px; }
   .intro-cards-grid { grid-template-columns: 1fr; }
 }

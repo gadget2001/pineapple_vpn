@@ -150,6 +150,7 @@ export default function App() {
   const [copyNotice, setCopyNotice] = useState("");
   const [showIntro, setShowIntro] = useState(false);
   const [introSlide, setIntroSlide] = useState(0);
+  const [introTouchStartX, setIntroTouchStartX] = useState(null);
   const [consentChecked, setConsentChecked] = useState(false);
 
   const [topupAmount, setTopupAmount] = useState(100);
@@ -299,6 +300,20 @@ export default function App() {
 
   const startIntroFlow = () => {
     setShowIntro(false);
+  };
+
+  const introPrev = () => setIntroSlide((v) => Math.max(0, v - 1));
+  const introNext = () => setIntroSlide((v) => Math.min(INTRO_SLIDES.length - 1, v + 1));
+  const onIntroTouchStart = (e) => setIntroTouchStartX(e.changedTouches?.[0]?.clientX ?? null);
+  const onIntroTouchEnd = (e) => {
+    if (introTouchStartX === null) return;
+    const endX = e.changedTouches?.[0]?.clientX ?? introTouchStartX;
+    const delta = endX - introTouchStartX;
+    if (Math.abs(delta) >= 40) {
+      if (delta < 0) introNext();
+      if (delta > 0) introPrev();
+    }
+    setIntroTouchStartX(null);
   };
 
   const topup = async () => {
@@ -512,25 +527,33 @@ export default function App() {
 
         {!isHydrating && showOnboarding && showIntro && (
           <section className="onboarding-shell pulse-in">
-            <article className="card intro-hero-card">
+            <article className="card intro-hero-card" onTouchStart={onIntroTouchStart} onTouchEnd={onIntroTouchEnd}>
               <div className="intro-illustration">
+                <button className="intro-arrow left" onClick={introPrev} disabled={introSlide === 0} aria-label="Предыдущий слайд">
+                  <svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" /></svg>
+                </button>
+                <button className="intro-arrow right" onClick={introNext} disabled={introSlide === INTRO_SLIDES.length - 1} aria-label="Следующий слайд">
+                  <svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7" /></svg>
+                </button>
                 <span className="intro-bubble a" />
                 <span className="intro-bubble b" />
                 <span className="intro-bubble c" />
+                <div className="intro-visual">
+                  <strong>Pineapple VPN</strong>
+                  <span>Защищенный доступ к важным сервисам из любой точки мира</span>
+                </div>
               </div>
-              <h2>{INTRO_SLIDES[introSlide].title}</h2>
-              <p>{INTRO_SLIDES[introSlide].text}</p>
+              <div key={introSlide} className="intro-copy">
+                <h2>{INTRO_SLIDES[introSlide].title}</h2>
+                <p>{INTRO_SLIDES[introSlide].text}</p>
+              </div>
               <div className="intro-dots">
                 {INTRO_SLIDES.map((_, idx) => (
                   <button key={idx} className={`dot ${introSlide === idx ? "active" : ""}`} onClick={() => setIntroSlide(idx)} aria-label={`Слайд ${idx + 1}`} />
                 ))}
               </div>
-              <div className="row wrap-row intro-nav">
-                <button className="soft-btn" disabled={introSlide === 0} onClick={() => setIntroSlide((v) => Math.max(0, v - 1))}>{"\u041d\u0430\u0437\u0430\u0434"}</button>
-                <button className="soft-btn" disabled={introSlide === INTRO_SLIDES.length - 1} onClick={() => setIntroSlide((v) => Math.min(INTRO_SLIDES.length - 1, v + 1))}>{"\u0414\u0430\u043b\u0435\u0435"}</button>
-              </div>
               <div className="intro-cards-grid">
-                <div className="intro-chip-card">
+                <div className="intro-chip-card trial-highlight">
                   <h4>{"\u041f\u0440\u043e\u0431\u043d\u044b\u0439 \u043f\u0435\u0440\u0438\u043e\u0434"}</h4>
                   <div className="value">{trialDays} {"\u0434\u043d."}</div>
                   <small>{trialDays > 3 ? "\u041f\u043e \u0440\u0435\u0444\u0435\u0440\u0430\u043b\u044c\u043d\u043e\u0439 \u0441\u0441\u044b\u043b\u043a\u0435" : "\u0421\u0442\u0430\u043d\u0434\u0430\u0440\u0442\u043d\u044b\u0439 \u0434\u043e\u0441\u0442\u0443\u043f"}</small>
