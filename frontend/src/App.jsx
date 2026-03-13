@@ -302,8 +302,8 @@ export default function App() {
     setShowIntro(false);
   };
 
-  const introPrev = () => setIntroSlide((v) => Math.max(0, v - 1));
-  const introNext = () => setIntroSlide((v) => Math.min(INTRO_SLIDES.length - 1, v + 1));
+  const introPrev = () => setIntroSlide((v) => (v - 1 + INTRO_SLIDES.length) % INTRO_SLIDES.length);
+  const introNext = () => setIntroSlide((v) => (v + 1) % INTRO_SLIDES.length);
   const onIntroTouchStart = (e) => setIntroTouchStartX(e.changedTouches?.[0]?.clientX ?? null);
   const onIntroTouchEnd = (e) => {
     if (introTouchStartX === null) return;
@@ -534,20 +534,23 @@ export default function App() {
                 <span className="intro-bubble c" />
                 <span className="intro-bubble d" />
                 <span className="intro-bubble e" />
+                <span className="intro-bubble f" />
+                <span className="intro-bubble g" />
+                <span className="intro-bubble h" />
                 <div className="intro-visual">
                   <strong>Pineapple VPN</strong>
                   <span>Защищенный доступ к важным сервисам из любой точки мира</span>
                 </div>
               </div>
               <div className="intro-carousel">
-                <button className="intro-arrow left" onClick={introPrev} disabled={introSlide === 0} aria-label="Предыдущий слайд">
+                <button className="intro-arrow left" onClick={introPrev} aria-label="Предыдущий слайд">
                   <svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" /></svg>
                 </button>
                 <div key={introSlide} className="intro-copy">
                   <h2>{INTRO_SLIDES[introSlide].title}</h2>
                   <p>{INTRO_SLIDES[introSlide].text}</p>
                 </div>
-                <button className="intro-arrow right" onClick={introNext} disabled={introSlide === INTRO_SLIDES.length - 1} aria-label="Следующий слайд">
+                <button className="intro-arrow right" onClick={introNext} aria-label="Следующий слайд">
                   <svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7" /></svg>
                 </button>
               </div>
