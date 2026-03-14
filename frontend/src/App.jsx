@@ -343,20 +343,26 @@ export default function App() {
     const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText.trim())}`;
 
     try {
+      if (tg?.switchInlineQuery) {
+        try {
+          tg.switchInlineQuery(shareText, ["users", "groups", "channels"]);
+          return;
+        } catch {
+          // Fallback for bots without inline mode.
+        }
+      }
+
       if (tg?.openTelegramLink) {
         tg.openTelegramLink(shareUrl);
         return;
       }
-      if (tg?.openLink) {
-        tg.openLink(shareUrl);
-        return;
-      }
+
       if (navigator.share) {
         await navigator.share({ text: shareText });
         return;
       }
+
       await copy(shareText, "Приглашение скопировано");
-      window.open(shareUrl, "_blank", "noopener,noreferrer");
     } catch (e) {
       setAuthError(String(e?.message || "Не удалось поделиться приглашением"));
     }
