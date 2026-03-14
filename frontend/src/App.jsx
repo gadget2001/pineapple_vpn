@@ -339,8 +339,7 @@ export default function App() {
 
     const inviteMessage = referralInviteMessage || link;
     const shareText = inviteMessage && inviteMessage !== "—" ? inviteMessage : link;
-    const shareBody = shareText.replace(link, "").trim();
-    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareBody)}`;
+    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText.trim())}`;
 
     try {
       if (tg?.openTelegramLink) {
