@@ -681,8 +681,8 @@ export default function App() {
                 </div>
                 <div className="intro-chip-card">
                   <h4>{"Тарифы"}</h4>
-                  <div className="tariff-line"><span>{"Неделя"}</span><strong>74 {"₽"}</strong></div>
-                  <div className="tariff-line"><span>{"Месяц"}</span><strong>149 {"₽"}</strong></div>
+                  <div className="tariff-line"><span>{"Неделя"}</span><strong>99 {"₽"}</strong></div>
+                  <div className="tariff-line"><span>{"Месяц"}</span><strong>199 {"₽"}</strong></div>
                 </div>
                 <div className="intro-chip-card">
                   <h4>{"Способы оплаты"}</h4>

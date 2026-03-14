@@ -12,7 +12,7 @@ from app.models.subscription import Subscription
 from app.models.user import User
 
 
-PLANS_TEXT = "Тарифы Pineapple VPN:\n• Неделя — 74 ₽\n• Месяц — 149 ₽"
+PLANS_TEXT = "Тарифы Pineapple VPN:\n• Неделя — 99 ₽\n• Месяц — 199 ₽"
 
 
 def _panel_headers() -> dict:

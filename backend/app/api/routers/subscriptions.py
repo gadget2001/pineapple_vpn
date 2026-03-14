@@ -20,8 +20,8 @@ from app.utils.trial_state import mark_trial_used
 router = APIRouter(prefix="/subscriptions", tags=["Subscriptions"])
 
 PLAN_PRICES = {
-    "week": 74,
-    "month": 149,
+    "week": 99,
+    "month": 199,
 }
 
 PLAN_DAYS = {
@@ -38,8 +38,8 @@ PLAN_DAYS = {
 )
 def list_plans():
     return [
-        SubscriptionPlan(code="week", title="Неделя", price_rub=74, duration_days=7),
-        SubscriptionPlan(code="month", title="Месяц", price_rub=149, duration_days=30),
+        SubscriptionPlan(code="week", title="Неделя", price_rub=99, duration_days=7),
+        SubscriptionPlan(code="month", title="Месяц", price_rub=199, duration_days=30),
     ]
 
 
