@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -9,23 +9,41 @@ from app.models.referral import Referral
 from app.models.user import User
 from app.schemas.referral import ReferralInfo
 from app.utils.audit import log_audit
+from app.utils.referral import build_bot_referral_link
 
 router = APIRouter(prefix="/referral", tags=["Referrals"])
 
+INVITE_TEMPLATES = [
+    (
+        "Пользуюсь Pineapple VPN, чтобы спокойно заходить в банки, Госуслуги и рабочие сервисы из-за границы.\n\n"
+        "По моей ссылке тебе откроется 7 дней бесплатно вместо 3 👇\n"
+        "{link}"
+    ),
+    (
+        "Если ты за границей, очень выручает Pineapple VPN.\n\n"
+        "По приглашению дают увеличенный пробный период: 7 дней вместо 3 👇\n"
+        "{link}"
+    ),
+    (
+        "Я подключил Pineapple VPN для доступа к российским сервисам из-за границы.\n\n"
+        "Зайди по моей ссылке и получи 7 бесплатных дней вместо 3 👇\n"
+        "{link}"
+    ),
+]
+DEFAULT_INVITE_TEMPLATE_INDEX = 0
+
 
 def _build_bot_deep_link(ref_code: str) -> str:
-    if settings.telegram_bot_username:
-        return f"https://t.me/{settings.telegram_bot_username}?startapp={ref_code}"
-    return f"{settings.telegram_miniapp_url}?startapp={ref_code}"
-
-
-def _build_invite_message(link: str) -> str:
-    return (
-        "Привет! Пользуюсь Pineapple VPN для защищенного доступа к российским сервисам из-за границы.\n\n"
-        "Сервис подходит для банков, Госуслуг и рабочих систем.\n"
-        "По моей ссылке тебе дадут увеличенный пробный период 7 дней вместо 3.\n\n"
-        f"Открыть: {link}"
+    return build_bot_referral_link(
+        referral_code=ref_code,
+        bot_username=settings.telegram_bot_username,
+        fallback_miniapp_url=settings.telegram_miniapp_url,
     )
+
+
+def _build_invite_message(link: str, template_index: int = DEFAULT_INVITE_TEMPLATE_INDEX) -> str:
+    safe_index = min(max(template_index, 0), len(INVITE_TEMPLATES) - 1)
+    return INVITE_TEMPLATES[safe_index].format(link=link)
 
 
 @router.get(
@@ -39,10 +57,10 @@ def referral_info(
     db: Session = Depends(get_db),
 ):
     bot_link = _build_bot_deep_link(user.referral_code)
-    log_audit(db, user.id, "referral_info", {})
+    log_audit(db, user.id, "referral_info", {"link_type": "telegram_start"})
     return ReferralInfo(
         referral_code=user.referral_code,
-        referral_link=f"{settings.telegram_miniapp_url}?startapp={user.referral_code}",
+        referral_link=bot_link,
         bot_deep_link=bot_link,
         invite_message=_build_invite_message(bot_link),
     )
@@ -75,7 +93,7 @@ def referral_stats(
         "invited_count": invited_count,
         "earned_rub": earned,
         "commission_percent": 10,
-        "link": f"{settings.telegram_miniapp_url}?startapp={user.referral_code}",
+        "link": bot_link,
         "bot_deep_link": bot_link,
         "invite_message": _build_invite_message(bot_link),
     }

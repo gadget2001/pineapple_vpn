@@ -45,6 +45,12 @@ function useTelegram() {
   return window.Telegram?.WebApp;
 }
 
+function getStartPayloadFromUrl() {
+  if (typeof window === "undefined") return "";
+  const params = new URLSearchParams(window.location.search);
+  return params.get("startapp") || params.get("start") || "";
+}
+
 function formatDate(dt) {
   if (!dt) return "—";
   return new Date(dt).toLocaleString("ru-RU", {
@@ -177,7 +183,7 @@ export default function App() {
   const prevOnboardingStepRef = useRef(null);
 
   const authHeaders = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token]);
-  const startParam = tg?.initDataUnsafe?.start_param || "";
+  const startParam = tg?.initDataUnsafe?.start_param || getStartPayloadFromUrl();
 
   const request = async (path, options = {}) => {
     const res = await fetch(`${API_BASE}${path}`, options);
@@ -306,6 +312,29 @@ export default function App() {
     await navigator.clipboard.writeText(text);
     setCopyNotice(notice);
     window.setTimeout(() => setCopyNotice(""), 2000);
+  };
+
+  const shareInvite = async () => {
+    const link = referralInfo?.bot_deep_link || referralStats?.bot_deep_link || "";
+    const inviteMessage = referralInfo?.invite_message || referralStats?.invite_message || link;
+    if (!link) return;
+
+    const shareText = inviteMessage && inviteMessage !== "—" ? inviteMessage : link;
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("7 дней бесплатно вместо 3 с Pineapple VPN")}`;
+
+    try {
+      if (tg?.openTelegramLink) {
+        tg.openTelegramLink(shareUrl);
+        return;
+      }
+      if (navigator.share) {
+        await navigator.share({ text: shareText });
+        return;
+      }
+      await copy(shareText, "Приглашение скопировано");
+    } catch (e) {
+      setAuthError(String(e?.message || "Не удалось поделиться приглашением"));
+    }
   };
 
   const openDoc = async (name, title) => {
@@ -924,6 +953,7 @@ export default function App() {
           <section className="page">
             <article className="card">
               <h3>Реферальная система</h3>
+              <p className="muted">Друг получит 7 дней бесплатно вместо 3</p>
               <p>Ссылка в Telegram-бот:</p>
               <div className="ref-link">{referralInfo?.bot_deep_link || referralStats?.bot_deep_link || "—"}</div>
               <div className="row">
@@ -932,7 +962,8 @@ export default function App() {
               <p>Готовое сообщение-приглашение:</p>
               <div className="ref-link">{referralInfo?.invite_message || referralStats?.invite_message || "—"}</div>
               <div className="row">
-                <button onClick={() => copy(referralInfo?.invite_message || referralStats?.invite_message)}>Скопировать сообщение</button>
+                <button onClick={() => copy(referralInfo?.invite_message || referralStats?.invite_message, "Приглашение скопировано")}>Скопировать приглашение</button>
+                <button className="soft-btn" onClick={shareInvite}>Поделиться</button>
               </div>
               <div className="grid three">
                 <div className="stat">Приглашено: {referralStats?.invited_count || 0}</div>

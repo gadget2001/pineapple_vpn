@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -15,6 +15,7 @@ from app.models.subscription import Subscription
 from app.models.user import User
 from app.models.vpn_profile import VPNProfile
 from app.utils.audit import log_audit
+from app.utils.referral import build_bot_referral_link
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -137,7 +138,11 @@ def account_overview(
         user.onboarding_os = normalized_os
         db.commit()
 
-    referral_link = f"{settings.telegram_miniapp_url}?startapp={user.referral_code}"
+    referral_link = build_bot_referral_link(
+        referral_code=user.referral_code,
+        bot_username=settings.telegram_bot_username,
+        fallback_miniapp_url=settings.telegram_miniapp_url,
+    )
 
     onboarding = {
         "step": user.onboarding_step or "welcome",

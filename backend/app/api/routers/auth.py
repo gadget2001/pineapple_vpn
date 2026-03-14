@@ -1,4 +1,4 @@
-﻿import json
+import json
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -14,6 +14,7 @@ from app.models.user import User
 from app.schemas.auth import Token
 from app.schemas.user import UserOut
 from app.utils.audit import log_audit
+from app.utils.referral import decode_referral_payload
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -21,6 +22,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 class TelegramAuthRequest(BaseModel):
     init_data: str
     referral_code: str | None = None
+    referral_payload: str | None = None
 
 
 @router.post(
@@ -41,6 +43,9 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
     first_name = user_data.get("first_name")
     last_name = user_data.get("last_name")
 
+    raw_ref_payload = payload.referral_payload or payload.referral_code
+    decoded_ref_code = decode_referral_payload(raw_ref_payload)
+
     try:
         user = db.query(User).filter(User.telegram_id == telegram_id).first()
         is_new = False
@@ -55,8 +60,8 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
                 onboarding_step="welcome",
             )
             inviter = None
-            if payload.referral_code:
-                inviter = db.query(User).filter(User.referral_code == payload.referral_code).first()
+            if decoded_ref_code:
+                inviter = db.query(User).filter(User.referral_code == decoded_ref_code).first()
                 if inviter:
                     user.referred_by_id = inviter.id
                     user.trial_days = 7
@@ -71,7 +76,16 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
 
         token = create_access_token(str(user.id), user.is_admin)
 
-        log_audit(db, user.id, "registration" if is_new else "login", {"username": username})
+        log_audit(
+            db,
+            user.id,
+            "registration" if is_new else "login",
+            {
+                "username": username,
+                "referral_payload_present": "yes" if raw_ref_payload else "no",
+                "referral_resolved": "yes" if decoded_ref_code else "no",
+            },
+        )
         if is_new:
             await send_admin_log(
                 "registration",
@@ -80,6 +94,7 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
                 {
                     "referral": "yes" if user.referred_by_id else "no",
                     "trial_days": user.trial_days,
+                    "referral_code": decoded_ref_code or "none",
                 },
             )
 
