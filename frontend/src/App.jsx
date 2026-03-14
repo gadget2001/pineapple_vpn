@@ -199,7 +199,7 @@ export default function App() {
 
   const authHeaders = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token]);
   const startParam = tg?.initDataUnsafe?.start_param || getStartPayloadFromUrl();
-  const referralLink = referralInfo?.bot_deep_link || referralStats?.bot_deep_link || "";
+  const referralLink = referralInfo?.bot_deep_link || referralStats?.bot_deep_link || referralInfo?.referral_link || referralStats?.link || "";
   const referralInviteMessage = buildInviteMessage(referralLink);
 
   const request = async (path, options = {}) => {
@@ -333,15 +333,22 @@ export default function App() {
 
   const shareInvite = async () => {
     const link = referralLink;
-    const inviteMessage = referralInviteMessage || link;
-    if (!link) return;
+    if (!link) {
+      setAuthError("Реферальная ссылка пока не загружена. Попробуйте через пару секунд.");
+      return;
+    }
 
+    const inviteMessage = referralInviteMessage || link;
     const shareText = inviteMessage && inviteMessage !== "—" ? inviteMessage : link;
-    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
+    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText.trim())}`;
 
     try {
       if (tg?.openTelegramLink) {
         tg.openTelegramLink(shareUrl);
+        return;
+      }
+      if (tg?.openLink) {
+        tg.openLink(shareUrl);
         return;
       }
       if (navigator.share) {
@@ -349,6 +356,7 @@ export default function App() {
         return;
       }
       await copy(shareText, "Приглашение скопировано");
+      window.open(shareUrl, "_blank", "noopener,noreferrer");
     } catch (e) {
       setAuthError(String(e?.message || "Не удалось поделиться приглашением"));
     }
