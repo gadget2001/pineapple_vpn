@@ -34,7 +34,7 @@ async def get_config(
         .first()
     )
     if not sub:
-        raise HTTPException(status_code=402, detail="Subscription required")
+        raise HTTPException(status_code=402, detail="Для получения конфигурации нужен активный тариф или пробный период.")
 
     try:
         profile, created = await get_or_create_vpn_profile(db, user)

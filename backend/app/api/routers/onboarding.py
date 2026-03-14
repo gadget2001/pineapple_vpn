@@ -195,7 +195,7 @@ async def accept_terms(
     db: Session = Depends(get_db),
 ):
     if not payload.accepted:
-        raise HTTPException(status_code=400, detail="Consent must be accepted")
+        raise HTTPException(status_code=400, detail="Необходимо подтвердить согласие с правилами.")
 
     if not user.terms_accepted_at:
         user.terms_accepted_at = datetime.utcnow()
@@ -224,7 +224,7 @@ async def activate_trial(
     db: Session = Depends(get_db),
 ):
     if _trial_used(db, user):
-        raise HTTPException(status_code=400, detail="Trial already used")
+        raise HTTPException(status_code=400, detail="Пробный период уже использован.")
 
     if _active_subscription(db, user):
         raise HTTPException(status_code=400, detail="У вас уже есть активная подписка.")
@@ -290,7 +290,7 @@ async def get_instructions(
 ):
     target_os = _normalize_os(os or user.onboarding_os) or ""
     if target_os not in INSTRUCTIONS:
-        raise HTTPException(status_code=400, detail="Choose device first")
+        raise HTTPException(status_code=400, detail="Сначала выберите устройство.")
 
     if user.onboarding_os != target_os:
         user.onboarding_os = target_os
@@ -343,7 +343,7 @@ async def get_onboarding_config(
     db: Session = Depends(get_db),
 ):
     if not _active_subscription(db, user):
-        raise HTTPException(status_code=402, detail="Active subscription required")
+        raise HTTPException(status_code=402, detail="Для получения конфигурации нужен активный тариф или пробный период.")
 
     try:
         profile, created = await get_or_create_vpn_profile(db, user)
@@ -418,7 +418,10 @@ async def restart_device_flow(
     db: Session = Depends(get_db),
 ):
     if not user.terms_accepted_at:
-        raise HTTPException(status_code=400, detail="Terms must be accepted first")
+        raise HTTPException(status_code=400, detail="Сначала примите правила сервиса.")
+
+    if not _active_subscription(db, user):
+        raise HTTPException(status_code=400, detail="Для повторной настройки нужен активный тариф или пробный период.")
 
     user.onboarding_step = "device_select"
     user.onboarding_os = None
@@ -435,3 +438,24 @@ async def restart_device_flow(
 
     return _state(db, user)
 
+
+@router.post(
+    "/cancel-device-flow",
+    response_model=OnboardingStateOut,
+    summary="Свернуть повторный мастер настройки",
+    description="Закрывает сокращенный мастер настройки устройства и возвращает пользователя в основной интерфейс.",
+)
+async def cancel_device_flow(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not user.onboarding_completed_at:
+        raise HTTPException(status_code=400, detail="Завершите первичную настройку перед закрытием мастера.")
+
+    user.onboarding_step = "done"
+    user.onboarding_os = None
+    user.onboarding_install_confirmed_at = None
+    db.commit()
+
+    log_audit(db, user.id, "onboarding_cancelled", {})
+    return _state(db, user)

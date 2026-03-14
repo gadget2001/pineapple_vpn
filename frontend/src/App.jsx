@@ -445,6 +445,11 @@ export default function App() {
   };
 
   const startDeviceFlow = async () => {
+    if (status?.status !== "active") {
+      setAuthError("Повторная настройка доступна только при активном тарифе или пробном периоде.");
+      return;
+    }
+
     setLoading(true);
     try {
       await request("/onboarding/restart-device-flow", { method: "POST", headers: authHeaders });
@@ -531,6 +536,11 @@ export default function App() {
   };
 
   const onboardingGetConfig = async () => {
+    if (status?.status !== "active") {
+      setAuthError("Для получения конфигурации нужен активный тариф или пробный период.");
+      return;
+    }
+
     setConfigGenerating(true);
     setLoading(true);
     try {
@@ -562,10 +572,26 @@ export default function App() {
     }
   };
 
+  const closeRepeatOnboarding = async () => {
+    setLoading(true);
+    try {
+      await request("/onboarding/cancel-device-flow", { method: "POST", headers: authHeaders });
+      await loadAll();
+      setShowOnboarding(false);
+      setShowQr(false);
+      setTab("setup");
+    } catch (e) {
+      setAuthError(String(e.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const wallet = overview?.user?.wallet_balance_rub || 0;
   const subEndsAt = overview?.subscription?.ends_at;
   const subDaysLeft = daysLeft(subEndsAt);
   const hasPlanInfo = Boolean(status?.plan);
+  const hasActiveAccess = status?.status === "active";
 
   const onboardingStep = onboarding?.step || "welcome";
   const onboardingStepIndex = onboarding?.step_index || 1;
@@ -699,6 +725,17 @@ export default function App() {
         {!isHydrating && showOnboarding && !showIntro && (
           <section className="onboarding-shell pulse-in">
             <article className="card onboarding-card">
+              {isRepeatDeviceFlow && (
+                <button
+                  className="onboarding-close"
+                  type="button"
+                  onClick={closeRepeatOnboarding}
+                  aria-label="Свернуть мастер"
+                  title="Свернуть мастер"
+                >
+                  ×
+                </button>
+              )}
               <div className="onboarding-progress-wrap">
                 <div className="onboarding-progress-meta">Шаг {progressStepIndex} из {progressTotal}</div>
                 <div className="onboarding-progress">
@@ -958,11 +995,11 @@ export default function App() {
             <article className="card">
               <h3>Ваша активная ссылка подключения</h3>
               <p className="muted">Этот ключ можно использовать на всех ваших устройствах.</p>
-              {!setupSubscriptionUrl && (
-                <button onClick={loadVpnConfig} disabled={loading || status?.status !== "active"}>Получить / обновить ключ</button>
+              {hasActiveAccess && !setupSubscriptionUrl && (
+                <button onClick={loadVpnConfig} disabled={loading || !hasActiveAccess}>Получить / обновить ключ</button>
               )}
               {status?.status !== "active" && <p className="muted">Для получения ключа активируйте пробный период или оплатите тариф.</p>}
-              {!!setupSubscriptionUrl && (
+              {hasActiveAccess && !!setupSubscriptionUrl && (
                 <div className="config-box">
                   <div className="config-item">
                     <label>Ссылка подключения</label>
@@ -977,7 +1014,7 @@ export default function App() {
               <h3>Подключить новое устройство</h3>
               <p className="muted">Поможем быстро настроить VPN на новом устройстве: выбор ОС, установка клиента и импорт конфигурации.</p>
               <p className="muted">Доступные ОС: Windows, iPhone, Android, macOS.</p>
-              <button disabled={loading} onClick={startDeviceFlow}>Запустить мастер подключения</button>
+              <button disabled={loading || !hasActiveAccess} onClick={startDeviceFlow}>Запустить мастер подключения</button>
             </article>
           </section>
         )}

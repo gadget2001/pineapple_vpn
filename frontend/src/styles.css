@@ -339,6 +339,33 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   margin: 0 auto;
 }
 
+
+.onboarding-card {
+  position: relative;
+}
+
+.onboarding-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #d9e6c8;
+  background: #f7fbef;
+  color: #42553f;
+  font-size: 22px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.onboarding-close:hover {
+  background: #eef6df;
+}
+
 .onboarding-progress-wrap {
   margin-bottom: 12px;
 }
