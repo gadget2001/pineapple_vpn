@@ -100,7 +100,7 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
 
         return Token(access_token=token)
     except OperationalError as exc:
-        raise HTTPException(status_code=503, detail="Database unavailable") from exc
+        raise HTTPException(status_code=503, detail="База данных временно недоступна. Попробуйте позже.") from exc
 
 
 @router.get(

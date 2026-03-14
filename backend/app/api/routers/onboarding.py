@@ -226,7 +226,7 @@ async def activate_trial(
         raise HTTPException(status_code=400, detail="Trial already used")
 
     if _active_subscription(db, user):
-        raise HTTPException(status_code=400, detail="Active subscription already exists")
+        raise HTTPException(status_code=400, detail="У вас уже есть активная подписка.")
 
     now = datetime.utcnow()
     ends_at = now + timedelta(days=user.trial_days)

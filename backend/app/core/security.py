@@ -30,7 +30,7 @@ def verify_telegram_init_data(init_data: str, max_age_seconds: int = 86400) -> D
     data = dict(parse_qsl(init_data, keep_blank_values=True))
     received_hash = data.pop("hash", None)
     if not received_hash:
-        raise ValueError("Missing hash")
+        raise ValueError("Отсутствует параметр hash в данных Telegram.")
 
     data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(data.items()))
     # Telegram MiniApp verification:
@@ -46,16 +46,16 @@ def verify_telegram_init_data(init_data: str, max_age_seconds: int = 86400) -> D
     if not hmac.compare_digest(received_hash, computed_hash):
         if settings.telegram_debug_auth:
             raise ValueError(
-                f"Invalid hash. received={received_hash} computed={computed_hash} "
+                f"Неверная подпись Telegram. received={received_hash} computed={computed_hash} "
                 f"data_check_string={data_check_string}"
             )
-        raise ValueError("Invalid hash")
+        raise ValueError("Не удалось проверить подпись Telegram. Откройте MiniApp заново.")
 
     auth_date = int(data.get("auth_date", "0"))
     if auth_date:
         now = int(time.time())
         if now - auth_date > max_age_seconds:
-            raise ValueError("Auth data expired")
+            raise ValueError("Данные авторизации устарели. Перезапустите MiniApp в Telegram.")
 
     return data
 

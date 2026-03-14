@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timedelta
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -98,7 +98,7 @@ async def activate_trial(
             )
             user.trial_activated_at = (first_trial.starts_at if first_trial else datetime.utcnow())
             db.commit()
-        raise HTTPException(status_code=400, detail="Trial already activated")
+        raise HTTPException(status_code=400, detail="Пробный период уже был активирован.")
 
     now = datetime.utcnow()
     current_sub = (
@@ -108,7 +108,7 @@ async def activate_trial(
         .first()
     )
     if current_sub:
-        raise HTTPException(status_code=400, detail="Active subscription already exists")
+        raise HTTPException(status_code=400, detail="У вас уже есть активная подписка.")
 
     ends_at = now + timedelta(days=user.trial_days)
     trial_sub = Subscription(
@@ -147,11 +147,11 @@ async def purchase_subscription(
     db: Session = Depends(get_db),
 ):
     if payload.plan not in PLAN_PRICES:
-        raise HTTPException(status_code=400, detail="Unknown plan")
+        raise HTTPException(status_code=400, detail="Неизвестный тариф.")
 
     amount = PLAN_PRICES[payload.plan]
     if user.wallet_balance_rub < amount:
-        raise HTTPException(status_code=400, detail="Insufficient wallet balance")
+        raise HTTPException(status_code=400, detail="Недостаточно средств на кошельке.")
 
     now = datetime.utcnow()
     current_sub = (

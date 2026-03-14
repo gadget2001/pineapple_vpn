@@ -1,4 +1,4 @@
-﻿from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -25,16 +25,16 @@ def get_current_user(
     try:
         payload = decode_token(credentials.credentials)
     except Exception as exc:
-        raise HTTPException(status_code=401, detail="Invalid token") from exc
+        raise HTTPException(status_code=401, detail="Недействительный токен авторизации.") from exc
 
     user_id = int(payload.get("sub"))
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=401, detail="User not found")
+        raise HTTPException(status_code=401, detail="Пользователь не найден. Пройдите авторизацию заново.")
     return user
 
 
 def get_admin_user(user: User = Depends(get_current_user)) -> User:
     if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Admin only")
+        raise HTTPException(status_code=403, detail="Доступ только для администратора.")
     return user

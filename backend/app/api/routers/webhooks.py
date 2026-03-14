@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -26,11 +26,11 @@ def connection_log(
     db: Session = Depends(get_db),
 ):
     if x_panel_token != settings.panel_token:
-        raise HTTPException(status_code=403, detail="Invalid token")
+        raise HTTPException(status_code=403, detail="Неверный токен панели.")
 
     user = db.query(User).filter(User.telegram_id == payload.telegram_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Пользователь не найден.")
 
     log = ConnectionLog(user_id=user.id, ip_address=payload.ip_address)
     db.add(log)

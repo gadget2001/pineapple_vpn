@@ -64,7 +64,7 @@ async def yookassa_webhook(
 ):
     raw = await request.body()
     if not x_webhook_signature or not verify_webhook_signature(raw, x_webhook_signature):
-        raise HTTPException(status_code=403, detail="Invalid signature")
+        raise HTTPException(status_code=403, detail="Неверная подпись webhook.")
 
     payload = await request.json()
     event = payload.get("event")
@@ -73,7 +73,7 @@ async def yookassa_webhook(
 
     payment = db.query(Payment).filter(Payment.provider_payment_id == payment_id).first()
     if not payment:
-        raise HTTPException(status_code=404, detail="Payment not found")
+        raise HTTPException(status_code=404, detail="Платеж не найден.")
 
     user = db.query(User).filter(User.id == payment.user_id).first()
 
