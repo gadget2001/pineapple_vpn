@@ -337,9 +337,18 @@ export default function App() {
       return;
     }
 
-    const inviteMessage = referralInviteMessage || link;
-    const shareText = inviteMessage && inviteMessage !== "—" ? inviteMessage : link;
-    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText.trim())}`;
+    const shareBody = [
+      "🍍 Pineapple VPN",
+      "",
+      "Надежный доступ к российским сервисам из-за границы: банки, Госуслуги, ЖКХ и рабочие системы.",
+      "",
+      "🎁 По моему приглашению тебе доступно 7 дней бесплатно вместо 3.",
+      "",
+      "👇 Ссылка для запуска бота — вверху сообщения.",
+    ].join("\n");
+
+    const shareText = shareBody.trim();
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`;
 
     try {
       if (tg?.openTelegramLink) {
@@ -348,11 +357,11 @@ export default function App() {
       }
 
       if (navigator.share) {
-        await navigator.share({ text: shareText });
+        await navigator.share({ text: `${shareText}\n\n${link}` });
         return;
       }
 
-      await copy(shareText, "Приглашение скопировано");
+      await copy(`${shareText}\n\n${link}`, "Приглашение скопировано");
       setAuthError("В вашем Telegram недоступна пересылка, текст скопирован.");
     } catch (e) {
       setAuthError(String(e?.message || "Не удалось открыть пересылку в Telegram"));
