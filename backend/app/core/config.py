@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     bot_token: str
     admin_chat_id: int
     telegram_miniapp_url: str
-    telegram_bot_username: str = ""
+    telegram_bot_username: str = "pineapple_AMBot"
     telegram_debug_auth: bool = False
 
     yookassa_shop_id: str
@@ -65,3 +65,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
