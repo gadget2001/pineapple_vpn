@@ -51,6 +51,21 @@ function getStartPayloadFromUrl() {
   return params.get("startapp") || params.get("start") || "";
 }
 
+function buildInviteMessage(link) {
+  if (!link) return "";
+  return [
+    "🍍 Pineapple VPN",
+    "",
+    "Надежный доступ к российским сервисам из-за границы: банки, Госуслуги, ЖКХ и рабочие системы.",
+    "",
+    "🎁 По моему приглашению тебе доступно 7 дней бесплатно вместо 3.",
+    "💸 А мне начисляется 10% от твоих пополнений, пока ты пользуешься сервисом.",
+    "",
+    "👇 Открывай бота и запускай MiniApp:",
+    link,
+  ].join("\n");
+}
+
 function formatDate(dt) {
   if (!dt) return "—";
   return new Date(dt).toLocaleString("ru-RU", {
@@ -184,6 +199,8 @@ export default function App() {
 
   const authHeaders = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token]);
   const startParam = tg?.initDataUnsafe?.start_param || getStartPayloadFromUrl();
+  const referralLink = referralInfo?.bot_deep_link || referralStats?.bot_deep_link || "";
+  const referralInviteMessage = buildInviteMessage(referralLink);
 
   const request = async (path, options = {}) => {
     const res = await fetch(`${API_BASE}${path}`, options);
@@ -315,12 +332,12 @@ export default function App() {
   };
 
   const shareInvite = async () => {
-    const link = referralInfo?.bot_deep_link || referralStats?.bot_deep_link || "";
-    const inviteMessage = referralInfo?.invite_message || referralStats?.invite_message || link;
+    const link = referralLink;
+    const inviteMessage = referralInviteMessage || link;
     if (!link) return;
 
     const shareText = inviteMessage && inviteMessage !== "—" ? inviteMessage : link;
-    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`;
+    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText)}`;
 
     try {
       if (tg?.openTelegramLink) {
@@ -955,14 +972,14 @@ export default function App() {
               <h3>Реферальная система</h3>
               <p className="muted">Друг получит 7 дней бесплатно вместо 3, а вы получаете 10% от любого пополнения друга, пока он пользуется VPN.</p>
               <p>Ссылка в Telegram-бот:</p>
-              <div className="ref-link">{referralInfo?.bot_deep_link || referralStats?.bot_deep_link || "—"}</div>
+              <div className="ref-link">{referralLink || "-"}</div>
               <div className="row">
-                <button onClick={() => copy(referralInfo?.bot_deep_link || referralStats?.bot_deep_link)}>Скопировать ссылку</button>
+                <button onClick={() => copy(referralLink)}>Скопировать ссылку</button>
               </div>
               <p>Готовое сообщение-приглашение:</p>
-              <div className="ref-link">{referralInfo?.invite_message || referralStats?.invite_message || "—"}</div>
+              <div className="ref-link">{referralInviteMessage || "-"}</div>
               <div className="row ref-share-row">
-                <button onClick={() => copy(referralInfo?.invite_message || referralStats?.invite_message, "Приглашение скопировано")}>Скопировать приглашение</button>
+                <button onClick={() => copy(referralInviteMessage, "Приглашение скопировано")}>Скопировать приглашение</button>
                 <button className="soft-btn" onClick={shareInvite}>Поделиться</button>
               </div>
               <div className="grid three">
