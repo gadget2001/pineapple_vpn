@@ -724,7 +724,7 @@ export default function App() {
 
         {!isHydrating && showOnboarding && !showIntro && (
           <section className="onboarding-shell pulse-in">
-            <article className="card onboarding-card">
+            <article className={`card onboarding-card ${isRepeatDeviceFlow ? "onboarding-card--with-close" : ""}`.trim()}>
               {isRepeatDeviceFlow && (
                 <button
                   className="onboarding-close"

@@ -344,6 +344,11 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   position: relative;
 }
 
+
+.onboarding-card--with-close {
+  padding-top: 44px;
+}
+
 .onboarding-close {
   position: absolute;
   top: 12px;
