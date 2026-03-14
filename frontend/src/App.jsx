@@ -340,7 +340,9 @@ export default function App() {
 
     const inviteMessage = referralInviteMessage || link;
     const shareText = inviteMessage && inviteMessage !== "—" ? inviteMessage : link;
-    const shareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText.trim())}`;
+    const encodedText = encodeURIComponent(shareText.trim());
+    const tgSchemeUrl = `tg://msg_url?text=${encodedText}`;
+    const webShareUrl = `https://t.me/share/url?text=${encodedText}`;
 
     try {
       if (tg?.switchInlineQuery) {
@@ -348,12 +350,17 @@ export default function App() {
           tg.switchInlineQuery(shareText, ["users", "groups", "channels"]);
           return;
         } catch {
-          // Fallback for bots without inline mode.
+          // Inline mode may be disabled for this bot.
         }
       }
 
+      if (tg?.platform) {
+        window.location.href = tgSchemeUrl;
+        return;
+      }
+
       if (tg?.openTelegramLink) {
-        tg.openTelegramLink(shareUrl);
+        tg.openTelegramLink(webShareUrl);
         return;
       }
 
