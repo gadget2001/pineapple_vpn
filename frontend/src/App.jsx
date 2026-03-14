@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
@@ -172,6 +172,9 @@ export default function App() {
   const [docHtml, setDocHtml] = useState("");
   const [docTitle, setDocTitle] = useState("");
   const [selectedOs, setSelectedOs] = useState("windows");
+  const alertRef = useRef(null);
+  const docCardRef = useRef(null);
+  const prevOnboardingStepRef = useRef(null);
 
   const authHeaders = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token]);
   const startParam = tg?.initDataUnsafe?.start_param || "";
@@ -311,6 +314,11 @@ export default function App() {
     const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     setDocTitle(title);
     setDocHtml(body ? body[1] : html);
+  };
+
+  const closeDoc = () => {
+    setDocHtml("");
+    setDocTitle("");
   };
 
   const startIntroFlow = () => {
@@ -520,13 +528,36 @@ export default function App() {
   );
   const configHelp = configInstructionByOs(selectedOs);
 
+  useEffect(() => {
+    if (!authError) return;
+    if (alertRef.current) {
+      alertRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    const timer = window.setTimeout(() => setAuthError(""), 5000);
+    return () => window.clearTimeout(timer);
+  }, [authError]);
+
+  useEffect(() => {
+    if (!docHtml) return;
+    if (!docCardRef.current) return;
+    docCardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [docHtml]);
+
+  useEffect(() => {
+    const prevStep = prevOnboardingStepRef.current;
+    if (prevStep && onboardingStep !== prevStep && docHtml) {
+      closeDoc();
+    }
+    prevOnboardingStepRef.current = onboardingStep;
+  }, [onboardingStep, docHtml]);
+
   return (
     <div className="app-shell">
       <div className="bg-orb bg-orb-a" />
       <div className="bg-orb bg-orb-b" />
 
       <main className="app-main">
-        {authError && <div className="alert">{authError}</div>}
+        {authError && <div ref={alertRef} className="alert">{authError}</div>}
         {copyNotice && <div className="toast-ok">{copyNotice}</div>}
         {isHydrating && (
           <section className="onboarding-shell pulse-in">
@@ -763,10 +794,10 @@ export default function App() {
             </article>
 
             {!!docHtml && (
-              <article className="card">
+              <article ref={docCardRef} className="card">
                 <div className="row between">
                   <h3>{docTitle}</h3>
-                  <button onClick={() => { setDocHtml(""); setDocTitle(""); }}>Назад</button>
+                  <button onClick={closeDoc}>Назад</button>
                 </div>
                 <div className="doc-view" dangerouslySetInnerHTML={{ __html: docHtml }} />
               </article>
@@ -935,10 +966,10 @@ export default function App() {
               </article>
             )}
             {!!docHtml && (
-              <article className="card">
+              <article ref={docCardRef} className="card">
                 <div className="row between">
                   <h3>{docTitle}</h3>
-                  <button onClick={() => { setDocHtml(""); setDocTitle(""); }}>Назад</button>
+                  <button onClick={closeDoc}>Назад</button>
                 </div>
                 <div className="doc-view" dangerouslySetInnerHTML={{ __html: docHtml }} />
               </article>
