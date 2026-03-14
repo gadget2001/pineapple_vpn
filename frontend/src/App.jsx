@@ -320,7 +320,7 @@ export default function App() {
     if (!link) return;
 
     const shareText = inviteMessage && inviteMessage !== "—" ? inviteMessage : link;
-    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("7 дней бесплатно вместо 3 с Pineapple VPN")}`;
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`;
 
     try {
       if (tg?.openTelegramLink) {
@@ -953,7 +953,7 @@ export default function App() {
           <section className="page">
             <article className="card">
               <h3>Реферальная система</h3>
-              <p className="muted">Друг получит 7 дней бесплатно вместо 3</p>
+              <p className="muted">Друг получит 7 дней бесплатно вместо 3, а вы получаете 10% от любого пополнения друга, пока он пользуется VPN.</p>
               <p>Ссылка в Telegram-бот:</p>
               <div className="ref-link">{referralInfo?.bot_deep_link || referralStats?.bot_deep_link || "—"}</div>
               <div className="row">
@@ -961,14 +961,13 @@ export default function App() {
               </div>
               <p>Готовое сообщение-приглашение:</p>
               <div className="ref-link">{referralInfo?.invite_message || referralStats?.invite_message || "—"}</div>
-              <div className="row">
+              <div className="row ref-share-row">
                 <button onClick={() => copy(referralInfo?.invite_message || referralStats?.invite_message, "Приглашение скопировано")}>Скопировать приглашение</button>
                 <button className="soft-btn" onClick={shareInvite}>Поделиться</button>
               </div>
               <div className="grid three">
                 <div className="stat">Приглашено: {referralStats?.invited_count || 0}</div>
                 <div className="stat">Начислено: {referralStats?.earned_rub || 0} ₽</div>
-                <div className="stat">Комиссия: {referralStats?.commission_percent || 10}%</div>
               </div>
             </article>
 

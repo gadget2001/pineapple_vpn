@@ -10,11 +10,13 @@ from app.core.logging import send_admin_log
 from app.core.security import create_access_token, verify_telegram_init_data
 from app.db.session import get_db
 from app.models.referral import Referral
+from app.models.subscription import Subscription
 from app.models.user import User
 from app.schemas.auth import Token
 from app.schemas.user import UserOut
 from app.utils.audit import log_audit
 from app.utils.referral import decode_referral_payload
+from app.utils.trial_state import mark_trial_used
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -73,6 +75,15 @@ async def auth_telegram(payload: TelegramAuthRequest, db: Session = Depends(get_
             if inviter:
                 db.add(Referral(inviter_id=inviter.id, invitee_id=user.id))
                 db.commit()
+
+        trial_used = bool(user.trial_activated_at) or (
+            db.query(Subscription.id)
+            .filter(Subscription.user_id == user.id, Subscription.plan == "trial")
+            .first()
+            is not None
+        )
+        if trial_used:
+            await mark_trial_used(user.telegram_id)
 
         token = create_access_token(str(user.id), user.is_admin)
 

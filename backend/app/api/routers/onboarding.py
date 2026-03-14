@@ -21,6 +21,7 @@ from app.schemas.onboarding import (
 )
 from app.services.vpn_profile import get_or_create_vpn_profile, marzban_error
 from app.utils.audit import log_audit
+from app.utils.trial_state import mark_trial_used
 
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
 
@@ -243,6 +244,7 @@ async def activate_trial(
     user.trial_activated_at = now
     user.onboarding_step = "device_select"
     db.commit()
+    await mark_trial_used(user.telegram_id)
 
     log_audit(db, user.id, "trial_activated", {"days": user.trial_days})
     await send_admin_log(

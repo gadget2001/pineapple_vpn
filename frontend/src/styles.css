@@ -829,3 +829,5 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   .intro-arrow.right { right: -8px; }
   .intro-cards-grid { grid-template-columns: 1fr; }
 }
+
+.ref-share-row { margin-bottom: 10px; }

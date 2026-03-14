@@ -15,6 +15,7 @@ from app.schemas.subscription import (
     SubscriptionStatus,
 )
 from app.utils.audit import log_audit
+from app.utils.trial_state import mark_trial_used
 
 router = APIRouter(prefix="/subscriptions", tags=["Subscriptions"])
 
@@ -98,6 +99,7 @@ async def activate_trial(
             )
             user.trial_activated_at = (first_trial.starts_at if first_trial else datetime.utcnow())
             db.commit()
+            await mark_trial_used(user.telegram_id)
         raise HTTPException(status_code=400, detail="Пробный период уже был активирован.")
 
     now = datetime.utcnow()
@@ -124,6 +126,7 @@ async def activate_trial(
         user.onboarding_step = "device_select"
     db.add(trial_sub)
     db.commit()
+    await mark_trial_used(user.telegram_id)
 
     log_audit(db, user.id, "trial_activated", {"days": user.trial_days})
     await send_admin_log(

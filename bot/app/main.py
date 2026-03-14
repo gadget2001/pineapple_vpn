@@ -61,6 +61,14 @@ def _decode_referral_code(payload: str | None) -> str | None:
     return decoded if _REF_CODE_RE.fullmatch(decoded) else None
 
 
+def _trial_used_key(telegram_id: int) -> str:
+    return f"trial:used:{telegram_id}"
+
+
+async def _has_trial_used(telegram_id: int) -> bool:
+    return bool(await redis_client.get(_trial_used_key(telegram_id)))
+
+
 def _build_miniapp_url_with_start(base_url: str | None, start_payload: str | None) -> str | None:
     if not base_url:
         return None
@@ -103,7 +111,7 @@ async def send_admin_log(action: str, message: Message, details: dict | None = N
         )
 
 
-def _build_welcome_caption(is_referral: bool) -> str:
+def _build_welcome_caption(is_referral: bool, trial_already_used: bool = False) -> str:
     text = (
         "🍍 <b>Pineapple VPN</b>\n\n"
         "Надежный доступ к российским сервисам из любой точки мира.\n\n"
@@ -118,10 +126,16 @@ def _build_welcome_caption(is_referral: bool) -> str:
     )
 
     if is_referral:
-        text += (
-            "\n🎁 <b>Вы пришли по приглашению</b>\n"
-            "Для вас доступен увеличенный пробный период — <b>7 дней бесплатно</b>.\n"
-        )
+        if trial_already_used:
+            text += (
+                "\n🎁 <b>Вы пришли по приглашению</b>\n"
+                "Пробный период уже был активирован ранее в вашем аккаунте, поэтому повторно недоступен.\n"
+            )
+        else:
+            text += (
+                "\n🎁 <b>Вы пришли по приглашению</b>\n"
+                "Для вас доступен увеличенный пробный период — <b>7 дней бесплатно</b>.\n"
+            )
 
     text += "\n👇 <b>Начните за пару минут</b>"
     return text
@@ -153,6 +167,7 @@ async def cmd_start(message: Message):
         start_param = message.text.split(" ", 1)[1].strip()
 
     referral_code = _decode_referral_code(start_param)
+    trial_already_used = await _has_trial_used(message.from_user.id)
 
     first_key = f"bot:first_start:{message.from_user.id}"
     is_first_start = await redis_client.set(first_key, "1", nx=True)
@@ -165,10 +180,11 @@ async def cmd_start(message: Message):
             details["start_param"] = start_param
         if referral_code:
             details["referral_code"] = referral_code
+            details["trial_already_used"] = "yes" if trial_already_used else "no"
         await send_admin_log("bot_first_start", message, details)
 
     webapp_url = _build_miniapp_url_with_start(MINIAPP_URL, start_param if referral_code else None)
-    caption = _build_welcome_caption(bool(referral_code))
+    caption = _build_welcome_caption(bool(referral_code), trial_already_used=trial_already_used)
     keyboard = _build_welcome_keyboard(webapp_url)
 
     if WELCOME_IMAGE.exists():

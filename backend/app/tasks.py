@@ -66,7 +66,7 @@ def send_renewal_reminders():
             text = (
                 f"{title}.\n"
                 f"Окончание: {sub.ends_at.strftime('%d.%m.%Y %H:%M')} (UTC).\n"
-                "Продлите доступ в MiniApp заранее, чтобы не потерять подключение.\n\n"
+                "Продлите доступ заранее, чтобы не потерять подключение.\n\n"
                 f"{PLANS_TEXT}"
             )
             httpx.post(
