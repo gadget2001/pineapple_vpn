@@ -3,24 +3,44 @@ import base64
 import os
 import re
 from datetime import datetime, timezone
+from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from aiogram import Bot, Dispatcher
-from aiogram.filters import CommandStart
-from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, WebAppInfo
 import httpx
+from aiogram import Bot, Dispatcher, F
+from aiogram.filters import CommandStart
+from aiogram.types import (
+    CallbackQuery,
+    FSInputFile,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+    WebAppInfo,
+)
 from redis.asyncio import Redis
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))
 MINIAPP_URL = os.getenv("TELEGRAM_MINIAPP_URL")
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:16379/0")
+SUPPORT_URL = os.getenv("SUPPORT_URL", "https://t.me/ambot24")
+WELCOME_IMAGE = Path(__file__).resolve().parents[1] / "img" / "welcome.png"
 
 _REF_CODE_RE = re.compile(r"^ref_\d{1,20}$")
 
 redis_client = Redis.from_url(REDIS_URL, decode_responses=True)
 
 dp = Dispatcher()
+
+HOW_IT_WORKS_TEXT = (
+    "📖 Как это работает\n\n"
+    "1. Нажмите «Открыть Pineapple VPN»\n"
+    "2. В MiniApp примите правила сервиса\n"
+    "3. Активируйте пробный период\n"
+    "4. Выберите устройство и выполните шаги настройки\n"
+    "5. Получите конфигурацию и подключитесь\n\n"
+    "Обычно это занимает всего несколько минут."
+)
 
 
 def _decode_referral_code(payload: str | None) -> str | None:
@@ -48,7 +68,11 @@ def _build_miniapp_url_with_start(base_url: str | None, start_payload: str | Non
         return base_url
 
     parts = urlsplit(base_url)
-    query_pairs = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if k not in {"startapp", "start"}]
+    query_pairs = [
+        (k, v)
+        for k, v in parse_qsl(parts.query, keep_blank_values=True)
+        if k not in {"startapp", "start"}
+    ]
     query_pairs.append(("startapp", start_payload))
     updated_query = urlencode(query_pairs)
     return urlunsplit((parts.scheme, parts.netloc, parts.path, updated_query, parts.fragment))
@@ -79,6 +103,49 @@ async def send_admin_log(action: str, message: Message, details: dict | None = N
         )
 
 
+def _build_welcome_caption(is_referral: bool) -> str:
+    text = (
+        "🍍 <b>Pineapple VPN</b>\n\n"
+        "Надежный доступ к российским сервисам из любой точки мира.\n\n"
+        "Подходит для:\n"
+        "• банков\n"
+        "• Госуслуг\n"
+        "• оплаты ЖКХ\n"
+        "• рабочих систем\n\n"
+        "🔐 защищенное соединение\n"
+        "⚡ быстрое подключение\n"
+        "🌍 работает за границей\n"
+    )
+
+    if is_referral:
+        text += (
+            "\n🎁 <b>Вы пришли по приглашению</b>\n"
+            "Для вас доступен увеличенный пробный период — <b>7 дней бесплатно</b>.\n"
+        )
+
+    text += "\n👇 <b>Начните за пару минут</b>"
+    return text
+
+
+def _build_welcome_keyboard(webapp_url: str | None) -> InlineKeyboardMarkup:
+    rows: list[list[InlineKeyboardButton]] = []
+
+    if webapp_url:
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    text="🚀 Открыть Pineapple VPN",
+                    web_app=WebAppInfo(url=webapp_url),
+                )
+            ]
+        )
+
+    rows.append([InlineKeyboardButton(text="📖 Как это работает", callback_data="how_it_works")])
+    rows.append([InlineKeyboardButton(text="💬 Поддержка", url=SUPPORT_URL)])
+
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
     start_param = ""
@@ -101,26 +168,28 @@ async def cmd_start(message: Message):
         await send_admin_log("bot_first_start", message, details)
 
     webapp_url = _build_miniapp_url_with_start(MINIAPP_URL, start_param if referral_code else None)
-    keyboard = None
-    if webapp_url:
-        keyboard = ReplyKeyboardMarkup(
-            keyboard=[[KeyboardButton(text="Открыть Pineapple VPN", web_app=WebAppInfo(url=webapp_url))]],
-            resize_keyboard=True,
+    caption = _build_welcome_caption(bool(referral_code))
+    keyboard = _build_welcome_keyboard(webapp_url)
+
+    if WELCOME_IMAGE.exists():
+        await message.answer_photo(
+            photo=FSInputFile(str(WELCOME_IMAGE)),
+            caption=caption,
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
+    else:
+        await message.answer(
+            caption,
+            parse_mode="HTML",
+            reply_markup=keyboard,
         )
 
-    referral_note = (
-        "\n\nВы пришли по приглашению: для вас доступен расширенный пробный период."
-        if referral_code
-        else ""
-    )
 
-    await message.answer(
-        "Pineapple VPN\n"
-        "Защищенный удаленный доступ к российским сервисам из-за границы.\n"
-        "В MiniApp вы сможете: принять правила, активировать пробный период,\n"
-        "пополнить кошелек, оформить подписку и получить настройку VPN." + referral_note,
-        reply_markup=keyboard,
-    )
+@dp.callback_query(F.data == "how_it_works")
+async def how_it_works(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer(HOW_IT_WORKS_TEXT)
 
 
 async def main():
