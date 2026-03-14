@@ -15,19 +15,10 @@ from app.schemas.subscription import (
     SubscriptionStatus,
 )
 from app.utils.audit import log_audit
+from app.utils.plans import PLAN_DAYS, available_plans, plan_prices
 from app.utils.trial_state import mark_trial_used
 
 router = APIRouter(prefix="/subscriptions", tags=["Subscriptions"])
-
-PLAN_PRICES = {
-    "week": 99,
-    "month": 199,
-}
-
-PLAN_DAYS = {
-    "week": 7,
-    "month": 30,
-}
 
 
 @router.get(
@@ -37,10 +28,7 @@ PLAN_DAYS = {
     description="Возвращает тарифные планы для покупки из кошелька.",
 )
 def list_plans():
-    return [
-        SubscriptionPlan(code="week", title="Неделя", price_rub=99, duration_days=7),
-        SubscriptionPlan(code="month", title="Месяц", price_rub=199, duration_days=30),
-    ]
+    return available_plans()
 
 
 @router.get(
@@ -149,10 +137,11 @@ async def purchase_subscription(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if payload.plan not in PLAN_PRICES:
+    prices = plan_prices()
+    if payload.plan not in prices:
         raise HTTPException(status_code=400, detail="Неизвестный тариф.")
 
-    amount = PLAN_PRICES[payload.plan]
+    amount = prices[payload.plan]
     if user.wallet_balance_rub < amount:
         raise HTTPException(status_code=400, detail="Недостаточно средств на кошельке.")
 

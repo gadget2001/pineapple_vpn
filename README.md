@@ -99,6 +99,10 @@ cp .env.example .env
 - `FRONTEND_URL` — `https://pineapple.ambot24.ru`
 - `API_BASE_URL` — `https://pineapple.ambot24.ru/api`
 
+### Тарифы
+- `SUBSCRIPTION_PRICE_WEEK_RUB` — цена тарифа "Неделя" (RUB)
+- `SUBSCRIPTION_PRICE_MONTH_RUB` — цена тарифа "Месяц" (RUB)
+
 ### PostgreSQL (внешняя)
 - `DB_HOST` — хост внешней БД
 - `DB_PORT` — порт БД

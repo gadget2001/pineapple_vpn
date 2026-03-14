@@ -10,9 +10,9 @@ from app.db.session import SessionLocal
 from app.models.connection_log import ConnectionLog
 from app.models.subscription import Subscription
 from app.models.user import User
+from app.utils.plans import plans_text
 
 
-PLANS_TEXT = "Тарифы Pineapple VPN:\n• Неделя — 99 ₽\n• Месяц — 199 ₽"
 
 
 def _panel_headers() -> dict:
@@ -67,7 +67,7 @@ def send_renewal_reminders():
                 f"{title}.\n"
                 f"Окончание: {sub.ends_at.strftime('%d.%m.%Y %H:%M')} (UTC).\n"
                 "Продлите доступ заранее, чтобы не потерять подключение.\n\n"
-                f"{PLANS_TEXT}"
+                f"{plans_text()}"
             )
             httpx.post(
                 f"https://api.telegram.org/bot{settings.bot_token}/sendMessage",

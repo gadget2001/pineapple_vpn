@@ -571,6 +571,8 @@ export default function App() {
   const onboardingStepIndex = onboarding?.step_index || 1;
   const onboardingTotal = onboarding?.total_steps || 6;
   const trialDays = onboarding?.trial_days || overview?.trial?.days || 3;
+  const weekPlanPrice = plans.find((p) => p.code === "week")?.price_rub;
+  const monthPlanPrice = plans.find((p) => p.code === "month")?.price_rub;
   const isRepeatDeviceFlow =
     Boolean(onboarding?.completed) &&
     ["device_select", "install_app", "get_config", "complete"].includes(onboardingStep);
@@ -681,8 +683,8 @@ export default function App() {
                 </div>
                 <div className="intro-chip-card">
                   <h4>{"Тарифы"}</h4>
-                  <div className="tariff-line"><span>{"Неделя"}</span><strong>99 {"₽"}</strong></div>
-                  <div className="tariff-line"><span>{"Месяц"}</span><strong>199 {"₽"}</strong></div>
+                  <div className="tariff-line"><span>{"Неделя"}</span><strong>{weekPlanPrice != null ? `${weekPlanPrice} ₽` : "—"}</strong></div>
+                  <div className="tariff-line"><span>{"Месяц"}</span><strong>{monthPlanPrice != null ? `${monthPlanPrice} ₽` : "—"}</strong></div>
                 </div>
                 <div className="intro-chip-card">
                   <h4>{"Способы оплаты"}</h4>

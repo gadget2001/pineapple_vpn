@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     jwt_alg: str = "HS256"
     access_token_expire_minutes: int = 10080
 
+    # Subscription pricing (RUB)
+    subscription_price_week_rub: int = 99
+    subscription_price_month_rub: int = 199
+
     db_host: str
     db_port: int
     db_name: str
