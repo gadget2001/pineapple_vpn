@@ -340,11 +340,10 @@ export default function App() {
 
     const inviteMessage = referralInviteMessage || link;
     const shareText = inviteMessage && inviteMessage !== "—" ? inviteMessage : link;
-    const webShareUrl = `https://t.me/share/url?text=${encodeURIComponent(shareText.trim())}`;
 
     try {
-      if (tg?.openTelegramLink) {
-        tg.openTelegramLink(webShareUrl);
+      if (tg?.switchInlineQuery) {
+        tg.switchInlineQuery(shareText, ["users", "groups", "channels"]);
         return;
       }
 
@@ -354,8 +353,9 @@ export default function App() {
       }
 
       await copy(shareText, "Приглашение скопировано");
+      setAuthError("В вашем Telegram недоступна системная пересылка. Текст уже скопирован.");
     } catch (e) {
-      setAuthError(String(e?.message || "Не удалось поделиться приглашением"));
+      setAuthError(String(e?.message || "Не удалось открыть пересылку в Telegram"));
     }
   };
 
