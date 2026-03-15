@@ -111,15 +111,12 @@ def send_admin_log_sync(action: str, user_id: int | None, username: str | None, 
 
 
 def _build_bot_main_menu_markup() -> dict:
-    bot_username = (settings.telegram_bot_username or "").strip().lstrip("@")
-    if not bot_username:
-        return {"inline_keyboard": []}
     return {
         "inline_keyboard": [
             [
                 {
-                    "text": "?? ??????? ????",
-                    "url": f"https://t.me/{bot_username}?start=menu",
+                    "text": "\U0001F3E0 \u0413\u043b\u0430\u0432\u043d\u043e\u0435 \u043c\u0435\u043d\u044e",
+                    "callback_data": "main_menu",
                 }
             ]
         ]

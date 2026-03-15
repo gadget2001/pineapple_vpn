@@ -284,9 +284,9 @@ async def yookassa_webhook(
                 await send_user_bot_message(
                     user_telegram_id=user.telegram_id,
                     text=(
-                        "? ?????????? ???????? ????????????.\n\n"
-                        f"?????: {payment.amount_rub} ?\n"
-                        f"??????: {user.wallet_balance_rub} ?"
+                        "\u2705 \u041f\u043e\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435 \u043a\u043e\u0448\u0435\u043b\u044c\u043a\u0430 \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u043e.\n\n"
+                        f"\u0421\u0443\u043c\u043c\u0430: {payment.amount_rub} \u20bd\n"
+                        f"\u0411\u0430\u043b\u0430\u043d\u0441: {user.wallet_balance_rub} \u20bd"
                     ),
                     with_main_menu_button=True,
                 )
