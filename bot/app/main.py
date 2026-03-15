@@ -34,13 +34,13 @@ redis_client = Redis.from_url(REDIS_URL, decode_responses=True)
 dp = Dispatcher()
 
 HOW_IT_WORKS_TEXT = (
-    "\U0001F4D6 \u041a\u0430\u043a \u044d\u0442\u043e \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442\n\n"
-    "1. \u041d\u0430\u0436\u043c\u0438\u0442\u0435 \xab\u041e\u0442\u043a\u0440\u044b\u0442\u044c Pineapple VPN\xbb\n"
-    "2. \u0412 MiniApp \u043f\u0440\u0438\u043c\u0438\u0442\u0435 \u0443\u0441\u043b\u043e\u0432\u0438\u044f \u0441\u0435\u0440\u0432\u0438\u0441\u0430\n"
-    "3. \u0410\u043a\u0442\u0438\u0432\u0438\u0440\u0443\u0439\u0442\u0435 \u043f\u0440\u043e\u0431\u043d\u044b\u0439 \u043f\u0435\u0440\u0438\u043e\u0434\n"
-    "4. \u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e \u0438 \u0432\u044b\u043f\u043e\u043b\u043d\u0438\u0442\u0435 \u0448\u0430\u0433\u0438 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438\n"
-    "5. \u041f\u043e\u043b\u0443\u0447\u0438\u0442\u0435 \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044e \u0438 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u0435\u0441\u044c\n\n"
-    "\u041e\u0431\u044b\u0447\u043d\u043e \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 \u0437\u0430\u043d\u0438\u043c\u0430\u0435\u0442 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u043c\u0438\u043d\u0443\u0442."
+    "📖 Как это работает\n\n"
+    "1. Нажмите \xabОткрыть Pineapple VPN\xbb\n"
+    "2. В MiniApp примите условия сервиса\n"
+    "3. Активируйте пробный период\n"
+    "4. Выберите устройство и выполните шаги настройки\n"
+    "5. Получите конфигурацию и подключитесь\n\n"
+    "Обычно настройка занимает несколько минут."
 )
 
 
@@ -116,11 +116,11 @@ async def send_admin_log(action: str, message: Message, details: dict | None = N
     lines = [
         "[ Pineapple VPN LOG ]",
         "",
-        f"\u041d\u043e\u0432\u043e\u0435 \u0441\u043e\u0431\u044b\u0442\u0438\u0435: {action}",
+        f"Новое событие: {action}",
         "",
         f"User ID: {message.from_user.id}",
         f"Username: @{message.from_user.username or 'unknown'}",
-        f"\u0414\u0430\u0442\u0430: {timestamp}",
+        f"Дата: {timestamp}",
     ]
     for k, v in details.items():
         lines.append(f"{k}: {v}")
@@ -135,31 +135,31 @@ async def send_admin_log(action: str, message: Message, details: dict | None = N
 
 def _build_welcome_caption(is_referral: bool, trial_already_used: bool = False) -> str:
     text = (
-        "\U0001F34D <b>Pineapple VPN</b>\n\n"
-        "\u041d\u0430\u0434\u0435\u0436\u043d\u044b\u0439 \u0434\u043e\u0441\u0442\u0443\u043f \u043a \u0440\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0438\u043c \u0441\u0435\u0440\u0432\u0438\u0441\u0430\u043c \u0438\u0437 \u043b\u044e\u0431\u043e\u0439 \u0442\u043e\u0447\u043a\u0438 \u043c\u0438\u0440\u0430.\n\n"
-        "\u041f\u043e\u0434\u0445\u043e\u0434\u0438\u0442 \u0434\u043b\u044f:\n"
-        "\u2022 \u0431\u0430\u043d\u043a\u043e\u0432\n"
-        "\u2022 \u0413\u043e\u0441\u0443\u0441\u043b\u0443\u0433\n"
-        "\u2022 \u043e\u043f\u043b\u0430\u0442\u044b \u0416\u041a\u0425\n"
-        "\u2022 \u0440\u0430\u0431\u043e\u0447\u0438\u0445 \u0441\u0438\u0441\u0442\u0435\u043c\n\n"
-        "\U0001F510 \u0437\u0430\u0449\u0438\u0449\u0435\u043d\u043d\u043e\u0435 \u0441\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435\n"
-        "\u26A1 \u0431\u044b\u0441\u0442\u0440\u043e\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435\n"
-        "\U0001F30D \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0437\u0430 \u0433\u0440\u0430\u043d\u0438\u0446\u0435\u0439\n"
+        "🍍 <b>Pineapple VPN</b>\n\n"
+        "Надежный доступ к российским сервисам из любой точки мира.\n\n"
+        "Подходит для:\n"
+        "• банков\n"
+        "• Госуслуг\n"
+        "• оплаты ЖКХ\n"
+        "• рабочих систем\n\n"
+        "🔐 защищенное соединение\n"
+        "⚡ быстрое подключение\n"
+        "🌍 работает за границей\n"
     )
 
     if is_referral:
         if trial_already_used:
             text += (
-                "\n\U0001F381 <b>\u0412\u044b \u043f\u0440\u0438\u0448\u043b\u0438 \u043f\u043e \u043f\u0440\u0438\u0433\u043b\u0430\u0448\u0435\u043d\u0438\u044e</b>\n"
-                "\u041f\u0440\u043e\u0431\u043d\u044b\u0439 \u043f\u0435\u0440\u0438\u043e\u0434 \u0443\u0436\u0435 \u0431\u044b\u043b \u0430\u043a\u0442\u0438\u0432\u0438\u0440\u043e\u0432\u0430\u043d \u0440\u0430\u043d\u0435\u0435 \u0432 \u0432\u0430\u0448\u0435\u043c \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0435, \u043f\u043e\u044d\u0442\u043e\u043c\u0443 \u043f\u043e\u0432\u0442\u043e\u0440\u043d\u043e \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d.\n"
+                "\n🎁 <b>Вы пришли по приглашению</b>\n"
+                "Пробный период уже был активирован ранее в вашем аккаунте, поэтому повторно недоступен.\n"
             )
         else:
             text += (
-                "\n\U0001F381 <b>\u0412\u044b \u043f\u0440\u0438\u0448\u043b\u0438 \u043f\u043e \u043f\u0440\u0438\u0433\u043b\u0430\u0448\u0435\u043d\u0438\u044e</b>\n"
-                "\u0414\u043b\u044f \u0432\u0430\u0441 \u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d \u0443\u0432\u0435\u043b\u0438\u0447\u0435\u043d\u043d\u044b\u0439 \u043f\u0440\u043e\u0431\u043d\u044b\u0439 \u043f\u0435\u0440\u0438\u043e\u0434 \u2014 <b>7 \u0434\u043d\u0435\u0439 \u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e</b>.\n"
+                "\n🎁 <b>Вы пришли по приглашению</b>\n"
+                "Для вас доступен увеличенный пробный период — <b>7 дней бесплатно</b>.\n"
             )
 
-    text += "\n\U0001F447 <b>\u041d\u0430\u0447\u043d\u0438\u0442\u0435 \u0437\u0430 \u043f\u0430\u0440\u0443 \u043c\u0438\u043d\u0443\u0442</b>"
+    text += "\n👇 <b>Начните за пару минут</b>"
     return text
 
 
@@ -169,14 +169,14 @@ def _build_welcome_keyboard(webapp_url: str | None) -> InlineKeyboardMarkup:
     if webapp_url:
         rows.append([
             InlineKeyboardButton(
-                text="\U0001F680 \u041e\u0442\u043a\u0440\u044b\u0442\u044c Pineapple VPN",
+                text="🚀 Открыть Pineapple VPN",
                 web_app=WebAppInfo(url=webapp_url),
             )
         ])
 
-    rows.append([InlineKeyboardButton(text="\U0001F4C4 \u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u044b", callback_data="docs_menu")])
-    rows.append([InlineKeyboardButton(text="\U0001F4D6 \u041a\u0430\u043a \u044d\u0442\u043e \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442", callback_data="how_it_works")])
-    rows.append([InlineKeyboardButton(text="\U0001F4AC \u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430", url=SUPPORT_URL)])
+    rows.append([InlineKeyboardButton(text="📄 Документы", callback_data="docs_menu")])
+    rows.append([InlineKeyboardButton(text="📖 Как это работает", callback_data="how_it_works")])
+    rows.append([InlineKeyboardButton(text="💬 Поддержка", url=SUPPORT_URL)])
 
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
@@ -185,17 +185,17 @@ def _build_docs_keyboard() -> InlineKeyboardMarkup:
     docs = _build_docs_urls()
     rows: list[list[InlineKeyboardButton]] = []
     if docs.get("offer"):
-        rows.append([InlineKeyboardButton(text="\U0001F4DC \u041f\u0443\u0431\u043b\u0438\u0447\u043d\u0430\u044f \u043e\u0444\u0435\u0440\u0442\u0430", url=docs["offer"])])
-        rows.append([InlineKeyboardButton(text="\U0001F512 \u041f\u043e\u043b\u0438\u0442\u0438\u043a\u0430 \u043a\u043e\u043d\u0444\u0438\u0434\u0435\u043d\u0446\u0438\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u0438", url=docs["privacy"])])
-        rows.append([InlineKeyboardButton(text="\u2696\uFE0F \u041f\u0440\u0430\u0432\u0438\u043b\u0430 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0438\u044f", url=docs["aup"])])
-    rows.append([InlineKeyboardButton(text="\U0001F4AC \u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430", url=SUPPORT_URL)])
-    rows.append([InlineKeyboardButton(text="\U0001F3E0 \u0413\u043b\u0430\u0432\u043d\u043e\u0435 \u043c\u0435\u043d\u044e", callback_data="main_menu")])
+        rows.append([InlineKeyboardButton(text="📜 Публичная оферта", url=docs["offer"])])
+        rows.append([InlineKeyboardButton(text="🔒 Политика конфиденциальности", url=docs["privacy"])])
+        rows.append([InlineKeyboardButton(text="⚖️ Правила использования", url=docs["aup"])])
+    rows.append([InlineKeyboardButton(text="💬 Поддержка", url=SUPPORT_URL)])
+    rows.append([InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def _build_main_menu_button() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="\U0001F3E0 \u0413\u043b\u0430\u0432\u043d\u043e\u0435 \u043c\u0435\u043d\u044e", callback_data="main_menu")]
+        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="main_menu")]
     ])
 
 
@@ -247,17 +247,17 @@ async def docs_menu(callback: CallbackQuery):
     docs = _build_docs_urls()
     if not docs:
         await callback.message.answer(
-            "\U0001F4C4 \u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u044b \u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u044b. "
-            "\u041d\u0430\u043f\u0438\u0448\u0438\u0442\u0435 \u0432 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0443, \u0438 \u043c\u044b \u043f\u043e\u043c\u043e\u0436\u0435\u043c.",
+            "📄 Документы временно недоступны. "
+            "Напишите в поддержку, и мы поможем.",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="\U0001F4AC \u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430", url=SUPPORT_URL)]
+                [InlineKeyboardButton(text="💬 Поддержка", url=SUPPORT_URL)]
             ]),
         )
         return
 
     await callback.message.answer(
-        "\U0001F4C4 \u042e\u0440\u0438\u0434\u0438\u0447\u0435\u0441\u043a\u0438\u0435 \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u044b Pineapple VPN:\n\n"
-        "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u043d\u0443\u0436\u043d\u044b\u0439 \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u2014 \u043e\u043d \u043e\u0442\u043a\u0440\u043e\u0435\u0442\u0441\u044f \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435 \u0431\u0435\u0437 \u0437\u0430\u043f\u0443\u0441\u043a\u0430 MiniApp.",
+        "📄 Юридические документы Pineapple VPN:\n\n"
+        "Выберите нужный документ — он откроется в браузере без запуска MiniApp.",
         reply_markup=_build_docs_keyboard(),
     )
 

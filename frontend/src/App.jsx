@@ -739,7 +739,7 @@ export default function App() {
         if (st === "paid") {
           if (!cancelled) {
             clearTopupIdFromUrl();
-            setCopyNotice("\u041f\u043e\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435 \u043a\u043e\u0448\u0435\u043b\u044c\u043a\u0430 \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u043e");
+            setCopyNotice("Пополнение кошелька подтверждено");
             await loadAll();
           }
           return;
@@ -748,21 +748,21 @@ export default function App() {
         if (st === "canceled" || st === "failed") {
           if (!cancelled) {
             clearTopupIdFromUrl();
-            setAuthError(st === "canceled" ? "\u041f\u043b\u0430\u0442\u0435\u0436 \u0431\u044b\u043b \u043e\u0442\u043c\u0435\u043d\u0435\u043d." : "\u041f\u043b\u0430\u0442\u0435\u0436 \u043d\u0435 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0441\u043d\u043e\u0432\u0430.");
+            setAuthError(st === "canceled" ? "Платеж был отменен." : "Платеж не завершен. Попробуйте снова.");
           }
           return;
         }
 
         if (!cancelled) {
           if (attempts === 0) {
-            setAuthError("\u041f\u043b\u0430\u0442\u0435\u0436 \u043e\u0431\u0440\u0430\u0431\u0430\u0442\u044b\u0432\u0430\u0435\u0442\u0441\u044f. \u041e\u0431\u044b\u0447\u043d\u043e \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u0435 \u0437\u0430\u043d\u0438\u043c\u0430\u0435\u0442 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u0441\u0435\u043a\u0443\u043d\u0434.");
+            setAuthError("Платеж обрабатывается. Обычно подтверждение занимает несколько секунд.");
           }
           if (attempts < 20) {
             attempts += 1;
             timer = window.setTimeout(poll, 3000);
           } else {
             clearTopupIdFromUrl();
-            setAuthError("\u041f\u043b\u0430\u0442\u0435\u0436 \u0435\u0449\u0435 \u043e\u0431\u0440\u0430\u0431\u0430\u0442\u044b\u0432\u0430\u0435\u0442\u0441\u044f. \u041e\u0431\u043d\u043e\u0432\u0438\u0442\u0435 \u044d\u043a\u0440\u0430\u043d \u0447\u0435\u0440\u0435\u0437 \u043c\u0438\u043d\u0443\u0442\u0443.");
+            setAuthError("Платеж еще обрабатывается. Обновите экран через минуту.");
           }
         }
       } catch {

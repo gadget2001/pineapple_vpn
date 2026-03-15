@@ -42,19 +42,19 @@ def _validate_amount_and_currency(payment: Payment, obj: dict) -> tuple[bool, st
     currency = str(amount_data.get("currency") or "").upper()
 
     if value_raw is None:
-        return False, "\u0412 webhook \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u0441\u0443\u043c\u043c\u0430 \u043f\u043b\u0430\u0442\u0435\u0436\u0430."
+        return False, "В webhook отсутствует сумма платежа."
 
     try:
         value = Decimal(str(value_raw))
     except (InvalidOperation, TypeError, ValueError):
-        return False, "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0430\u044f \u0441\u0443\u043c\u043c\u0430 \u043f\u043b\u0430\u0442\u0435\u0436\u0430 \u0432 webhook."
+        return False, "Некорректная сумма платежа в webhook."
 
     expected = Decimal(payment.amount_rub).quantize(Decimal("1.00"))
     if value.quantize(Decimal("1.00")) != expected:
-        return False, f"\u0421\u0443\u043c\u043c\u0430 webhook ({value}) \u043d\u0435 \u0441\u043e\u0432\u043f\u0430\u0434\u0430\u0435\u0442 \u0441 \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u043e\u0439 ({expected})."
+        return False, f"Сумма webhook ({value}) не совпадает с локальной ({expected})."
 
     if currency != "RUB":
-        return False, f"\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u0430\u044f \u0432\u0430\u043b\u044e\u0442\u0430 webhook: {currency}."
+        return False, f"Некорректная валюта webhook: {currency}."
 
     return True, None
 
@@ -90,7 +90,7 @@ async def create_topup_payment(
         db.commit()
         raise HTTPException(
             status_code=502,
-            detail="\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u043e\u0437\u0434\u0430\u0442\u044c \u043f\u043b\u0430\u0442\u0435\u0436 \u0432 \u042eKassa. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043f\u043e\u0437\u0436\u0435.",
+            detail="Не удалось создать платеж в ЮKassa. Попробуйте позже.",
         ) from exc
 
     confirmation_url = response.get("confirmation", {}).get("confirmation_url")
@@ -125,7 +125,7 @@ def payment_status(
 ):
     payment = db.query(Payment).filter(Payment.id == payment_id, Payment.user_id == user.id).first()
     if not payment:
-        raise HTTPException(status_code=404, detail="\u041f\u043b\u0430\u0442\u0435\u0436 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d.")
+        raise HTTPException(status_code=404, detail="Платеж не найден.")
 
     return {
         "id": payment.id,
@@ -149,13 +149,13 @@ async def yookassa_webhook(
     if not is_ip_allowed(source_ip, settings.yookassa_webhook_ips):
         raise HTTPException(
             status_code=403,
-            detail="Webhook \u043e\u0442\u043a\u043b\u043e\u043d\u0435\u043d: IP-\u0430\u0434\u0440\u0435\u0441 \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u0430 \u043d\u0435 \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043d.",
+            detail="Webhook отклонен: IP-адрес источника не разрешен.",
         )
 
     # Optional compatibility check for setups that pass custom signature header.
     if x_webhook_signature and settings.yookassa_webhook_secret:
         if not verify_webhook_signature(raw, x_webhook_signature):
-            raise HTTPException(status_code=403, detail="\u041d\u0435\u0432\u0435\u0440\u043d\u0430\u044f \u043f\u043e\u0434\u043f\u0438\u0441\u044c webhook.")
+            raise HTTPException(status_code=403, detail="Неверная подпись webhook.")
 
     payload = await request.json()
     event = payload.get("event")
@@ -163,14 +163,14 @@ async def yookassa_webhook(
     provider_payment_id = obj.get("id")
 
     if not provider_payment_id:
-        raise HTTPException(status_code=400, detail="Webhook \u043d\u0435 \u0441\u043e\u0434\u0435\u0440\u0436\u0438\u0442 payment id.")
+        raise HTTPException(status_code=400, detail="Webhook не содержит payment id.")
 
     try:
         yookassa_payment = await get_yookassa_payment(provider_payment_id)
     except Exception as exc:
         raise HTTPException(
             status_code=503,
-            detail="\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u0432\u0435\u0440\u0438\u0442\u044c \u043f\u043b\u0430\u0442\u0435\u0436 \u0441 \u042eKassa. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043f\u043e\u0437\u0436\u0435.",
+            detail="Не удалось сверить платеж с ЮKassa. Попробуйте позже.",
         ) from exc
 
     if isinstance(yookassa_payment, dict) and yookassa_payment.get("id") == provider_payment_id:
@@ -284,9 +284,9 @@ async def yookassa_webhook(
                 await send_user_bot_message(
                     user_telegram_id=user.telegram_id,
                     text=(
-                        "\u2705 \u041f\u043e\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435 \u043a\u043e\u0448\u0435\u043b\u044c\u043a\u0430 \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u043e.\n\n"
-                        f"\u0421\u0443\u043c\u043c\u0430: {payment.amount_rub} \u20bd\n"
-                        f"\u0411\u0430\u043b\u0430\u043d\u0441: {user.wallet_balance_rub} \u20bd"
+                        "✅ Пополнение кошелька подтверждено.\n\n"
+                        f"Сумма: {payment.amount_rub} ₽\n"
+                        f"Баланс: {user.wallet_balance_rub} ₽"
                     ),
                     with_main_menu_button=True,
                 )

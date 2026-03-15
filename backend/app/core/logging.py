@@ -115,7 +115,7 @@ def _build_bot_main_menu_markup() -> dict:
         "inline_keyboard": [
             [
                 {
-                    "text": "\U0001F3E0 \u0413\u043b\u0430\u0432\u043d\u043e\u0435 \u043c\u0435\u043d\u044e",
+                    "text": "🏠 Главное меню",
                     "callback_data": "main_menu",
                 }
             ]
