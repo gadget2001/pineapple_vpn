@@ -189,7 +189,14 @@ def _build_docs_keyboard() -> InlineKeyboardMarkup:
         rows.append([InlineKeyboardButton(text="\U0001F512 \u041f\u043e\u043b\u0438\u0442\u0438\u043a\u0430 \u043a\u043e\u043d\u0444\u0438\u0434\u0435\u043d\u0446\u0438\u0430\u043b\u044c\u043d\u043e\u0441\u0442\u0438", url=docs["privacy"])])
         rows.append([InlineKeyboardButton(text="\u2696\uFE0F \u041f\u0440\u0430\u0432\u0438\u043b\u0430 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0438\u044f", url=docs["aup"])])
     rows.append([InlineKeyboardButton(text="\U0001F4AC \u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430", url=SUPPORT_URL)])
+    rows.append([InlineKeyboardButton(text="\U0001F3E0 \u0413\u043b\u0430\u0432\u043d\u043e\u0435 \u043c\u0435\u043d\u044e", callback_data="main_menu")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def _build_main_menu_button() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="\U0001F3E0 \u0413\u043b\u0430\u0432\u043d\u043e\u0435 \u043c\u0435\u043d\u044e", callback_data="main_menu")]
+    ])
 
 
 @dp.message(CommandStart())
@@ -258,7 +265,29 @@ async def docs_menu(callback: CallbackQuery):
 @dp.callback_query(F.data == "how_it_works")
 async def how_it_works(callback: CallbackQuery):
     await callback.answer()
-    await callback.message.answer(HOW_IT_WORKS_TEXT)
+    await callback.message.answer(HOW_IT_WORKS_TEXT, reply_markup=_build_main_menu_button())
+
+
+@dp.callback_query(F.data == "main_menu")
+async def main_menu(callback: CallbackQuery):
+    await callback.answer()
+    webapp_url = _build_miniapp_url_with_start(MINIAPP_URL, None)
+    caption = _build_welcome_caption(False, trial_already_used=False)
+    keyboard = _build_welcome_keyboard(webapp_url)
+
+    if WELCOME_IMAGE.exists():
+        await callback.message.answer_photo(
+            photo=FSInputFile(str(WELCOME_IMAGE)),
+            caption=caption,
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
+    else:
+        await callback.message.answer(
+            caption,
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
 
 
 async def main():
