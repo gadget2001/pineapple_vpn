@@ -40,10 +40,10 @@ STEP_INDEX = {
 INSTRUCTIONS = {
     "windows": {
         "app_name": "NekoRay",
-        "download_url": "https://github.com/MatsuriDayo/nekoray/releases",
+        "download_url": "https://github.com/MatsuriDayo/nekoray/releases/download/4.0.1/nekoray-4.0.1-2024-12-12-windows64.zip",
         "steps": [
             "Скачайте архив NekoRay для Windows и распакуйте его в удобную папку.",
-            "Запустите клиент от имени пользователя и дождитесь загрузки интерфейса.",
+            "Запустите файл nekobox.exe и дождитесь загрузки интерфейса.",
             "На следующем шаге получите ссылку конфигурации и импортируйте ее в NekoRay.",
             "Выберите импортированный профиль и нажмите Подключить.",
         ],
