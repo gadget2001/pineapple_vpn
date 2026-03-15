@@ -3,7 +3,7 @@ import { QRCodeSVG } from "qrcode.react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 const PANEL_BASE = import.meta.env.VITE_PANEL_BASE_URL || "https://panelpineapple.ambot24.ru";
-const SUPPORT_URL = import.meta.env.VITE_SUPPORT_URL || "https://t.me/ambot24";
+const SUPPORT_URL = import.meta.env.VITE_SUPPORT_URL || "https://t.me/AMBot_adm";
 const LEGAL_DOCS_VERSION = import.meta.env.VITE_LEGAL_DOCS_VERSION || "2026-03-15";
 
 const TABS = [
@@ -190,7 +190,7 @@ export default function App() {
   const [consentChecked, setConsentChecked] = useState(false);
 
   const [topupAmount, setTopupAmount] = useState(100);
-  const [docUrl, setDocUrl] = useState("");
+  const [docHtml, setDocHtml] = useState("");
   const [docTitle, setDocTitle] = useState("");
   const [selectedOs, setSelectedOs] = useState("windows");
   const alertRef = useRef(null);
@@ -370,12 +370,18 @@ export default function App() {
   };
 
   const openDoc = async (name, title) => {
+    const res = await fetch(`/docs/${name}`);
+    const html = await res.text();
+    const styleBlocks = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
+      .map((m) => m[0])
+      .join("\n");
+    const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     setDocTitle(title);
-    setDocUrl(`/docs/${name}`);
+    setDocHtml(`${styleBlocks}${body ? body[1] : html}`);
   };
 
   const closeDoc = () => {
-    setDocUrl("");
+    setDocHtml("");
     setDocTitle("");
   };
 
@@ -624,18 +630,18 @@ export default function App() {
   }, [authError]);
 
   useEffect(() => {
-    if (!docUrl) return;
+    if (!docHtml) return;
     if (!docCardRef.current) return;
     docCardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [docUrl]);
+  }, [docHtml]);
 
   useEffect(() => {
     const prevStep = prevOnboardingStepRef.current;
-    if (prevStep && onboardingStep !== prevStep && docUrl) {
+    if (prevStep && onboardingStep !== prevStep && docHtml) {
       closeDoc();
     }
     prevOnboardingStepRef.current = onboardingStep;
-  }, [onboardingStep, docUrl]);
+  }, [onboardingStep, docHtml]);
 
   return (
     <div className="app-shell">
@@ -890,19 +896,13 @@ export default function App() {
               )}
             </article>
 
-            {!!docUrl && (
+            {!!docHtml && (
               <article ref={docCardRef} className="card">
                 <div className="row between">
                   <h3>{docTitle}</h3>
                   <button onClick={closeDoc}>Назад</button>
                 </div>
-                <iframe
-                  className="doc-frame"
-                  src={docUrl}
-                  title={docTitle || "Документ"}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                />
+                <div className="doc-view" dangerouslySetInnerHTML={{ __html: docHtml }} />
               </article>
             )}
           </section>
@@ -1059,7 +1059,7 @@ export default function App() {
 
         {!isHydrating && !showOnboarding && tab === "help" && (
           <section className="page">
-            {!docUrl && (
+            {!docHtml && (
               <article className="card">
                 <h3>Документы</h3>
                 <div className="doc-links">
@@ -1069,19 +1069,13 @@ export default function App() {
                 </div>
               </article>
             )}
-            {!!docUrl && (
+            {!!docHtml && (
               <article ref={docCardRef} className="card">
                 <div className="row between">
                   <h3>{docTitle}</h3>
                   <button onClick={closeDoc}>Назад</button>
                 </div>
-                <iframe
-                  className="doc-frame"
-                  src={docUrl}
-                  title={docTitle || "Документ"}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                />
+                <div className="doc-view" dangerouslySetInnerHTML={{ __html: docHtml }} />
               </article>
             )}
           </section>

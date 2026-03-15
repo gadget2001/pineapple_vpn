@@ -23,7 +23,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))
 MINIAPP_URL = os.getenv("TELEGRAM_MINIAPP_URL")
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:16379/0")
-SUPPORT_URL = os.getenv("SUPPORT_URL", "https://t.me/ambot24")
+SUPPORT_URL = os.getenv("SUPPORT_URL", "https://t.me/AMBot_adm")
 DOCUMENTS_BASE_URL = os.getenv("DOCUMENTS_BASE_URL", "")
 WELCOME_IMAGE = Path(__file__).resolve().parents[1] / "img" / "welcome.png"
 
