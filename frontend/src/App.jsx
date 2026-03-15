@@ -190,7 +190,7 @@ export default function App() {
   const [consentChecked, setConsentChecked] = useState(false);
 
   const [topupAmount, setTopupAmount] = useState(100);
-  const [docHtml, setDocHtml] = useState("");
+  const [docUrl, setDocUrl] = useState("");
   const [docTitle, setDocTitle] = useState("");
   const [selectedOs, setSelectedOs] = useState("windows");
   const alertRef = useRef(null);
@@ -370,15 +370,12 @@ export default function App() {
   };
 
   const openDoc = async (name, title) => {
-    const res = await fetch(`/docs/${name}.html`);
-    const html = await res.text();
-    const body = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     setDocTitle(title);
-    setDocHtml(body ? body[1] : html);
+    setDocUrl(`/docs/${name}.html`);
   };
 
   const closeDoc = () => {
-    setDocHtml("");
+    setDocUrl("");
     setDocTitle("");
   };
 
@@ -627,18 +624,18 @@ export default function App() {
   }, [authError]);
 
   useEffect(() => {
-    if (!docHtml) return;
+    if (!docUrl) return;
     if (!docCardRef.current) return;
     docCardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [docHtml]);
+  }, [docUrl]);
 
   useEffect(() => {
     const prevStep = prevOnboardingStepRef.current;
-    if (prevStep && onboardingStep !== prevStep && docHtml) {
+    if (prevStep && onboardingStep !== prevStep && docUrl) {
       closeDoc();
     }
     prevOnboardingStepRef.current = onboardingStep;
-  }, [onboardingStep, docHtml]);
+  }, [onboardingStep, docUrl]);
 
   return (
     <div className="app-shell">
@@ -893,13 +890,19 @@ export default function App() {
               )}
             </article>
 
-            {!!docHtml && (
+            {!!docUrl && (
               <article ref={docCardRef} className="card">
                 <div className="row between">
                   <h3>{docTitle}</h3>
                   <button onClick={closeDoc}>Назад</button>
                 </div>
-                <div className="doc-view" dangerouslySetInnerHTML={{ __html: docHtml }} />
+                <iframe
+                  className="doc-frame"
+                  src={docUrl}
+                  title={docTitle || "Документ"}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                />
               </article>
             )}
           </section>
@@ -1056,7 +1059,7 @@ export default function App() {
 
         {!isHydrating && !showOnboarding && tab === "help" && (
           <section className="page">
-            {!docHtml && (
+            {!docUrl && (
               <article className="card">
                 <h3>Документы</h3>
                 <div className="doc-links">
@@ -1066,13 +1069,19 @@ export default function App() {
                 </div>
               </article>
             )}
-            {!!docHtml && (
+            {!!docUrl && (
               <article ref={docCardRef} className="card">
                 <div className="row between">
                   <h3>{docTitle}</h3>
                   <button onClick={closeDoc}>Назад</button>
                 </div>
-                <div className="doc-view" dangerouslySetInnerHTML={{ __html: docHtml }} />
+                <iframe
+                  className="doc-frame"
+                  src={docUrl}
+                  title={docTitle || "Документ"}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                />
               </article>
             )}
           </section>

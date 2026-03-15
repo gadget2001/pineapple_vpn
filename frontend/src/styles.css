@@ -867,3 +867,18 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 .tiny {
   font-size: 12px;
 }
+
+
+.doc-frame {
+  width: 100%;
+  min-height: 72vh;
+  border: 1px solid #e2e8d5;
+  border-radius: 12px;
+  background: #fff;
+}
+
+@media (max-width: 640px) {
+  .doc-frame {
+    min-height: 68vh;
+  }
+}
