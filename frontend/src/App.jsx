@@ -42,6 +42,43 @@ const INTRO_SLIDES = [
   },
 ];
 
+const INSTRUCTION_IMAGE_FOLDERS = {
+  windows: ["Windows", "windows"],
+  iphone: ["Iphone", "iPhone", "iphone"],
+  android: ["Android", "android"],
+  macos: ["macOS", "MacOS", "macos"],
+};
+
+const MAX_INSTRUCTION_IMAGES = 10;
+
+function checkImageExists(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+}
+
+async function loadInstructionImages(os) {
+  const folders = INSTRUCTION_IMAGE_FOLDERS[os] || [];
+  for (const folder of folders) {
+    const found = [];
+    for (let i = 1; i <= MAX_INSTRUCTION_IMAGES; i += 1) {
+      const src = `/docs/img/Instructions/${folder}/${i}.png`;
+      // no-cache query so newly uploaded screenshots become visible without rebuild
+      const cacheBusted = `${src}?v=${Date.now()}`;
+      // eslint-disable-next-line no-await-in-loop
+      const exists = await checkImageExists(cacheBusted);
+      if (exists) {
+        found.push(src);
+      }
+    }
+    if (found.length > 0) return found;
+  }
+  return [];
+}
+
 function useTelegram() {
   return window.Telegram?.WebApp;
 }
@@ -229,6 +266,8 @@ export default function App() {
   const [onboardingConfig, setOnboardingConfig] = useState(null);
   const [configGenerating, setConfigGenerating] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const [instructionImages, setInstructionImages] = useState([]);
+  const [instructionViewerIndex, setInstructionViewerIndex] = useState(null);
   const [copyNotice, setCopyNotice] = useState("");
   const [showIntro, setShowIntro] = useState(false);
   const [introSlide, setIntroSlide] = useState(0);
@@ -370,6 +409,55 @@ export default function App() {
 
     loadInstructionIfNeeded();
   }, [showOnboarding, onboarding?.step, selectedOs, token]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadImages = async () => {
+      if (!showOnboarding || onboarding?.step !== "get_config") {
+        setInstructionImages([]);
+        setInstructionViewerIndex(null);
+        return;
+      }
+
+      const images = await loadInstructionImages(selectedOs);
+      if (!cancelled) {
+        setInstructionImages(images);
+        setInstructionViewerIndex(null);
+      }
+    };
+
+    loadImages();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showOnboarding, onboarding?.step, selectedOs]);
+
+  useEffect(() => {
+    if (instructionViewerIndex === null) return;
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setInstructionViewerIndex(null);
+      }
+      if (event.key === "ArrowLeft") {
+        setInstructionViewerIndex((prev) => {
+          if (prev === null) return null;
+          return Math.max(0, prev - 1);
+        });
+      }
+      if (event.key === "ArrowRight") {
+        setInstructionViewerIndex((prev) => {
+          if (prev === null) return null;
+          return Math.min(instructionImages.length - 1, prev + 1);
+        });
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [instructionViewerIndex, instructionImages.length]);
 
   useEffect(() => {
     if (tab !== "setup") return;
@@ -732,6 +820,31 @@ export default function App() {
   );
   const configHelp = configInstructionByOs(selectedOs);
 
+  const currentInstructionImage =
+    instructionViewerIndex === null ? "" : instructionImages[instructionViewerIndex] || "";
+
+  const openInstructionViewer = (index) => {
+    setInstructionViewerIndex(index);
+  };
+
+  const closeInstructionViewer = () => {
+    setInstructionViewerIndex(null);
+  };
+
+  const showPrevInstructionImage = () => {
+    setInstructionViewerIndex((prev) => {
+      if (prev === null) return null;
+      return Math.max(0, prev - 1);
+    });
+  };
+
+  const showNextInstructionImage = () => {
+    setInstructionViewerIndex((prev) => {
+      if (prev === null) return null;
+      return Math.min(instructionImages.length - 1, prev + 1);
+    });
+  };
+
   const supportUsername = parseSupportUsername(SUPPORT_URL);
   const latestSubscriptionPayment = [...payments]
     .filter((item) => item?.kind === "subscription_debit" && item?.status === "paid")
@@ -1086,6 +1199,26 @@ export default function App() {
                         </ol>
                       </article>
 
+                      {instructionImages.length > 0 && (
+                        <section className="instruction-screens-block">
+                          <h4>{"Скриншоты настройки"}</h4>
+                          <p className="muted">{"Нажмите на скриншот, чтобы открыть его в полном размере."}</p>
+                          <div className="instruction-thumbs" role="list">
+                            {instructionImages.map((src, idx) => (
+                              <button
+                                key={`${src}-${idx}`}
+                                type="button"
+                                className="instruction-thumb"
+                                onClick={() => openInstructionViewer(idx)}
+                                aria-label={`Скриншот ${idx + 1}`}
+                              >
+                                <img src={src} alt={`Step ${idx + 1}`} loading="lazy" />
+                              </button>
+                            ))}
+                          </div>
+                        </section>
+                      )}
+
                       <button onClick={onboardingComplete} disabled={loading}>{"Я добавил конфигурацию"}</button>
 
                       <div className="help-box">
@@ -1094,6 +1227,41 @@ export default function App() {
                           <a className="soft-link" href={SUPPORT_URL} target="_blank" rel="noreferrer">{"Написать в поддержку"}</a>
                         </div>
                       </div>
+
+                      {instructionViewerIndex !== null && currentInstructionImage && (
+                        <div className="instruction-viewer-overlay" onClick={closeInstructionViewer}>
+                          <div className="instruction-viewer" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              className="instruction-viewer-close"
+                              onClick={closeInstructionViewer}
+                              aria-label={"Закрыть"}
+                            >
+                              ×
+                            </button>
+                            <img src={currentInstructionImage} alt={`Step ${instructionViewerIndex + 1}`} />
+                            <div className="instruction-viewer-footer">
+                              <button
+                                type="button"
+                                className="soft-btn"
+                                onClick={showPrevInstructionImage}
+                                disabled={instructionViewerIndex <= 0}
+                              >
+                                Назад
+                              </button>
+                              <span>{instructionViewerIndex + 1} / {instructionImages.length}</span>
+                              <button
+                                type="button"
+                                className="soft-btn"
+                                onClick={showNextInstructionImage}
+                                disabled={instructionViewerIndex >= instructionImages.length - 1}
+                              >
+                                Вперед
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
