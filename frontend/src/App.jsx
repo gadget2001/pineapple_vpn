@@ -1119,11 +1119,11 @@ export default function App() {
           <section className="page">
             {!docHtml && (
               <article className="card">
-                <h3>Документы</h3>
+                <h3>{"Документы"}</h3>
                 <div className="doc-links">
-                  <button className="link-btn" onClick={() => openDoc("public-offer", "Публичная оферта")}>Пользовательское соглашение</button>
-                  <button className="link-btn" onClick={() => openDoc("privacy-policy", "Политика конфиденциальности")}>Политика конфиденциальности</button>
-                  <button className="link-btn" onClick={() => openDoc("acceptable-use", "Правила использования")}>Правила использования</button>
+                  <button className="link-btn" onClick={() => openDoc("public-offer", "Публичная оферта")}>{"Пользовательское соглашение"}</button>
+                  <button className="link-btn" onClick={() => openDoc("privacy-policy", "Политика конфиденциальности")}>{"Политика конфиденциальности"}</button>
+                  <button className="link-btn" onClick={() => openDoc("acceptable-use", "Правила использования")}>{"Правила использования"}</button>
                 </div>
               </article>
             )}
@@ -1131,11 +1131,23 @@ export default function App() {
               <article ref={docCardRef} className="card">
                 <div className="row between">
                   <h3>{docTitle}</h3>
-                  <button onClick={closeDoc}>Назад</button>
+                  <button onClick={closeDoc}>{"Назад"}</button>
                 </div>
                 <div className="doc-view" dangerouslySetInnerHTML={{ __html: docHtml }} />
               </article>
             )}
+
+            <article className="card support-card">
+              <h3>{"Поддержка"}</h3>
+              <p className="muted">{"Поможем с подключением, ошибками доступа, вопросами по оплате и продлению."}</p>
+              <ul className="support-list">
+                <li><strong>{"Когда обращаться:"}</strong> {"ежедневно, 10:00-22:00 МСК."}</li>
+                <li><strong>{"Что решаем:"}</strong> {"настройка VPN, восстановление доступа, вопросы по подписке и платежам."}</li>
+                <li><strong>{"Куда:"}</strong> <a href={SUPPORT_URL} target="_blank" rel="noreferrer">{SUPPORT_URL}</a></li>
+              </ul>
+              <div className="support-note">{"При нажатии кнопки откроется Telegram с уже заполненным сообщением: Telegram ID, статус подписки, даты и ссылка конфигурации."}</div>
+              <button onClick={openSupportChat}>{"Написать в поддержку"}</button>
+            </article>
           </section>
         )}
       </main>
