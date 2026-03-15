@@ -371,7 +371,7 @@ export default function App() {
 
   const openDoc = async (name, title) => {
     setDocTitle(title);
-    setDocUrl(`/docs/${name}.html`);
+    setDocUrl(`/docs/${name}`);
   };
 
   const closeDoc = () => {
@@ -752,9 +752,9 @@ export default function App() {
                   <p className="muted">Сервис не предназначен для обхода блокировок и незаконной деятельности.</p>
 
                   <div className="doc-links inline-links onboarding-links">
-                    <button className="link-btn" onClick={() => openDoc("terms", "Пользовательское соглашение")}>Соглашение</button>
-                    <button className="link-btn" onClick={() => openDoc("privacy", "Политика конфиденциальности")}>Политика</button>
-                    <button className="link-btn" onClick={() => openDoc("acceptable_use", "Правила использования")}>Правила</button>
+                    <button className="link-btn" onClick={() => openDoc("public-offer", "Публичная оферта")}>Соглашение</button>
+                    <button className="link-btn" onClick={() => openDoc("privacy-policy", "Политика конфиденциальности")}>Политика</button>
+                    <button className="link-btn" onClick={() => openDoc("acceptable-use", "Правила использования")}>Правила</button>
                   </div>
 
                   <label className="consent-line">
@@ -1063,9 +1063,9 @@ export default function App() {
               <article className="card">
                 <h3>Документы</h3>
                 <div className="doc-links">
-                  <button className="link-btn" onClick={() => openDoc("terms", "Пользовательское соглашение")}>Пользовательское соглашение</button>
-                  <button className="link-btn" onClick={() => openDoc("privacy", "Политика конфиденциальности")}>Политика конфиденциальности</button>
-                  <button className="link-btn" onClick={() => openDoc("acceptable_use", "Правила использования")}>Правила использования</button>
+                  <button className="link-btn" onClick={() => openDoc("public-offer", "Публичная оферта")}>Пользовательское соглашение</button>
+                  <button className="link-btn" onClick={() => openDoc("privacy-policy", "Политика конфиденциальности")}>Политика конфиденциальности</button>
+                  <button className="link-btn" onClick={() => openDoc("acceptable-use", "Правила использования")}>Правила использования</button>
                 </div>
               </article>
             )}
