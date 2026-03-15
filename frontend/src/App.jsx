@@ -114,7 +114,7 @@ function planRu(plan) {
 }
 
 function operationMeta(item) {
-  if (item.kind === "topup") return { title: "Пополнение ЮKassa", sign: "+", cls: "credit" };
+  if (item.kind === "topup") return { title: "Пополнение", sign: "+", cls: "credit" };
   if (item.kind === "referral_bonus") return { title: "Реферальное начисление", sign: "+", cls: "credit" };
   if (item.kind === "subscription_debit") return { title: "Списание за тариф", sign: "-", cls: "debit" };
   return { title: "Операция", sign: "", cls: "neutral" };
@@ -171,9 +171,11 @@ function onboardingTitle(step) {
 function configInstructionByOs(os) {
   if (os === "iphone") {
     return [
+      "Нажмите на этой странице <Скопировать кофигурацию>",
       "Откройте приложение Streisand.",
-      "Нажмите «Добавить конфигурацию».",
-      "Вставьте скопированную ссылку и сохраните.",
+      "Нажмите значок <+> в правом верхнем углу меню.",
+      "Затем нажмите <Добавить из буфера>",
+      "ВПН настроен и его можно включить кнопкой <⏻>",
     ];
   }
   if (os === "windows") {

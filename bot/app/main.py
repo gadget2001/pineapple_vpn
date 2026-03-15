@@ -14,6 +14,7 @@ from aiogram.types import (
     FSInputFile,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    MenuButtonCommands,
     Message,
     WebAppInfo,
 )
@@ -292,6 +293,7 @@ async def main_menu(callback: CallbackQuery):
 
 async def main():
     bot = Bot(BOT_TOKEN)
+    await bot.set_chat_menu_button(menu_button=MenuButtonCommands())
     await dp.start_polling(bot)
 
 
