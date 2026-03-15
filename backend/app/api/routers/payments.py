@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.config import settings
-from app.core.logging import send_admin_log
+from app.core.logging import send_admin_log, send_user_bot_message
 from app.core.security import is_ip_allowed, verify_webhook_signature
 from app.db.session import get_db
 from app.models.payment import Payment
@@ -257,16 +257,19 @@ async def yookassa_webhook(
                             )
                         )
 
-            await send_admin_log(
-                "wallet_topup",
-                user.telegram_id,
-                user.username,
-                {
-                    "amount": payment.amount_rub,
-                    "wallet_balance": user.wallet_balance_rub,
-                    "provider_payment_id": payment.provider_payment_id,
-                },
-            )
+            try:
+                await send_admin_log(
+                    "wallet_topup",
+                    user.telegram_id,
+                    user.username,
+                    {
+                        "amount": payment.amount_rub,
+                        "wallet_balance": user.wallet_balance_rub,
+                        "provider_payment_id": payment.provider_payment_id,
+                    },
+                )
+            except Exception:
+                pass
 
         db.commit()
         log_audit(
@@ -275,6 +278,20 @@ async def yookassa_webhook(
             "payment_success",
             {"amount": payment.amount_rub, "kind": payment.kind, "provider_payment_id": provider_payment_id},
         )
+
+        if payment.kind == "topup" and user:
+            try:
+                await send_user_bot_message(
+                    user_telegram_id=user.telegram_id,
+                    text=(
+                        "? ?????????? ???????? ????????????.\n\n"
+                        f"?????: {payment.amount_rub} ?\n"
+                        f"??????: {user.wallet_balance_rub} ?"
+                    ),
+                    with_main_menu_button=True,
+                )
+            except Exception:
+                pass
 
     elif event == "payment.canceled":
         if payment.status != "pending":

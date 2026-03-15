@@ -107,3 +107,39 @@ def send_admin_log_sync(action: str, user_id: int | None, username: str | None, 
         json={"chat_id": settings.admin_chat_id, "text": text, "disable_web_page_preview": True},
         timeout=10,
     )
+
+
+
+def _build_bot_main_menu_markup() -> dict:
+    bot_username = (settings.telegram_bot_username or "").strip().lstrip("@")
+    if not bot_username:
+        return {"inline_keyboard": []}
+    return {
+        "inline_keyboard": [
+            [
+                {
+                    "text": "?? ??????? ????",
+                    "url": f"https://t.me/{bot_username}?start=menu",
+                }
+            ]
+        ]
+    }
+
+
+async def send_user_bot_message(user_telegram_id: int, text: str, with_main_menu_button: bool = False):
+    if not user_telegram_id or not settings.bot_token:
+        return
+
+    payload = {
+        "chat_id": user_telegram_id,
+        "text": text,
+        "disable_web_page_preview": True,
+    }
+    if with_main_menu_button:
+        payload["reply_markup"] = _build_bot_main_menu_markup()
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        await client.post(
+            f"https://api.telegram.org/bot{settings.bot_token}/sendMessage",
+            json=payload,
+        )
