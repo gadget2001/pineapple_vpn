@@ -64,6 +64,7 @@ async def accept_consent(
 ):
     if not user.terms_accepted_at:
         user.terms_accepted_at = datetime.utcnow()
+    user.legal_docs_version_accepted = settings.legal_docs_version
 
     if payload.os:
         user.onboarding_os = _normalize_os(payload.os)
@@ -71,15 +72,15 @@ async def accept_consent(
     user.onboarding_step = "trial_offer"
     db.commit()
 
-    log_audit(db, user.id, "terms_accepted", {"os": user.onboarding_os})
+    log_audit(db, user.id, "terms_accepted", {"os": user.onboarding_os, "docs_version": settings.legal_docs_version})
     await send_admin_log(
         "terms_accepted",
         user.telegram_id,
         user.username,
-        {"os": user.onboarding_os or "unknown", "accepted_at": user.terms_accepted_at.isoformat()},
+        {"os": user.onboarding_os or "unknown", "accepted_at": user.terms_accepted_at.isoformat(), "docs_version": settings.legal_docs_version},
     )
 
-    return {"status": "ok", "terms_accepted_at": user.terms_accepted_at, "os": user.onboarding_os}
+    return {"status": "ok", "terms_accepted_at": user.terms_accepted_at, "os": user.onboarding_os, "docs_version": user.legal_docs_version_accepted}
 
 
 @router.get(
@@ -158,6 +159,8 @@ def account_overview(
         "total_steps": 6,
         "terms_accepted": user.terms_accepted_at is not None,
         "terms_accepted_at": user.terms_accepted_at,
+        "legal_docs_version_current": settings.legal_docs_version,
+        "legal_docs_version_accepted": user.legal_docs_version_accepted,
         "os": normalized_os,
         "trial_available": not trial_used,
         "install_confirmed": user.onboarding_install_confirmed_at is not None,

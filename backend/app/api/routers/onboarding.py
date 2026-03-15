@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.core.config import settings
 from app.core.logging import send_admin_log
 from app.db.session import get_db
 from app.models.subscription import Subscription
@@ -154,6 +155,8 @@ def _state(db: Session, user: User) -> OnboardingStateOut:
         total_steps=TOTAL_STEPS,
         terms_accepted=user.terms_accepted_at is not None,
         terms_accepted_at=user.terms_accepted_at,
+        legal_docs_version_current=settings.legal_docs_version,
+        legal_docs_version_accepted=user.legal_docs_version_accepted,
         trial_available=not _trial_used(db, user),
         trial_activated_at=user.trial_activated_at,
         trial_days=user.trial_days,
@@ -197,18 +200,27 @@ async def accept_terms(
     if not payload.accepted:
         raise HTTPException(status_code=400, detail="Необходимо подтвердить согласие с правилами.")
 
+    accepted_version = (payload.docs_version or settings.legal_docs_version).strip()[:32]
+
     if not user.terms_accepted_at:
         user.terms_accepted_at = datetime.utcnow()
+        user.legal_docs_version_accepted = accepted_version
         user.onboarding_step = "trial_offer"
         db.commit()
 
-        log_audit(db, user.id, "terms_accepted", {})
+        log_audit(db, user.id, "terms_accepted", {"docs_version": accepted_version})
         await send_admin_log(
             "terms_accepted",
             user.telegram_id,
             user.username,
-            {"accepted_at": user.terms_accepted_at.isoformat()},
+            {
+                "accepted_at": user.terms_accepted_at.isoformat(),
+                "docs_version": accepted_version,
+            },
         )
+    elif user.legal_docs_version_accepted != accepted_version:
+        user.legal_docs_version_accepted = accepted_version
+        db.commit()
 
     return _state(db, user)
 

@@ -22,6 +22,8 @@ class OnboardingStateOut(BaseModel):
     total_steps: int = Field(default=6, ge=1)
     terms_accepted: bool
     terms_accepted_at: datetime | None
+    legal_docs_version_current: str
+    legal_docs_version_accepted: str | None
     trial_available: bool
     trial_activated_at: datetime | None
     trial_days: int
@@ -35,6 +37,7 @@ class OnboardingStateOut(BaseModel):
 
 class AcceptTermsRequest(BaseModel):
     accepted: bool
+    docs_version: str | None = None
 
 
 class SelectDeviceRequest(BaseModel):

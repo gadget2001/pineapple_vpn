@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     jwt_secret: str
     jwt_alg: str = "HS256"
     access_token_expire_minutes: int = 10080
+    legal_docs_version: str = "2026-03-15"
 
     # Subscription pricing (RUB)
     subscription_price_week_rub: int = 99

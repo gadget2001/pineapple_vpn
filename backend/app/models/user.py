@@ -20,6 +20,7 @@ class User(Base):
     trial_days: Mapped[int] = mapped_column(Integer, default=3)
     trial_activated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     terms_accepted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    legal_docs_version_accepted: Mapped[str | None] = mapped_column(String(32), nullable=True)
     onboarding_os: Mapped[str | None] = mapped_column(String(32), nullable=True)
     onboarding_step: Mapped[str] = mapped_column(String(32), default="welcome")
     onboarding_install_confirmed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

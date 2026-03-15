@@ -863,3 +863,7 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 }
 
 .ref-share-row { margin-bottom: 10px; }
+
+.tiny {
+  font-size: 12px;
+}

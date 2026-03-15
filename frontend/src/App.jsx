@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 const PANEL_BASE = import.meta.env.VITE_PANEL_BASE_URL || "https://panelpineapple.ambot24.ru";
 const SUPPORT_URL = import.meta.env.VITE_SUPPORT_URL || "https://t.me/ambot24";
+const LEGAL_DOCS_VERSION = import.meta.env.VITE_LEGAL_DOCS_VERSION || "2026-03-15";
 
 const TABS = [
   { id: "home", label: "Главная", title: "Главная" },
@@ -474,7 +475,7 @@ export default function App() {
       const state = await request("/onboarding/accept-terms", {
         method: "POST",
         headers: { ...authHeaders, "Content-Type": "application/json" },
-        body: JSON.stringify({ accepted: true }),
+        body: JSON.stringify({ accepted: true, docs_version: LEGAL_DOCS_VERSION }),
       });
       setOnboarding(state);
       setShowOnboarding(true);
