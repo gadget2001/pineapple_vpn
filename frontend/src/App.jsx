@@ -119,6 +119,21 @@ function normalizeSubscriptionUrl(url) {
   return url;
 }
 
+function parseSupportUsername(url) {
+  if (!url) return "";
+  const raw = String(url).trim();
+  if (!raw) return "";
+  if (raw.startsWith("@")) return raw.slice(1);
+  try {
+    const parsed = new URL(raw);
+    if (!/^(t\.me|telegram\.me)$/i.test(parsed.hostname)) return "";
+    const first = parsed.pathname.split("/").filter(Boolean)[0] || "";
+    return first;
+  } catch {
+    return "";
+  }
+}
+
 function onboardingTitle(step) {
   if (step === "welcome") return "Добро пожаловать в Pineapple VPN";
   if (step === "trial_offer") return "Попробуйте сервис бесплатно";
@@ -628,6 +643,40 @@ export default function App() {
     onboardingConfig?.subscription_url || vpnConfig?.subscription_url,
   );
   const configHelp = configInstructionByOs(selectedOs);
+
+  const supportUsername = parseSupportUsername(SUPPORT_URL);
+  const latestSubscriptionPayment = [...payments]
+    .filter((item) => item?.kind === "subscription_debit" && item?.status === "paid")
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+  const supportSubscriptionStartedAt =
+    status?.plan === "trial"
+      ? overview?.trial?.activated_at || null
+      : latestSubscriptionPayment?.created_at || null;
+
+  const supportMessage = [
+    "????????????! ????? ?????? ? Pineapple VPN.",
+    "",
+    "?????? ??? ??????? ???????????:",
+    `Telegram ID: ${overview?.user?.telegram_id || tg?.initDataUnsafe?.user?.id || "?? ??????"}`,
+    `Username: @${overview?.user?.username || tg?.initDataUnsafe?.user?.username || "?? ??????"}`,
+    `?????? ????????: ${statusRu(status?.status)}`,
+    `?????: ${planRu(status?.plan)}`,
+    `?????????: ${formatDate(supportSubscriptionStartedAt)}`,
+    `????????: ${formatDate(status?.ends_at || overview?.subscription?.ends_at)}`,
+    `???? VPN: ${setupSubscriptionUrl || "??? ?? ???????"}`,
+  ].join("\n");
+
+  const supportChatUrl = supportUsername
+    ? `https://t.me/${supportUsername}?text=${encodeURIComponent(supportMessage)}`
+    : SUPPORT_URL;
+
+  const openSupportChat = () => {
+    if (tg?.openTelegramLink && supportChatUrl.startsWith("https://t.me/")) {
+      tg.openTelegramLink(supportChatUrl);
+      return;
+    }
+    window.open(supportChatUrl, "_blank", "noopener,noreferrer");
+  };
 
   useEffect(() => {
     if (!authError) return;
