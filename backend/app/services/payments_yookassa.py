@@ -12,6 +12,7 @@ async def create_yookassa_payment(
     return_url: str,
     idempotence_key: str | None = None,
     metadata: dict[str, str] | None = None,
+    receipt: dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     payload = {
         "amount": {"value": f"{amount_rub}.00", "currency": "RUB"},
@@ -21,6 +22,8 @@ async def create_yookassa_payment(
     }
     if metadata:
         payload["metadata"] = metadata
+    if receipt:
+        payload["receipt"] = receipt
 
     async with httpx.AsyncClient(timeout=15) as client:
         response = await client.post(

@@ -120,9 +120,13 @@ cp .env.example .env
 - `TELEGRAM_MINIAPP_URL` — `https://pineapple.ambot24.ru`
 
 ### YooKassa
-- `YOOKASSA_SHOP_ID` — ID магазина
-- `YOOKASSA_SECRET_KEY` — секрет
-- `YOOKASSA_WEBHOOK_SECRET` — секрет webhook
+- `YOOKASSA_SHOP_ID` - shop ID
+- `YOOKASSA_SECRET_KEY` - API secret key
+- `YOOKASSA_WEBHOOK_SECRET` - webhook secret
+- `YOOKASSA_RECEIPT_DESCRIPTION` - receipt item description (54-FZ)
+- `YOOKASSA_RECEIPT_VAT_CODE` - VAT code for receipt item (confirm with accountant/lawyer)
+- `YOOKASSA_RECEIPT_PAYMENT_MODE` - receipt payment mode
+- `YOOKASSA_RECEIPT_PAYMENT_SUBJECT` - receipt payment subject
 
 ### VPN Panel (Marzban)
 - `PANEL_URL` — `http://panel:19090` (если Marzban в compose) или внешний URL

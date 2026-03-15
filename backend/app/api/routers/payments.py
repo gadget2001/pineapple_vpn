@@ -59,6 +59,26 @@ def _validate_amount_and_currency(payment: Payment, obj: dict) -> tuple[bool, st
     return True, None
 
 
+def _build_receipt(email: str, amount_rub: int) -> dict:
+    vat_code = settings.yookassa_receipt_vat_code
+    if vat_code not in {1, 2, 3, 4, 5, 6}:
+        raise HTTPException(status_code=500, detail="Некорректная конфигурация НДС для ЮKassa (YOOKASSA_RECEIPT_VAT_CODE).")
+
+    return {
+        "customer": {"email": email},
+        "items": [
+            {
+                "description": settings.yookassa_receipt_description,
+                "quantity": "1.00",
+                "amount": {"value": f"{amount_rub}.00", "currency": "RUB"},
+                "vat_code": vat_code,
+                "payment_mode": settings.yookassa_receipt_payment_mode,
+                "payment_subject": settings.yookassa_receipt_payment_subject,
+            }
+        ],
+    }
+
+
 @router.post("/topup", response_model=PaymentOut, summary="Create wallet top-up payment")
 async def create_topup_payment(
     payload: PaymentCreate,
@@ -66,6 +86,12 @@ async def create_topup_payment(
     db: Session = Depends(get_db),
 ):
     amount = payload.amount_rub
+    receipt_email = (user.receipt_email or "").strip().lower()
+    if not receipt_email:
+        raise HTTPException(
+            status_code=400,
+            detail="Укажите email для получения кассового чека в разделе «Кошелек», затем повторите оплату.",
+        )
 
     payment = Payment(user_id=user.id, amount_rub=amount, status="pending", kind="topup")
     db.add(payment)
@@ -75,10 +101,11 @@ async def create_topup_payment(
     try:
         response = await create_yookassa_payment(
             amount_rub=amount,
-            description=f"Pineapple VPN wallet top-up: {amount} RUB",
+            description=settings.yookassa_receipt_description,
             return_url=_build_return_url(payment.id),
             idempotence_key=f"topup-{payment.id}",
             metadata={"local_payment_id": str(payment.id), "user_id": str(user.id), "kind": "topup"},
+            receipt=_build_receipt(receipt_email, amount),
         )
     except Exception as exc:
         payment.status = "failed"
@@ -97,6 +124,7 @@ async def create_topup_payment(
     payment.provider_payment_id = response.get("id")
     payment.meta = {
         "kind": "topup",
+        "receipt_email": receipt_email,
         "yookassa": {
             "id": response.get("id"),
             "status": response.get("status"),

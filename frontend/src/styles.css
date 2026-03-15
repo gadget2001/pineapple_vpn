@@ -244,6 +244,21 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 .op-amount { font-size: 18px; font-weight: 800; white-space: nowrap; }
 .empty { color: var(--muted); font-size: 14px; }
 
+.receipt-email-card {
+  display: grid;
+  gap: 8px;
+}
+
+.receipt-email-row {
+  align-items: stretch;
+}
+
+.warning-text {
+  display: block;
+  margin-top: 4px;
+  color: #9c5f00;
+}
+
 .ref-link {
   margin: 8px 0;
   font-size: 12px;

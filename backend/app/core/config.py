@@ -41,6 +41,10 @@ class Settings(BaseSettings):
         "185.71.76.0/27,185.71.77.0/27,77.75.153.0/25,77.75.156.11,"
         "77.75.156.35,77.75.154.128/25,2a02:5180::/32"
     )
+    yookassa_receipt_description: str = "Пополнение баланса Pineapple VPN"
+    yookassa_receipt_vat_code: int = 1
+    yookassa_receipt_payment_mode: str = "full_prepayment"
+    yookassa_receipt_payment_subject: str = "service"
 
     panel_url: str
     panel_token: str = ""

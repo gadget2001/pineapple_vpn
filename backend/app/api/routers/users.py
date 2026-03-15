@@ -1,6 +1,7 @@
+import re
 from datetime import datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -19,9 +20,15 @@ from app.utils.referral import build_bot_referral_link
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
+EMAIL_RE = re.compile(r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$")
+
 
 class ConsentAcceptRequest(BaseModel):
     os: str | None = None
+
+
+class ReceiptEmailUpdateRequest(BaseModel):
+    email: str
 
 
 def _normalize_os(value: str | None) -> str | None:
@@ -33,10 +40,19 @@ def _normalize_os(value: str | None) -> str | None:
     return raw
 
 
+def _normalize_receipt_email(value: str | None) -> str:
+    email = (value or "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=422, detail="Укажите email для получения кассовых чеков.")
+    if len(email) > 254 or not EMAIL_RE.match(email):
+        raise HTTPException(status_code=422, detail="Укажите корректный email в формате name@example.com.")
+    return email
+
+
 @router.get(
     "/me",
-    summary="Профиль пользователя",
-    description="Короткий профиль: Telegram-данные, реферальный код и баланс кошелька.",
+    summary="User profile",
+    description="Short profile with Telegram data, referral code and wallet balance.",
 )
 def get_profile(
     user: User = Depends(get_current_user),
@@ -49,13 +65,14 @@ def get_profile(
         "username": user.username,
         "referral_code": user.referral_code,
         "wallet_balance_rub": user.wallet_balance_rub,
+        "receipt_email": user.receipt_email,
     }
 
 
 @router.post(
     "/consent",
-    summary="Согласие с правилами",
-    description="Фиксирует ознакомление пользователя с правилами сервиса и юридическими документами.",
+    summary="Accept legal consent",
+    description="Stores user consent for service rules and legal documents.",
 )
 async def accept_consent(
     payload: ConsentAcceptRequest,
@@ -77,16 +94,53 @@ async def accept_consent(
         "terms_accepted",
         user.telegram_id,
         user.username,
-        {"os": user.onboarding_os or "unknown", "accepted_at": user.terms_accepted_at.isoformat(), "docs_version": settings.legal_docs_version},
+        {
+            "os": user.onboarding_os or "unknown",
+            "accepted_at": user.terms_accepted_at.isoformat(),
+            "docs_version": settings.legal_docs_version,
+        },
     )
 
-    return {"status": "ok", "terms_accepted_at": user.terms_accepted_at, "os": user.onboarding_os, "docs_version": user.legal_docs_version_accepted}
+    return {
+        "status": "ok",
+        "terms_accepted_at": user.terms_accepted_at,
+        "os": user.onboarding_os,
+        "docs_version": user.legal_docs_version_accepted,
+    }
+
+
+@router.get(
+    "/receipt-email",
+    summary="Get receipt email",
+    description="Returns current email used by YooKassa to deliver fiscal receipts.",
+)
+def get_receipt_email(user: User = Depends(get_current_user)):
+    return {"email": user.receipt_email}
+
+
+@router.put(
+    "/receipt-email",
+    summary="Update receipt email",
+    description="Updates email used in YooKassa receipt payload.",
+)
+def update_receipt_email(
+    payload: ReceiptEmailUpdateRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    email = _normalize_receipt_email(payload.email)
+    user.receipt_email = email
+    db.commit()
+
+    log_audit(db, user.id, "receipt_email_updated", {"email": email})
+
+    return {"status": "ok", "email": email}
 
 
 @router.get(
     "/overview",
-    summary="Обзор личного кабинета",
-    description="Единая сводка для MiniApp: пользователь, trial, подписка, баланс, рефералы и onboarding.",
+    summary="Account overview",
+    description="Unified MiniApp dashboard payload with user, trial, subscription, wallet and onboarding state.",
 )
 def account_overview(
     user: User = Depends(get_current_user),
@@ -179,6 +233,7 @@ def account_overview(
             "username": user.username,
             "created_at": user.created_at,
             "wallet_balance_rub": user.wallet_balance_rub,
+            "receipt_email": user.receipt_email,
         },
         "subscription": {
             "status": "active" if active else "expired" if sub else "none",

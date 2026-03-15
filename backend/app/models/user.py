@@ -25,6 +25,7 @@ class User(Base):
     onboarding_step: Mapped[str] = mapped_column(String(32), default="welcome")
     onboarding_install_confirmed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     onboarding_completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    receipt_email: Mapped[str | None] = mapped_column(String(254), nullable=True)
     wallet_balance_rub: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

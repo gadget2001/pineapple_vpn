@@ -151,6 +151,12 @@ function parseSupportUsername(url) {
   }
 }
 
+function isValidEmail(value) {
+  const email = String(value || "").trim().toLowerCase();
+  if (!email) return false;
+  return /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/.test(email);
+}
+
 function onboardingTitle(step) {
   if (step === "welcome") return "Добро пожаловать в Pineapple VPN";
   if (step === "trial_offer") return "Попробуйте сервис бесплатно";
@@ -222,6 +228,9 @@ export default function App() {
   const [consentChecked, setConsentChecked] = useState(false);
 
   const [topupAmount, setTopupAmount] = useState(100);
+  const [receiptEmail, setReceiptEmail] = useState("");
+  const [receiptEmailDraft, setReceiptEmailDraft] = useState("");
+  const [receiptEmailSaving, setReceiptEmailSaving] = useState(false);
   const [docHtml, setDocHtml] = useState("");
   const [docTitle, setDocTitle] = useState("");
   const [selectedOs, setSelectedOs] = useState("windows");
@@ -290,6 +299,12 @@ export default function App() {
     const fatal = results.find((item) => item.status === "rejected" && !String(item.reason?.message || "").includes("Сессия истекла"));
     if (fatal) throw fatal.reason;
   };
+
+  useEffect(() => {
+    const email = overview?.user?.receipt_email || "";
+    setReceiptEmail(email);
+    setReceiptEmailDraft(email);
+  }, [overview?.user?.receipt_email]);
 
   useEffect(() => {
     const auth = async () => {
@@ -444,7 +459,50 @@ export default function App() {
     setIntroTouchStartX(null);
   };
 
+  const saveReceiptEmail = async () => {
+    const normalized = String(receiptEmailDraft || "").trim().toLowerCase();
+    if (!isValidEmail(normalized)) {
+      setAuthError("Укажите корректный email для получения кассовых чеков.");
+      return;
+    }
+
+    setReceiptEmailSaving(true);
+    try {
+      const data = await request("/users/receipt-email", {
+        method: "PUT",
+        headers: { ...authHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalized }),
+      });
+
+      const savedEmail = data?.email || normalized;
+      setReceiptEmail(savedEmail);
+      setReceiptEmailDraft(savedEmail);
+      setOverview((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          user: {
+            ...(prev.user || {}),
+            receipt_email: savedEmail,
+          },
+        };
+      });
+      setCopyNotice("Email для чеков сохранен");
+      window.setTimeout(() => setCopyNotice(""), 2000);
+    } catch (e) {
+      setAuthError(String(e.message));
+    } finally {
+      setReceiptEmailSaving(false);
+    }
+  };
+
   const topup = async () => {
+    const normalizedEmail = String(receiptEmail || "").trim().toLowerCase();
+    if (!isValidEmail(normalizedEmail)) {
+      setAuthError("Укажите email для получения кассового чека перед оплатой.");
+      return;
+    }
+
     setLoading(true);
     try {
       const data = await request("/payments/topup", {
@@ -637,6 +695,11 @@ export default function App() {
   const subDaysLeft = daysLeft(subEndsAt);
   const hasPlanInfo = Boolean(status?.plan);
   const hasActiveAccess = status?.status === "active";
+  const hasReceiptEmail = Boolean(String(receiptEmail || "").trim());
+  const isReceiptEmailDraftValid = isValidEmail(receiptEmailDraft);
+  const canSaveReceiptEmail =
+    isReceiptEmailDraftValid &&
+    String(receiptEmailDraft || "").trim().toLowerCase() !== String(receiptEmail || "").trim().toLowerCase();
 
   const onboardingStep = onboarding?.step || "welcome";
   const onboardingStepIndex = onboarding?.step_index || 1;
@@ -1110,13 +1173,32 @@ export default function App() {
               <small>Используется для оплаты подписок</small>
             </article>
 
+            <article className="card receipt-email-card">
+              <h3>Email для получения чеков</h3>
+              <p className="muted">На этот адрес ЮKassa будет отправлять кассовые чеки после оплаты.</p>
+              <div className="row receipt-email-row">
+                <input
+                  type="email"
+                  value={receiptEmailDraft}
+                  placeholder="name@example.com"
+                  onChange={(e) => setReceiptEmailDraft(e.target.value)}
+                />
+                <button disabled={receiptEmailSaving || !canSaveReceiptEmail} onClick={saveReceiptEmail}>
+                  {receiptEmailSaving ? "Сохраняем..." : "Сохранить"}
+                </button>
+              </div>
+              {!hasReceiptEmail && <small className="warning-text">Перед оплатой нужно сохранить email для отправки кассового чека.</small>}
+              {hasReceiptEmail && <small>Чеки отправляются на: {receiptEmail}</small>}
+            </article>
+
             <article className="card">
               <h3>Пополнение кошелька</h3>
               <div className="row">
                 <input type="number" min="50" value={topupAmount} onChange={(e) => setTopupAmount(e.target.value)} />
-                <button disabled={loading} onClick={topup}>Пополнить</button>
+                <button disabled={loading || !hasReceiptEmail} onClick={topup}>Пополнить</button>
               </div>
               <small>Минимальная сумма 50 ₽</small>
+              {!hasReceiptEmail && <small className="warning-text">Сначала укажите email в блоке выше.</small>}
             </article>
 
             <article className="card">
