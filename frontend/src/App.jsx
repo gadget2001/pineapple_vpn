@@ -663,8 +663,7 @@ export default function App() {
     `Оформлена: ${formatDate(supportSubscriptionStartedAt)}`,
     `Истекает: ${formatDate(status?.ends_at || overview?.subscription?.ends_at)}`,
     `Ключ VPN: ${setupSubscriptionUrl || "еще не получен"}`,
-  ].join("
-");
+  ].join("\n");
 
   const supportChatUrl = supportUsername
     ? `https://t.me/${supportUsername}?text=${encodeURIComponent(supportMessage)}`
