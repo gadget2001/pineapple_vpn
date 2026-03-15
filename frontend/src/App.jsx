@@ -1085,7 +1085,6 @@ export default function App() {
                       <div className="help-box">
                         <strong>{"Не получается подключиться?"}</strong>
                         <div className="row wrap-row">
-                          <button className="soft-btn" onClick={() => setTab("help")}>{"Открыть инструкцию"}</button>
                           <a className="soft-link" href={SUPPORT_URL} target="_blank" rel="noreferrer">{"Написать в поддержку"}</a>
                         </div>
                       </div>
