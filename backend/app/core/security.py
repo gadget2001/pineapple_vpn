@@ -1,4 +1,5 @@
 import hashlib
+import ipaddress
 import hmac
 import time
 from datetime import datetime, timedelta, timezone
@@ -63,3 +64,39 @@ def verify_telegram_init_data(init_data: str, max_age_seconds: int = 86400) -> D
 def verify_webhook_signature(raw_body: bytes, signature: str) -> bool:
     mac = hmac.new(settings.yookassa_webhook_secret.encode(), raw_body, hashlib.sha256).hexdigest()
     return hmac.compare_digest(signature, mac)
+
+
+
+def is_ip_allowed(source_ip: str, allowed_ranges: str) -> bool:
+    """Validate source IP against comma-separated CIDR/IP allowlist."""
+    if not source_ip:
+        return False
+
+    allowlist = (allowed_ranges or "").strip()
+    if not allowlist or allowlist == "*":
+        return True
+
+    ip_candidate = source_ip.strip()
+    if ip_candidate.startswith("[") and "]" in ip_candidate:
+        ip_candidate = ip_candidate[1:ip_candidate.index("]")]
+    if ":" in ip_candidate and ip_candidate.count(":") == 1 and ip_candidate.rsplit(":", 1)[1].isdigit():
+        # IPv4 with optional port.
+        ip_candidate = ip_candidate.rsplit(":", 1)[0]
+
+    try:
+        ip_obj = ipaddress.ip_address(ip_candidate)
+    except ValueError:
+        return False
+
+    for item in [x.strip() for x in allowlist.split(",") if x.strip()]:
+        try:
+            if "/" in item:
+                if ip_obj in ipaddress.ip_network(item, strict=False):
+                    return True
+            else:
+                if ip_obj == ipaddress.ip_address(item):
+                    return True
+        except ValueError:
+            continue
+
+    return False

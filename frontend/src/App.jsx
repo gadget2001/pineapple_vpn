@@ -52,6 +52,23 @@ function getStartPayloadFromUrl() {
   return params.get("startapp") || params.get("start") || "";
 }
 
+function getTopupIdFromUrl() {
+  if (typeof window === "undefined") return null;
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("topup_id");
+  if (!raw) return null;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value <= 0) return null;
+  return value;
+}
+
+function clearTopupIdFromUrl() {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  url.searchParams.delete("topup_id");
+  window.history.replaceState({}, "", url.toString());
+}
+
 function buildInviteMessage(link) {
   if (!link) return "";
   return [
@@ -691,6 +708,78 @@ export default function App() {
     if (!docCardRef.current) return;
     docCardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [docHtml]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const topupId = getTopupIdFromUrl();
+    if (!topupId) return;
+
+    let cancelled = false;
+    let timer = null;
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/payments/${topupId}/status`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          if (!cancelled && attempts < 20) {
+            attempts += 1;
+            timer = window.setTimeout(poll, 3000);
+          }
+          return;
+        }
+
+        const data = await res.json();
+        const st = data?.status;
+
+        if (st === "paid") {
+          if (!cancelled) {
+            clearTopupIdFromUrl();
+            setCopyNotice("\u041f\u043e\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435 \u043a\u043e\u0448\u0435\u043b\u044c\u043a\u0430 \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u043e");
+            await loadAll();
+          }
+          return;
+        }
+
+        if (st === "canceled" || st === "failed") {
+          if (!cancelled) {
+            clearTopupIdFromUrl();
+            setAuthError(st === "canceled" ? "\u041f\u043b\u0430\u0442\u0435\u0436 \u0431\u044b\u043b \u043e\u0442\u043c\u0435\u043d\u0435\u043d." : "\u041f\u043b\u0430\u0442\u0435\u0436 \u043d\u0435 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0441\u043d\u043e\u0432\u0430.");
+          }
+          return;
+        }
+
+        if (!cancelled) {
+          if (attempts === 0) {
+            setAuthError("\u041f\u043b\u0430\u0442\u0435\u0436 \u043e\u0431\u0440\u0430\u0431\u0430\u0442\u044b\u0432\u0430\u0435\u0442\u0441\u044f. \u041e\u0431\u044b\u0447\u043d\u043e \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u0435 \u0437\u0430\u043d\u0438\u043c\u0430\u0435\u0442 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u0441\u0435\u043a\u0443\u043d\u0434.");
+          }
+          if (attempts < 20) {
+            attempts += 1;
+            timer = window.setTimeout(poll, 3000);
+          } else {
+            clearTopupIdFromUrl();
+            setAuthError("\u041f\u043b\u0430\u0442\u0435\u0436 \u0435\u0449\u0435 \u043e\u0431\u0440\u0430\u0431\u0430\u0442\u044b\u0432\u0430\u0435\u0442\u0441\u044f. \u041e\u0431\u043d\u043e\u0432\u0438\u0442\u0435 \u044d\u043a\u0440\u0430\u043d \u0447\u0435\u0440\u0435\u0437 \u043c\u0438\u043d\u0443\u0442\u0443.");
+          }
+        }
+      } catch {
+        if (!cancelled && attempts < 20) {
+          attempts += 1;
+          timer = window.setTimeout(poll, 3000);
+        }
+      }
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [token]);
 
   useEffect(() => {
     const prevStep = prevOnboardingStepRef.current;

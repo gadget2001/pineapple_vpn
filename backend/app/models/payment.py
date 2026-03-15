@@ -15,7 +15,7 @@ class Payment(Base):
     status: Mapped[str] = mapped_column(String(32), default="pending")
     provider: Mapped[str] = mapped_column(String(32), default="yookassa")
     kind: Mapped[str] = mapped_column(String(32), default="topup")
-    provider_payment_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    provider_payment_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     meta: Mapped[dict | None] = mapped_column(JSON, nullable=True)
