@@ -652,19 +652,19 @@ export default function App() {
     status?.plan === "trial"
       ? overview?.trial?.activated_at || null
       : latestSubscriptionPayment?.created_at || null;
-
   const supportMessage = [
-    "????????????! ????? ?????? ? Pineapple VPN.",
+    "Здравствуйте! Нужна помощь с Pineapple VPN.",
     "",
-    "?????? ??? ??????? ???????????:",
-    `Telegram ID: ${overview?.user?.telegram_id || tg?.initDataUnsafe?.user?.id || "?? ??????"}`,
-    `Username: @${overview?.user?.username || tg?.initDataUnsafe?.user?.username || "?? ??????"}`,
-    `?????? ????????: ${statusRu(status?.status)}`,
-    `?????: ${planRu(status?.plan)}`,
-    `?????????: ${formatDate(supportSubscriptionStartedAt)}`,
-    `????????: ${formatDate(status?.ends_at || overview?.subscription?.ends_at)}`,
-    `???? VPN: ${setupSubscriptionUrl || "??? ?? ???????"}`,
-  ].join("\n");
+    "Данные для быстрой диагностики:",
+    `Telegram ID: ${overview?.user?.telegram_id || tg?.initDataUnsafe?.user?.id || "не найден"}`,
+    `Username: @${overview?.user?.username || tg?.initDataUnsafe?.user?.username || "не указан"}`,
+    `Статус подписки: ${statusRu(status?.status)}`,
+    `Тариф: ${planRu(status?.plan)}`,
+    `Оформлена: ${formatDate(supportSubscriptionStartedAt)}`,
+    `Истекает: ${formatDate(status?.ends_at || overview?.subscription?.ends_at)}`,
+    `Ключ VPN: ${setupSubscriptionUrl || "еще не получен"}`,
+  ].join("
+");
 
   const supportChatUrl = supportUsername
     ? `https://t.me/${supportUsername}?text=${encodeURIComponent(supportMessage)}`
