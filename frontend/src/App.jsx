@@ -370,7 +370,16 @@ export default function App() {
   };
 
   const openDoc = async (name, title) => {
-    const res = await fetch(`/docs/${name}`);
+    const docPathBySlug = {
+      "public-offer": "/docs/terms.html",
+      "privacy-policy": "/docs/privacy.html",
+      "acceptable-use": "/docs/acceptable_use.html",
+    };
+    const docPath = docPathBySlug[name] || `/docs/${name}.html`;
+
+    const res = await fetch(docPath, { cache: "no-store" });
+    if (!res.ok) throw new Error("Не удалось открыть документ");
+
     const html = await res.text();
     const styleBlocks = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
       .map((m) => m[0])
