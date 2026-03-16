@@ -104,16 +104,16 @@ Pineapple VPN вызывает Marzban API для:
 
 ## Xray Access Logs (for abuse tracing)
 
-Для пайплайна логирования подключений в Pineapple VPN включите access-лог Xray и убедитесь, что строка содержит `tg_<telegram_id>` (как правило в поле email/username клиента).
+Enable Xray access log and ensure each line includes `tg_<telegram_id>` (usually in email/username field).
 
-Рекомендуемый путь лога:
+Recommended path:
 - `/var/log/xray/access.log`
 
-Далее укажите в `.env` проекта Pineapple VPN:
+Add to `.env`:
 
 ```env
 VPN_ACCESS_LOG_ENABLED=true
 VPN_ACCESS_LOG_PATH=/var/log/xray/access.log
 ```
 
-И смонтируйте этот путь read-only в контейнеры backend/worker/scheduler (если лог находится на хосте/в другом контейнере).
+If the log file is outside containers, mount this path read-only into backend/worker/scheduler.

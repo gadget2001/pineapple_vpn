@@ -256,8 +256,8 @@ Trial: активирован
 
 ### Daily traffic limit
 - `VPN_DAILY_DATA_LIMIT_GB` configures per-user daily cap in Marzban.
-- For new users limit is applied on creation (`data_limit`, `data_limit_reset_strategy=day`).
-- For existing users limit is re-synced by worker during daily-limit checks.
+- For new users, limit is applied on creation (`data_limit`, `data_limit_reset_strategy=day`).
+- For existing users, limit is re-synced by worker during daily-limit checks.
 
 ### Admin alert on daily limit reached
 - Worker task `check_daily_data_limits` polls active users in Marzban.
@@ -268,10 +268,10 @@ Trial: активирован
 - Enable in `.env`:
   - `VPN_ACCESS_LOG_ENABLED=true`
   - `VPN_ACCESS_LOG_PATH=/var/log/xray/access.log`
-- Worker task `ingest_xray_access_logs` runs periodically and ingests new log lines into `connection_logs`.
+- Worker task `ingest_xray_access_logs` ingests new log lines into `connection_logs`.
 - Parser stores: `user_id`, `telegram_id`, `panel_username`, `client_ip`, `connected_at`, `raw_event`, source path/offset.
 - Cursor is persisted in DB table `ingestion_cursors` and survives restarts.
-- Cleanup uses `VPN_CONNECTION_LOG_RETENTION_DAYS` (default 30 days).
+- Cleanup uses `VPN_CONNECTION_LOG_RETENTION_DAYS` (default: 30 days).
 
-### Required infra note
+### Infra note
 If Xray access log is outside backend/worker container filesystem, mount it read-only to the same path as `VPN_ACCESS_LOG_PATH`.
