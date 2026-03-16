@@ -131,6 +131,11 @@ function formatDate(dt) {
   });
 }
 
+function addDays(dateValue, days) {
+  const base = new Date(dateValue);
+  return new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
 function daysLeft(dt) {
   if (!dt) return null;
   const diffMs = new Date(dt).getTime() - Date.now();
@@ -615,6 +620,40 @@ export default function App() {
   };
 
   const buyPlan = async (plan) => {
+    const selectedPlan = plans.find((item) => item.code === plan);
+    const planName = planRu(plan);
+    const planDays = Number(selectedPlan?.duration_days || 0);
+    const planPrice = selectedPlan?.price_rub;
+    const activeUntil = status?.status === "active" ? status?.ends_at : null;
+
+    if (planDays > 0) {
+      if (activeUntil) {
+        const extendedUntil = addDays(activeUntil, planDays);
+        const confirmedRenew = window.confirm(
+          [
+            `У вас уже есть активная подписка до ${formatDate(activeUntil)}.`,
+            "",
+            `Тариф «${planName}» продлит доступ с даты окончания текущей подписки.`,
+            `Новая дата окончания: ${formatDate(extendedUntil)}.`,
+            "",
+            "Подтверждаете продление?",
+          ].join("\n"),
+        );
+        if (!confirmedRenew) return;
+      } else {
+        const newEndsAt = addDays(new Date(), planDays);
+        const confirmedPurchase = window.confirm(
+          [
+            `Оформление тарифа «${planName}»${planPrice != null ? ` за ${planPrice} ₽` : ""}.`,
+            `Дата окончания после покупки: ${formatDate(newEndsAt)}.`,
+            "",
+            "Подтверждаете оформление подписки?",
+          ].join("\n"),
+        );
+        if (!confirmedPurchase) return;
+      }
+    }
+
     setLoading(true);
     try {
       const purchase = await request("/subscriptions/purchase", {
