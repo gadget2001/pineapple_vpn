@@ -1,4 +1,3 @@
-
 services:
   backend:
     build: ./backend
@@ -6,6 +5,8 @@ services:
     env_file: .env
     ports:
       - "18081:18081"
+    volumes:
+      - ${VPN_ACCESS_LOG_HOST_DIR:-/var/log/xray}:/var/log/xray:ro
     depends_on:
       - redis
     restart: unless-stopped
@@ -35,6 +36,8 @@ services:
       dockerfile: worker/Dockerfile
     container_name: pineapple_worker
     env_file: .env
+    volumes:
+      - ${VPN_ACCESS_LOG_HOST_DIR:-/var/log/xray}:/var/log/xray:ro
     depends_on:
       - backend
       - redis
@@ -46,13 +49,14 @@ services:
       dockerfile: scheduler/Dockerfile
     container_name: pineapple_scheduler
     env_file: .env
+    volumes:
+      - ${VPN_ACCESS_LOG_HOST_DIR:-/var/log/xray}:/var/log/xray:ro
     depends_on:
       - backend
       - redis
     restart: unless-stopped
 
-  # Marzban уже установлен системно на сервере.
-  # Если захотите поднять Marzban в Docker, раскомментируйте этот блок.
+  # Marzban can run externally. Uncomment below to run in this compose.
   # panel:
   #   image: gozargah/marzban:latest
   #   container_name: pineapple_panel
@@ -72,8 +76,7 @@ services:
       - redis_data:/data
     restart: unless-stopped
 
-  # Внешний nginx уже настроен на сервере.
-  # Если захотите использовать nginx в Docker, раскомментируйте этот блок.
+  # External nginx is usually configured on server. Uncomment below if needed.
   # nginx:
   #   image: nginx:1.25-alpine
   #   container_name: pineapple_nginx

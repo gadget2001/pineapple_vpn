@@ -1,4 +1,4 @@
-﻿from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from urllib.parse import quote_plus
 
 
@@ -53,6 +53,16 @@ class Settings(BaseSettings):
     panel_inbound_name: str = "VLESS TCP REALITY"
     vpn_limit_mbps: int = 50
     vpn_max_connections: int = 2
+    vpn_daily_data_limit_gb: int = 40
+    vpn_daily_limit_alerts_enabled: bool = True
+    vpn_connection_name_template: str = "🍍 Pineapple VPN ({username})"
+
+    vpn_access_log_enabled: bool = True
+    vpn_access_log_path: str = "/var/log/xray/access.log"
+    vpn_access_log_cursor_key: str = "xray_access_log"
+    vpn_access_log_max_lines_per_run: int = 5000
+    vpn_access_log_poll_seconds: int = 120
+    vpn_connection_log_retention_days: int = 30
 
     rate_limit_per_minute: int = 120
     frontend_url: str
@@ -78,4 +88,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-

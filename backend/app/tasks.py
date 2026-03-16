@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from html import escape
 from zoneinfo import ZoneInfo
 
@@ -14,6 +14,7 @@ from app.models.connection_log import ConnectionLog
 from app.models.payment import Payment
 from app.models.subscription import Subscription
 from app.models.user import User
+from app.services.xray_access_ingest import ingest_xray_access_log
 from app.utils.plans import plans_text
 
 
@@ -81,6 +82,113 @@ def _reminder_text(plan: str, ends_at: datetime, hours_left: int) -> str:
         "Продлите доступ заранее, чтобы подключение не прервалось.\n\n"
         f"{plans_text()}"
     )
+
+
+def _active_subscriptions(db: Session) -> list[tuple[Subscription, User]]:
+    now = datetime.utcnow()
+    rows = (
+        db.query(Subscription, User)
+        .join(User, User.id == Subscription.user_id)
+        .filter(Subscription.status == "active", Subscription.ends_at > now)
+        .all()
+    )
+    return rows
+
+
+def _start_of_local_day_utc(day: date) -> tuple[datetime, datetime]:
+    tz = ZoneInfo(settings.sched_tz)
+    start_local = datetime(day.year, day.month, day.day, tzinfo=tz)
+    end_local = start_local + timedelta(days=1)
+    start_utc = start_local.astimezone(timezone.utc).replace(tzinfo=None)
+    end_utc = end_local.astimezone(timezone.utc).replace(tzinfo=None)
+    return start_utc, end_utc
+
+
+def _load_daily_limit_alerted_users(db: Session, today: date) -> set[int]:
+    start_utc, end_utc = _start_of_local_day_utc(today)
+    rows = (
+        db.query(AuditLog.details)
+        .filter(
+            AuditLog.action == "daily_limit_reached_alert",
+            AuditLog.created_at >= start_utc,
+            AuditLog.created_at < end_utc,
+        )
+        .all()
+    )
+
+    alerted: set[int] = set()
+    for (details,) in rows:
+        if not isinstance(details, dict):
+            continue
+        tid = details.get("telegram_id")
+        if isinstance(tid, int):
+            alerted.add(tid)
+    return alerted
+
+
+def _panel_get_user(uname: str) -> dict | None:
+    panel_base = settings.panel_url.rstrip("/")
+    try:
+        response = httpx.get(
+            f"{panel_base}/api/user/{uname}",
+            headers=_panel_headers(),
+            timeout=15,
+        )
+        if response.is_success:
+            return response.json()
+    except Exception:
+        return None
+    return None
+
+
+def _build_limit_payload(panel_user: dict, uname: str, note: str) -> dict:
+    target_limit = max(int(settings.vpn_daily_data_limit_gb or 0), 0) * 1024 * 1024 * 1024
+    target_strategy = "day" if target_limit > 0 else "no_reset"
+
+    inbounds = panel_user.get("inbounds") if isinstance(panel_user.get("inbounds"), dict) else {}
+    vless = inbounds.get("vless") if isinstance(inbounds, dict) else None
+    if not isinstance(vless, list) or not vless:
+        vless = [settings.panel_inbound_name] if settings.panel_inbound_name else []
+
+    return {
+        "username": uname,
+        "note": note,
+        "status": panel_user.get("status") or "active",
+        "expire": panel_user.get("expire") or 0,
+        "data_limit": target_limit,
+        "data_limit_reset_strategy": target_strategy,
+        "inbounds": {"vless": vless},
+        "proxies": panel_user.get("proxies") or {"vless": {}},
+    }
+
+
+def _sync_panel_user_limit(uname: str, panel_user: dict, note: str) -> dict:
+    target_limit = max(int(settings.vpn_daily_data_limit_gb or 0), 0) * 1024 * 1024 * 1024
+    target_strategy = "day" if target_limit > 0 else "no_reset"
+
+    existing_limit = int(panel_user.get("data_limit") or 0)
+    existing_strategy = str(panel_user.get("data_limit_reset_strategy") or "")
+    existing_note = str(panel_user.get("note") or "")
+
+    if existing_limit == target_limit and existing_strategy == target_strategy and existing_note == note:
+        return panel_user
+
+    payload = _build_limit_payload(panel_user, uname, note)
+    panel_base = settings.panel_url.rstrip("/")
+
+    try:
+        response = httpx.put(
+            f"{panel_base}/api/user/{uname}",
+            headers=_panel_headers(),
+            json=payload,
+            timeout=15,
+        )
+        if response.is_success:
+            return response.json()
+    except Exception:
+        return panel_user
+
+    return panel_user
 
 
 @celery_app.task
@@ -176,12 +284,94 @@ def send_renewal_reminders():
 
 
 @celery_app.task
+def ingest_xray_access_logs():
+    db: Session = SessionLocal()
+    try:
+        ingest_xray_access_log(db)
+    finally:
+        db.close()
+
+
+@celery_app.task
 def cleanup_connection_logs():
     db: Session = SessionLocal()
     try:
-        cutoff = datetime.utcnow() - timedelta(days=settings.log_retention_days)
+        cutoff = datetime.utcnow() - timedelta(days=settings.vpn_connection_log_retention_days)
         db.query(ConnectionLog).filter(ConnectionLog.connected_at < cutoff).delete()
         db.commit()
+    finally:
+        db.close()
+
+
+@celery_app.task
+def check_daily_data_limits():
+    if not settings.vpn_daily_limit_alerts_enabled:
+        return
+
+    db: Session = SessionLocal()
+    try:
+        target_limit = max(int(settings.vpn_daily_data_limit_gb or 0), 0) * 1024 * 1024 * 1024
+        if target_limit <= 0:
+            return
+
+        today_local = datetime.now(ZoneInfo(settings.sched_tz)).date()
+        alerted_today = _load_daily_limit_alerted_users(db, today_local)
+
+        rows = _active_subscriptions(db)
+        for _sub, user in rows:
+            if user.telegram_id in alerted_today:
+                continue
+
+            uname = f"tg_{user.telegram_id}"
+            note = (settings.vpn_connection_name_template or "🍍 Pineapple VPN ({username})").format(
+                username=uname,
+                telegram_username=user.username or "",
+            )
+
+            panel_user = _panel_get_user(uname)
+            if not panel_user:
+                continue
+
+            panel_user = _sync_panel_user_limit(uname, panel_user, note)
+
+            used_traffic = int(panel_user.get("used_traffic") or 0)
+            data_limit = int(panel_user.get("data_limit") or 0)
+            strategy = str(panel_user.get("data_limit_reset_strategy") or "")
+
+            if data_limit <= 0 or strategy != "day":
+                continue
+            if used_traffic < data_limit:
+                continue
+
+            send_admin_log_sync(
+                "daily_limit_reached",
+                user.telegram_id,
+                user.username,
+                {
+                    "panel_username": uname,
+                    "limit_bytes": data_limit,
+                    "limit_gb": settings.vpn_daily_data_limit_gb,
+                    "used_bytes": used_traffic,
+                    "used_gb": round(used_traffic / (1024 * 1024 * 1024), 2),
+                    "date": today_local.isoformat(),
+                },
+            )
+
+            db.add(
+                AuditLog(
+                    user_id=user.id,
+                    action="daily_limit_reached_alert",
+                    details={
+                        "telegram_id": user.telegram_id,
+                        "panel_username": uname,
+                        "date": today_local.isoformat(),
+                        "limit_bytes": data_limit,
+                        "used_bytes": used_traffic,
+                    },
+                )
+            )
+            db.commit()
+            alerted_today.add(user.telegram_id)
     finally:
         db.close()
 

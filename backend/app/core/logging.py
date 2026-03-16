@@ -26,6 +26,7 @@ ACTION_TITLES = {
     "onboarding_restarted": "Повторная настройка устройства",
     "payment_error": "Ошибка платежа",
     "user_purged": "Пользователь удален для теста",
+    "daily_limit_reached": "Пользователь достиг дневного лимита трафика",
 }
 
 

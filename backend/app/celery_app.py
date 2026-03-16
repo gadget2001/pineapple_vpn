@@ -20,6 +20,14 @@ celery_app.conf.beat_schedule = {
         "task": "app.tasks.send_renewal_reminders",
         "schedule": 3600.0,
     },
+    "ingest-xray-access-logs": {
+        "task": "app.tasks.ingest_xray_access_logs",
+        "schedule": float(max(settings.vpn_access_log_poll_seconds, 30)),
+    },
+    "check-daily-data-limits": {
+        "task": "app.tasks.check_daily_data_limits",
+        "schedule": 600.0,
+    },
     "cleanup-connection-logs": {
         "task": "app.tasks.cleanup_connection_logs",
         "schedule": 86400.0,

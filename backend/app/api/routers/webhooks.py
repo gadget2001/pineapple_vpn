@@ -32,7 +32,19 @@ def connection_log(
     if not user:
         raise HTTPException(status_code=404, detail="Пользователь не найден.")
 
-    log = ConnectionLog(user_id=user.id, ip_address=payload.ip_address)
+    raw = f"webhook telegram_id={payload.telegram_id} ip={payload.ip_address}"
+
+    log = ConnectionLog(
+        user_id=user.id,
+        telegram_id=user.telegram_id,
+        panel_username=f"tg_{user.telegram_id}",
+        ip_address=payload.ip_address,
+        raw_event=raw,
+        source_path="webhook",
+        source_offset=0,
+        event_hash=None,
+    )
     db.add(log)
     db.commit()
+
     return {"status": "ok"}

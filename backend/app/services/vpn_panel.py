@@ -1,4 +1,5 @@
-﻿from typing import Any, Dict
+from typing import Any, Dict
+from urllib.parse import quote
 
 import httpx
 
@@ -14,6 +15,32 @@ def _normalize_panel_url() -> str:
 
 def _auth_headers(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
+
+
+def _daily_limit_bytes() -> int:
+    gb = max(int(settings.vpn_daily_data_limit_gb or 0), 0)
+    return gb * 1024 * 1024 * 1024
+
+
+def _daily_reset_strategy() -> str:
+    return "day" if _daily_limit_bytes() > 0 else "no_reset"
+
+
+def _connection_note(panel_username: str, telegram_username: str | None) -> str:
+    template = settings.vpn_connection_name_template or "🍍 Pineapple VPN ({username})"
+    try:
+        return template.format(username=panel_username, telegram_username=telegram_username or "")
+    except Exception:
+        return f"🍍 Pineapple VPN ({panel_username})"
+
+
+def _override_vless_alias(vless_url: str, alias: str) -> str:
+    if not vless_url or not alias:
+        return vless_url
+    if "#" in vless_url:
+        base = vless_url.split("#", 1)[0]
+        return f"{base}#{quote(alias)}"
+    return f"{vless_url}#{quote(alias)}"
 
 
 async def _refresh_panel_token(client: httpx.AsyncClient) -> str:
@@ -76,6 +103,9 @@ def _extract_profile(response_data: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(links, list) and links:
         vless_url = links[0]
 
+    alias = str(response_data.get("note") or response_data.get("username") or "")
+    vless_url = _override_vless_alias(vless_url or response_data.get("vless_url", ""), alias)
+
     if not subscription_url:
         subscription_url = response_data.get("subscription_url", "")
     if subscription_url and subscription_url.startswith("/"):
@@ -84,10 +114,14 @@ def _extract_profile(response_data: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "uuid": response_data.get("proxies", {}).get("vless", {}).get("id", "")
         or response_data.get("uuid", ""),
-        "vless_url": vless_url or response_data.get("vless_url", ""),
+        "vless_url": vless_url,
         "subscription_url": subscription_url,
         "reality_public_key": response_data.get("reality_public_key")
         or response_data.get("proxies", {}).get("vless", {}).get("reality_settings", {}).get("public_key"),
+        "data_limit": response_data.get("data_limit"),
+        "used_traffic": response_data.get("used_traffic"),
+        "data_limit_reset_strategy": response_data.get("data_limit_reset_strategy"),
+        "panel_username": response_data.get("username"),
     }
 
 
@@ -150,29 +184,82 @@ async def _get_vless_inbounds(client: httpx.AsyncClient) -> list[str]:
     return list(dict.fromkeys([n for n in names if n]))
 
 
+def _build_base_payload(uname: str, note: str) -> dict[str, Any]:
+    return {
+        "username": uname,
+        "note": note,
+        "status": "active",
+        "expire": 0,
+        "data_limit": _daily_limit_bytes(),
+        "data_limit_reset_strategy": _daily_reset_strategy(),
+        "inbounds": {"vless": []},
+        "proxies": {"vless": {}},
+    }
+
+
+async def _sync_existing_user(
+    client: httpx.AsyncClient,
+    existing: Dict[str, Any],
+    uname: str,
+    note: str,
+    discovered_inbounds: list[str],
+) -> Dict[str, Any]:
+    target_limit = _daily_limit_bytes()
+    target_strategy = _daily_reset_strategy()
+
+    existing_limit = int(existing.get("data_limit") or 0)
+    existing_strategy = str(existing.get("data_limit_reset_strategy") or "")
+    existing_note = str(existing.get("note") or "")
+
+    needs_update = (
+        existing_limit != target_limit
+        or existing_strategy != target_strategy
+        or existing_note != note
+    )
+    if not needs_update:
+        return existing
+
+    existing_inbounds = existing.get("inbounds") if isinstance(existing.get("inbounds"), dict) else {}
+    vless_inbounds = existing_inbounds.get("vless") if isinstance(existing_inbounds, dict) else None
+    if not isinstance(vless_inbounds, list) or not vless_inbounds:
+        inbound_name = settings.panel_inbound_name or (discovered_inbounds[0] if discovered_inbounds else "")
+        vless_inbounds = [inbound_name] if inbound_name else []
+
+    payload = {
+        "username": uname,
+        "note": note,
+        "status": existing.get("status") or "active",
+        "expire": existing.get("expire") or 0,
+        "data_limit": target_limit,
+        "data_limit_reset_strategy": target_strategy,
+        "inbounds": {"vless": vless_inbounds},
+        "proxies": existing.get("proxies") or {"vless": {}},
+    }
+
+    response = await _request_with_auth(client, "PUT", f"/api/user/{uname}", json=payload)
+    if response.is_success:
+        return response.json()
+    return existing
+
+
 async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, Any]:
     uname = f"tg_{telegram_id}"
+    note = _connection_note(uname, username)
 
     async with httpx.AsyncClient(timeout=20) as client:
         existing = await _get_existing_user(client, uname)
         if existing:
-            return _extract_profile(existing)
+            discovered_inbounds = await _get_vless_inbounds(client)
+            synced = await _sync_existing_user(client, existing, uname, note, discovered_inbounds)
+            refreshed = await _get_existing_user(client, uname)
+            return _extract_profile(refreshed or synced)
 
         discovered_inbounds = await _get_vless_inbounds(client)
         inbound_candidates = [settings.panel_inbound_name]
         inbound_candidates.extend(discovered_inbounds)
         unique_inbounds = list(dict.fromkeys([i for i in inbound_candidates if i]))
 
-        base_payload = {
-            "username": uname,
-            "note": username or "",
-            "status": "active",
-            "expire": 0,
-            "data_limit": 0,
-            "data_limit_reset_strategy": "no_reset",
-            "inbounds": {"vless": []},
-            "proxies": {"vless": {}},
-        }
+        base_payload = _build_base_payload(uname, note)
 
         last_error: str | None = None
         for inbound_name in unique_inbounds:
@@ -195,6 +282,18 @@ async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, A
             request=httpx.Request("POST", f"{_normalize_panel_url()}/api/user"),
             response=httpx.Response(422, text=last_error or "Unprocessable Entity"),
         )
+
+
+async def get_vpn_user(telegram_id: int) -> Dict[str, Any] | None:
+    uname = f"tg_{telegram_id}"
+    async with httpx.AsyncClient(timeout=20) as client:
+        user = await _get_existing_user(client, uname)
+        if not user:
+            return None
+        return _extract_profile(user) | {
+            "status": user.get("status"),
+            "note": user.get("note"),
+        }
 
 
 async def disable_vpn_user(telegram_id: int):

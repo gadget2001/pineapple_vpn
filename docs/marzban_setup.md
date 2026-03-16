@@ -1,4 +1,4 @@
-﻿# Инструкция по установке и настройке Marzban API (production)
+# Инструкция по установке и настройке Marzban API (production)
 
 Дата: 2026-03-11
 
@@ -101,3 +101,19 @@ Pineapple VPN вызывает Marzban API для:
 
 **Q: Нужно ли держать Marzban в docker, если он установлен отдельно?**
 Нет. Pineapple VPN взаимодействует по HTTP API, ему важно только `PANEL_URL` и `PANEL_TOKEN`.
+
+## Xray Access Logs (for abuse tracing)
+
+Для пайплайна логирования подключений в Pineapple VPN включите access-лог Xray и убедитесь, что строка содержит `tg_<telegram_id>` (как правило в поле email/username клиента).
+
+Рекомендуемый путь лога:
+- `/var/log/xray/access.log`
+
+Далее укажите в `.env` проекта Pineapple VPN:
+
+```env
+VPN_ACCESS_LOG_ENABLED=true
+VPN_ACCESS_LOG_PATH=/var/log/xray/access.log
+```
+
+И смонтируйте этот путь read-only в контейнеры backend/worker/scheduler (если лог находится на хосте/в другом контейнере).
