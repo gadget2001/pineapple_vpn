@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timezone
+from datetime import datetime, timezone
 from typing import Any, Dict
 from urllib.parse import unquote
 
@@ -14,6 +14,7 @@ ACTION_TITLES = {
     "trial_activated": "Активация пробного периода",
     "wallet_topup": "Пополнение кошелька",
     "subscription_activated": "Активация подписки",
+    "subscription_reminder_sent": "Отправлено напоминание о продлении",
     "subscription_expired": "Окончание подписки",
     "vpn_disabled": "Отключение VPN",
     "vpn_config_created": "Создан VPN-конфиг",

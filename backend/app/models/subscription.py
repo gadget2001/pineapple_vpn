@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -16,6 +16,9 @@ class Subscription(Base):
     price_rub: Mapped[int] = mapped_column(Integer)
     starts_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     ends_at: Mapped[datetime] = mapped_column(DateTime)
+    reminder_24h_sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    reminder_1h_sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    expired_user_notified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="subscriptions")
