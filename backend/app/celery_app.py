@@ -1,4 +1,5 @@
-﻿from celery import Celery
+from celery import Celery
+from celery.schedules import crontab
 
 from app.core.config import settings
 
@@ -22,6 +23,10 @@ celery_app.conf.beat_schedule = {
     "cleanup-connection-logs": {
         "task": "app.tasks.cleanup_connection_logs",
         "schedule": 86400.0,
+    },
+    "send-my-nalog-daily-report": {
+        "task": "app.tasks.send_my_nalog_daily_report",
+        "schedule": crontab(hour=21, minute=5),
     },
 }
 

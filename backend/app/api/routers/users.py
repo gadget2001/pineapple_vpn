@@ -28,7 +28,7 @@ class ConsentAcceptRequest(BaseModel):
 
 
 class ReceiptEmailUpdateRequest(BaseModel):
-    email: str
+    email: str | None = None
 
 
 def _normalize_os(value: str | None) -> str | None:
@@ -40,10 +40,10 @@ def _normalize_os(value: str | None) -> str | None:
     return raw
 
 
-def _normalize_receipt_email(value: str | None) -> str:
+def _normalize_receipt_email(value: str | None) -> str | None:
     email = (value or "").strip().lower()
     if not email:
-        raise HTTPException(status_code=422, detail="Укажите email для получения кассовых чеков.")
+        return None
     if len(email) > 254 or not EMAIL_RE.match(email):
         raise HTTPException(status_code=422, detail="Укажите корректный email в формате name@example.com.")
     return email
@@ -112,7 +112,7 @@ async def accept_consent(
 @router.get(
     "/receipt-email",
     summary="Get receipt email",
-    description="Returns current email used by YooKassa to deliver fiscal receipts.",
+    description="Возвращает email для отправки кассового чека вручную (самозанятый, НПД).",
 )
 def get_receipt_email(user: User = Depends(get_current_user)):
     return {"email": user.receipt_email}
@@ -121,7 +121,7 @@ def get_receipt_email(user: User = Depends(get_current_user)):
 @router.put(
     "/receipt-email",
     summary="Update receipt email",
-    description="Updates email used in YooKassa receipt payload.",
+    description="Обновляет контактный email для отправки кассового чека вручную.",
 )
 def update_receipt_email(
     payload: ReceiptEmailUpdateRequest,
@@ -132,9 +132,9 @@ def update_receipt_email(
     user.receipt_email = email
     db.commit()
 
-    log_audit(db, user.id, "receipt_email_updated", {"email": email})
+    log_audit(db, user.id, "receipt_email_updated", {"email": email or ""})
 
-    return {"status": "ok", "email": email}
+    return {"status": "ok", "email": user.receipt_email}
 
 
 @router.get(

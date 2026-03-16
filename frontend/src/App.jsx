@@ -563,8 +563,8 @@ export default function App() {
 
   const saveReceiptEmail = async () => {
     const normalized = String(receiptEmailDraft || "").trim().toLowerCase();
-    if (!isValidEmail(normalized)) {
-      setAuthError("Укажите корректный email для получения кассовых чеков.");
+    if (normalized && !isValidEmail(normalized)) {
+      setAuthError("Укажите корректный email в формате name@example.com.");
       return;
     }
 
@@ -573,10 +573,10 @@ export default function App() {
       const data = await request("/users/receipt-email", {
         method: "PUT",
         headers: { ...authHeaders, "Content-Type": "application/json" },
-        body: JSON.stringify({ email: normalized }),
+        body: JSON.stringify({ email: normalized || null }),
       });
 
-      const savedEmail = data?.email || normalized;
+      const savedEmail = String(data?.email || "").trim().toLowerCase();
       setReceiptEmail(savedEmail);
       setReceiptEmailDraft(savedEmail);
       setOverview((prev) => {
@@ -585,11 +585,11 @@ export default function App() {
           ...prev,
           user: {
             ...(prev.user || {}),
-            receipt_email: savedEmail,
+            receipt_email: savedEmail || null,
           },
         };
       });
-      setCopyNotice("Email для чеков сохранен");
+      setCopyNotice(savedEmail ? "Email для чеков сохранен" : "Email для чеков удален");
       window.setTimeout(() => setCopyNotice(""), 2000);
     } catch (e) {
       setAuthError(String(e.message));
@@ -599,12 +599,6 @@ export default function App() {
   };
 
   const topup = async () => {
-    const normalizedEmail = String(receiptEmail || "").trim().toLowerCase();
-    if (!isValidEmail(normalizedEmail)) {
-      setAuthError("Укажите email для получения кассового чека перед оплатой.");
-      return;
-    }
-
     setTopupRedirecting(true);
     setLoading(true);
     try {
@@ -860,10 +854,10 @@ export default function App() {
   const hasPlanInfo = Boolean(status?.plan);
   const hasActiveAccess = status?.status === "active";
   const hasReceiptEmail = Boolean(String(receiptEmail || "").trim());
-  const isReceiptEmailDraftValid = isValidEmail(receiptEmailDraft);
-  const canSaveReceiptEmail =
-    isReceiptEmailDraftValid &&
-    String(receiptEmailDraft || "").trim().toLowerCase() !== String(receiptEmail || "").trim().toLowerCase();
+  const normalizedReceiptEmailDraft = String(receiptEmailDraft || "").trim().toLowerCase();
+  const normalizedReceiptEmail = String(receiptEmail || "").trim().toLowerCase();
+  const isReceiptEmailDraftValid = !normalizedReceiptEmailDraft || isValidEmail(normalizedReceiptEmailDraft);
+  const canSaveReceiptEmail = normalizedReceiptEmailDraft !== normalizedReceiptEmail && isReceiptEmailDraftValid;
 
   const onboardingStep = onboarding?.step || "welcome";
   const onboardingStepIndex = onboarding?.step_index || 1;
@@ -1418,7 +1412,7 @@ export default function App() {
 
             <article className="card receipt-email-card">
               <h3>Email для получения чеков</h3>
-              <p className="muted">На этот адрес ЮKassa будет отправлять кассовые чеки после оплаты.</p>
+              <p className="muted">Email необязателен. Если укажете его, мы сможем отправить кассовый чек после оплаты в течение 24 часов.</p>
               <div className="row receipt-email-row">
                 <input
                   type="email"
@@ -1430,15 +1424,14 @@ export default function App() {
                   {receiptEmailSaving ? "Сохраняем..." : "Сохранить"}
                 </button>
               </div>
-              {!hasReceiptEmail && <small className="warning-text">Перед оплатой нужно сохранить email для отправки кассового чека.</small>}
-              {hasReceiptEmail && <small>Чеки отправляются на: {receiptEmail}</small>}
+              {hasReceiptEmail ? <small>Текущий email для отправки чека: {receiptEmail}</small> : <small className="muted">Email не указан. Это не помешает оплате.</small>}
             </article>
 
             <article className="card">
               <h3>Пополнение кошелька</h3>
               <div className="row">
                 <input type="number" min="50" value={topupAmount} onChange={(e) => setTopupAmount(e.target.value)} />
-                <button disabled={loading || topupRedirecting || !hasReceiptEmail} onClick={topup}>
+                <button disabled={loading || topupRedirecting} onClick={topup}>
                   {topupRedirecting ? "Переходим к оплате..." : "Пополнить"}
                 </button>
               </div>
@@ -1452,8 +1445,7 @@ export default function App() {
                 </div>
               )}
               <small>Минимальная сумма 50 ₽</small>
-              {!hasReceiptEmail && <small className="warning-text">Сначала укажите email в блоке выше.</small>}
-            </article>
+                          </article>
 
             <article className="card">
               <h3>История операций</h3>
