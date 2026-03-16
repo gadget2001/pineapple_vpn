@@ -392,13 +392,13 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 
 
 .onboarding-card--with-close {
-  padding-top: 44px;
+  padding-top: 24px;
 }
 
 .onboarding-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: -12px;
+  right: -12px;
   width: 34px;
   height: 34px;
   border-radius: 999px;
@@ -411,6 +411,8 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  z-index: 3;
+  box-shadow: 0 6px 14px rgba(20, 32, 21, 0.12);
 }
 
 .onboarding-close:hover {
