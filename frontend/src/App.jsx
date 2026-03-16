@@ -617,13 +617,35 @@ export default function App() {
   const buyPlan = async (plan) => {
     setLoading(true);
     try {
-      await request("/subscriptions/purchase", {
+      const purchase = await request("/subscriptions/purchase", {
         method: "POST",
         headers: { ...authHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({ plan }),
       });
+
+      if (purchase?.subscription_url) {
+        setVpnConfig({ subscription_url: purchase.subscription_url });
+      }
+
       await loadAll();
-      setTab("setup");
+
+      if (purchase?.is_renewal) {
+        setCopyNotice("Подписка продлена. Ключ активен. Если нужно подключить новое устройство, откройте вкладку «Настройка».");
+        window.setTimeout(() => setCopyNotice(""), 3000);
+        return;
+      }
+
+      try {
+        await request("/onboarding/restart-device-flow", { method: "POST", headers: authHeaders });
+        await refreshOnboardingState();
+        setShowOnboarding(true);
+        setTab("setup");
+      } catch {
+        setTab("setup");
+      }
+
+      setCopyNotice("Подписка активирована. Запущен мастер подключения нового устройства.");
+      window.setTimeout(() => setCopyNotice(""), 3000);
     } catch (e) {
       setAuthError(String(e.message));
     } finally {

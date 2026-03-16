@@ -1,14 +1,18 @@
 from datetime import datetime, timedelta
+from urllib.parse import urlsplit, urlunsplit
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
-from app.core.logging import send_admin_log
+from app.core.config import settings
+from app.core.logging import send_admin_log, send_user_bot_message
 from app.db.session import get_db
 from app.models.payment import Payment
 from app.models.subscription import Subscription
 from app.models.user import User
+from app.services.vpn_profile import get_or_create_vpn_profile
 from app.schemas.subscription import (
     SubscriptionPlan,
     SubscriptionPurchaseRequest,
@@ -19,6 +23,22 @@ from app.utils.plans import PLAN_DAYS, available_plans, plan_prices
 from app.utils.trial_state import mark_trial_used
 
 router = APIRouter(prefix="/subscriptions", tags=["Subscriptions"])
+
+
+def _absolute_subscription_url(raw_url: str | None) -> str:
+    if not raw_url:
+        return ""
+    if raw_url.startswith("http://") or raw_url.startswith("https://"):
+        return raw_url
+    if not raw_url.startswith("/"):
+        return raw_url
+
+    base = (settings.panel_url or "").strip()
+    if not (base.startswith("http://") or base.startswith("https://")):
+        return raw_url
+
+    parts = urlsplit(base)
+    return urlunsplit((parts.scheme, parts.netloc, raw_url, "", ""))
 
 
 @router.get(
@@ -152,7 +172,9 @@ async def purchase_subscription(
         .order_by(Subscription.ends_at.desc())
         .first()
     )
-    start_at = current_sub.ends_at if current_sub and current_sub.ends_at > now else now
+
+    is_renewal = bool(current_sub and current_sub.status == "active" and current_sub.ends_at > now)
+    start_at = current_sub.ends_at if is_renewal else now
     ends_at = start_at + timedelta(days=PLAN_DAYS[payload.plan])
 
     user.wallet_balance_rub -= amount
@@ -173,12 +195,50 @@ async def purchase_subscription(
             provider="internal",
             kind="subscription_debit",
             paid_at=now,
-            meta={"plan": payload.plan},
+            meta={"plan": payload.plan, "renewal": is_renewal},
         )
     )
     db.commit()
 
-    log_audit(db, user.id, "subscription_purchased", {"plan": payload.plan, "price": amount})
+    subscription_url = None
+    config_sent_to_bot = False
+
+    if not is_renewal:
+        try:
+            profile, _created = await get_or_create_vpn_profile(db, user)
+            subscription_url = _absolute_subscription_url(profile.subscription_url)
+
+            if subscription_url:
+                await send_user_bot_message(
+                    user_telegram_id=user.telegram_id,
+                    text=(
+                        f"Новый VPN-ключ готов.\n\nКонфигурация VPN:\n{subscription_url}\n\nСкопируйте ссылку и добавьте ее в VPN-клиент.\nИнструкция: откройте MiniApp → вкладка «Настройка»."
+                    ),
+                    with_main_menu_button=True,
+                )
+                config_sent_to_bot = True
+        except httpx.HTTPError as exc:
+            await send_admin_log(
+                "payment_error",
+                user.telegram_id,
+                user.username,
+                {
+                    "reason": "subscription_purchased_but_config_issue",
+                    "error": str(exc),
+                },
+            )
+
+    log_audit(
+        db,
+        user.id,
+        "subscription_purchased",
+        {
+            "plan": payload.plan,
+            "price": amount,
+            "renewal": is_renewal,
+            "config_sent_to_bot": config_sent_to_bot,
+        },
+    )
     await send_admin_log(
         "subscription_activated",
         user.telegram_id,
@@ -187,7 +247,15 @@ async def purchase_subscription(
             "plan": payload.plan,
             "price": amount,
             "wallet_balance": user.wallet_balance_rub,
+            "renewal": is_renewal,
+            "config_sent_to_bot": config_sent_to_bot,
         },
     )
 
-    return {"status": "ok", "ends_at": ends_at, "wallet_balance": user.wallet_balance_rub}
+    return {
+        "status": "ok",
+        "ends_at": ends_at,
+        "wallet_balance": user.wallet_balance_rub,
+        "is_renewal": is_renewal,
+        "subscription_url": subscription_url,
+    }
