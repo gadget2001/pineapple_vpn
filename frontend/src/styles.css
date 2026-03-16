@@ -838,6 +838,38 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   animation: spin 0.95s linear infinite;
 }
 
+.loader-spinner.small {
+  width: 26px;
+  height: 26px;
+  border-width: 3px;
+}
+
+.payment-loader-inline {
+  margin-top: 10px;
+  border: 1px solid #dce9c9;
+  border-radius: 12px;
+  background: #f7fbef;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.payment-loader-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.payment-loader-copy strong {
+  font-size: 13px;
+  color: #214b27;
+}
+
+.payment-loader-copy small {
+  color: #4f5d52;
+}
+
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .vpn-ready-layout { display: grid; gap: 12px; }

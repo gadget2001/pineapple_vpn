@@ -280,6 +280,7 @@ export default function App() {
   const [consentChecked, setConsentChecked] = useState(false);
 
   const [topupAmount, setTopupAmount] = useState(100);
+  const [topupRedirecting, setTopupRedirecting] = useState(false);
   const [receiptEmail, setReceiptEmail] = useState("");
   const [receiptEmailDraft, setReceiptEmailDraft] = useState("");
   const [receiptEmailSaving, setReceiptEmailSaving] = useState(false);
@@ -604,6 +605,7 @@ export default function App() {
       return;
     }
 
+    setTopupRedirecting(true);
     setLoading(true);
     try {
       const data = await request("/payments/topup", {
@@ -611,11 +613,16 @@ export default function App() {
         headers: { ...authHeaders, "Content-Type": "application/json" },
         body: JSON.stringify({ amount_rub: Number(topupAmount) }),
       });
-      if (data.confirmation_url) window.location.href = data.confirmation_url;
+      if (data.confirmation_url) {
+        window.location.href = data.confirmation_url;
+        return;
+      }
+      throw new Error("Не удалось открыть страницу оплаты. Попробуйте снова.");
     } catch (e) {
       setAuthError(String(e.message));
     } finally {
       setLoading(false);
+      setTopupRedirecting(false);
     }
   };
 
@@ -1431,8 +1438,19 @@ export default function App() {
               <h3>Пополнение кошелька</h3>
               <div className="row">
                 <input type="number" min="50" value={topupAmount} onChange={(e) => setTopupAmount(e.target.value)} />
-                <button disabled={loading || !hasReceiptEmail} onClick={topup}>Пополнить</button>
+                <button disabled={loading || topupRedirecting || !hasReceiptEmail} onClick={topup}>
+                  {topupRedirecting ? "Переходим к оплате..." : "Пополнить"}
+                </button>
               </div>
+              {topupRedirecting && (
+                <div className="payment-loader-inline" role="status" aria-live="polite">
+                  <div className="loader-spinner small" />
+                  <div className="payment-loader-copy">
+                    <strong>Готовим переход в ЮKassa</strong>
+                    <small>Открываем страницу оплаты, это может занять несколько секунд.</small>
+                  </div>
+                </div>
+              )}
               <small>Минимальная сумма 50 ₽</small>
               {!hasReceiptEmail && <small className="warning-text">Сначала укажите email в блоке выше.</small>}
             </article>
