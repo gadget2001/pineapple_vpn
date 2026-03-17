@@ -281,11 +281,22 @@ async def select_device(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    user.onboarding_os = _normalize_os(payload.os)
+    normalized_os = _normalize_os(payload.os)
+    user.onboarding_os = normalized_os
     user.onboarding_step = "install_app"
     db.commit()
 
     log_audit(db, user.id, "onboarding_platform_selected", {"os": payload.os})
+    await send_admin_log(
+        "onboarding_platform_selected",
+        user.telegram_id,
+        user.username,
+        {
+            "os": normalized_os or payload.os,
+            "flow": "repeat_device" if user.onboarding_completed_at else "first_time",
+            "step": "device_select",
+        },
+    )
 
     return _state(db, user)
 
