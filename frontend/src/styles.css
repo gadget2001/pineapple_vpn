@@ -1063,3 +1063,25 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
     min-height: 68vh;
   }
 }
+
+
+.browser-return-card {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.browser-return-card p {
+  margin: 0 0 12px;
+}
+
+.browser-return-actions {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0 8px;
+}
+
+.browser-return-actions .soft-link,
+.browser-return-actions .soft-btn {
+  width: 100%;
+  justify-content: center;
+}

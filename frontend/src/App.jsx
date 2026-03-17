@@ -5,6 +5,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 const PANEL_BASE = import.meta.env.VITE_PANEL_BASE_URL || "https://panelpineapple.ambot24.ru";
 const SUPPORT_URL = import.meta.env.VITE_SUPPORT_URL || "https://t.me/AMBot_adm";
 const LEGAL_DOCS_VERSION = import.meta.env.VITE_LEGAL_DOCS_VERSION || "2026-03-15";
+const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || "pineapple_AMBot";
 
 const TABS = [
   { id: "home", label: "Главная", title: "Главная" },
@@ -300,6 +301,12 @@ export default function App() {
   const startParam = tg?.initDataUnsafe?.start_param || getStartPayloadFromUrl();
   const referralLink = referralInfo?.bot_deep_link || referralStats?.bot_deep_link || referralInfo?.referral_link || referralStats?.link || "";
   const referralInviteMessage = buildInviteMessage(referralLink);
+  const topupIdFromUrl = useMemo(() => getTopupIdFromUrl(), []);
+  const inTelegram = Boolean(tg?.initData);
+  const botChatUrl = `https://t.me/${BOT_USERNAME}`;
+  const telegramOpenUrl = topupIdFromUrl
+    ? `tg://resolve?domain=${BOT_USERNAME}&startapp=topup_${topupIdFromUrl}`
+    : `tg://resolve?domain=${BOT_USERNAME}`;
 
   const request = async (path, options = {}) => {
     const res = await fetch(`${API_BASE}${path}`, options);
@@ -367,6 +374,10 @@ export default function App() {
   useEffect(() => {
     const auth = async () => {
       if (!tg?.initData) {
+        if (topupIdFromUrl) {
+          setIsHydrating(false);
+          return;
+        }
         setAuthError("Откройте приложение через кнопку в Telegram-боте.");
         setIsHydrating(false);
         return;
@@ -388,7 +399,7 @@ export default function App() {
     };
 
     auth();
-  }, [tg, token, startParam]);
+  }, [tg, token, startParam, topupIdFromUrl]);
 
   useEffect(() => {
     if (!token) return;
@@ -1066,12 +1077,36 @@ export default function App() {
     prevOnboardingStepRef.current = onboardingStep;
   }, [onboardingStep, docHtml]);
 
+  if (!inTelegram && topupIdFromUrl) {
+    return (
+      <div className="app-shell">
+        <div className="bg-orb bg-orb-a" />
+        <div className="bg-orb bg-orb-b" />
+        <main className="app-main">
+          <section className="onboarding-shell pulse-in">
+            <article className="card browser-return-card">
+              <h3>Оплата открыта в браузере</h3>
+              <p>Чтобы увидеть результат пополнения, вернитесь в Telegram и снова откройте Pineapple VPN.</p>
+              <div className="browser-return-actions">
+                <a className="soft-link" href={telegramOpenUrl}>Открыть Telegram</a>
+                <a className="soft-link" href={botChatUrl} target="_blank" rel="noreferrer">Открыть бота</a>
+                <button className="soft-btn" onClick={() => copy(botChatUrl, "Ссылка на бота скопирована")}>Скопировать ссылку на бота</button>
+              </div>
+              <small className="muted">Если автопереход не сработал, откройте бота вручную и нажмите кнопку запуска MiniApp.</small>
+            </article>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell">
       <div className="bg-orb bg-orb-a" />
       <div className="bg-orb bg-orb-b" />
 
       <main className="app-main">
+
         {authError && <div ref={alertRef} className="alert">{authError}</div>}
         {copyNotice && <div className="toast-ok">{copyNotice}</div>}
         {isHydrating && (
