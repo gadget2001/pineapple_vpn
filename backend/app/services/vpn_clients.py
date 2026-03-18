@@ -67,14 +67,15 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
     ),
     "iphone": PlatformClientInfo(
         platform="iphone",
-        client_type="hiddify",
-        client_name="Hiddify",
-        download_url="https://apps.apple.com/app/hiddify-proxy-vpn/id6596777532",
-        install_cta="Открыть в Hiddify",
+        client_type="happ",
+        client_name="Happ",
+        download_url="https://apps.apple.com",
+        install_cta="Открыть в Happ",
         instructions=[
-            "Установите Hiddify из App Store.",
-            "Нажмите кнопку автонастройки или откройте ссылку подписки в Hiddify.",
-            "Разрешите создание VPN-профиля и включите подключение.",
+            "Установите Happ на iPhone.",
+            "Откройте ссылку автонастройки или импортируйте subscription URL в Happ.",
+            "Включите режим Global (или TUN, если доступен в версии клиента).",
+            "После импорта включите VPN-профиль.",
         ],
     ),
 }

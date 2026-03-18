@@ -1,4 +1,5 @@
 from datetime import datetime
+from urllib.parse import quote_plus
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -68,9 +69,36 @@ def _landing(profile: VPNProfile, payload: dict, token: str) -> str:
 
 @router.get("", response_class=HTMLResponse)
 def install_root(
-    token: str = Query(...),
+    token: str | None = Query(default=None),
+    platform: str | None = Query(default=None),
+    sub: str | None = Query(default=None),
+    landing: bool = Query(default=True),
     db: Session = Depends(get_db),
 ):
+    # Compatibility endpoint: /install?platform=...&sub=...
+    if platform and sub:
+        try:
+            client = platform_client(platform)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="Unsupported platform") from exc
+        deep_link = build_deep_link(platform, sub)
+        if not landing and not settings.vpn_enable_install_landing:
+            return RedirectResponse(url=deep_link, status_code=302)
+
+        html = render_install_landing_html(
+            brand=settings.vpn_brand_name,
+            platform=platform,
+            client_name=client.client_name,
+            deep_link=deep_link,
+            subscription_url=sub,
+            fallback_url=f"/install?platform={quote_plus(platform)}&sub={quote_plus(sub)}",
+            title=settings.vpn_brand_name,
+        )
+        return HTMLResponse(html)
+
+    if not token:
+        raise HTTPException(status_code=400, detail="token or platform/sub must be provided")
+
     payload, profile = _resolve(token, db)
     profile.last_install_opened_at = datetime.utcnow()
     profile.last_install_platform = str(payload.get("platform") or "")
@@ -78,6 +106,7 @@ def install_root(
     db.commit()
 
     log_audit(db, profile.user_id, "vpn_install_link_opened", {"platform": payload.get("platform")})
+    log_audit(db, profile.user_id, "vpn_install_opened", {"platform": payload.get("platform")})
     return HTMLResponse(_landing(profile, payload, token))
 
 
@@ -98,6 +127,7 @@ def install_open(
     db.commit()
 
     log_audit(db, profile.user_id, "vpn_install_link_opened", {"platform": platform})
+    log_audit(db, profile.user_id, "vpn_install_opened", {"platform": platform})
 
     if not settings.vpn_enable_install_landing and not landing:
         log_audit(db, profile.user_id, "vpn_deep_link_redirected", {"platform": platform})

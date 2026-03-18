@@ -15,6 +15,7 @@ from app.services.vpn_delivery import issue_platform_config
 from app.services.vpn_profile import get_or_create_vpn_profile, marzban_error
 from app.services.vpn_subscription import (
     build_clash_subscription,
+    build_happ_subscription,
     build_hiddify_subscription,
     verify_subscription_signature,
 )
@@ -70,6 +71,7 @@ async def get_config(
         subscription_url=bundle.subscription_url,
         subscription_url_clash=bundle.subscription_url_clash,
         subscription_url_hiddify=bundle.subscription_url_hiddify,
+        subscription_url_happ=bundle.subscription_url_hiddify,
         raw_vless_url=bundle.raw_vless_url,
         install_urls=bundle.install_urls,
         display_title=bundle.display_title,
@@ -87,7 +89,7 @@ def get_public_subscription(
     db: Session = Depends(get_db),
 ):
     normalized_kind = (kind or "").strip().lower()
-    if normalized_kind not in {"clash", "hiddify"}:
+    if normalized_kind not in {"clash", "happ", "hiddify"}:
         raise HTTPException(status_code=404, detail="Unknown subscription kind")
 
     if not verify_subscription_signature(pid, normalized_kind, v, sig):
@@ -107,7 +109,7 @@ def get_public_subscription(
         log_audit(db, profile.user_id, "vpn_profile_downloaded", {"kind": "clash"})
         return Response(content=payload, media_type="text/yaml; charset=utf-8")
 
-    payload = build_hiddify_subscription(profile)
-    log_audit(db, profile.user_id, "vpn_profile_downloaded", {"kind": "hiddify"})
+    payload = build_happ_subscription(profile) if normalized_kind == "happ" else build_hiddify_subscription(profile)
+    log_audit(db, profile.user_id, "vpn_profile_downloaded", {"kind": normalized_kind})
     return Response(content=payload, media_type="text/plain; charset=utf-8")
 

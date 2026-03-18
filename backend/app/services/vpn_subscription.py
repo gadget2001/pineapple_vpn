@@ -37,7 +37,7 @@ def build_subscription_url(profile: VPNProfile, kind: str) -> str:
 
 
 def render_display_title() -> str:
-    template = settings.vpn_profile_name_template or "{brand} • {country}"
+    template = settings.vpn_profile_name_template or "{brand} - {country}"
     title = template.format(
         brand=settings.vpn_brand_name,
         country=settings.vpn_display_country_name,
@@ -61,7 +61,8 @@ def parse_vless(vless_url: str) -> dict[str, Any]:
     host = parsed.hostname or ""
     port = int(parsed.port or 443)
     uuid = parsed.username or ""
-    security = (query.get("security", [""])[0] or "reality").lower()
+
+    security = (query.get("security", [""])[0] or "none").lower()
     transport = (query.get("type", [""])[0] or "tcp").lower()
 
     return {
@@ -74,8 +75,39 @@ def parse_vless(vless_url: str) -> dict[str, Any]:
         "short_id": query.get("sid", [""])[0],
         "public_key": query.get("pbk", [""])[0],
         "flow": query.get("flow", [""])[0],
-        "fp": query.get("fp", [""])[0] or "chrome",
     }
+
+
+def _build_clash_proxy_block(parsed: dict[str, Any], proxy_name: str) -> list[str]:
+    lines = [
+        f"  - name: \"{proxy_name}\"",
+        "    type: vless",
+        f"    server: {parsed['host']}",
+        f"    port: {parsed['port']}",
+        f"    uuid: {parsed['uuid']}",
+        f"    network: {parsed['transport'] or 'tcp'}",
+        "    udp: true",
+    ]
+
+    if parsed.get("security") == "reality":
+        # CASE 2: reality
+        lines.extend(
+            [
+                "    tls: true",
+                f"    servername: {parsed.get('sni') or parsed['host']}",
+                "    client-fingerprint: chrome",
+                "    reality-opts:",
+                f"      public-key: {parsed.get('public_key') or ''}",
+                f"      short-id: {parsed.get('short_id') or ''}",
+            ]
+        )
+        if parsed.get("flow"):
+            lines.append(f"    flow: {parsed['flow']}")
+        return lines
+
+    # CASE 1: none (and any non-reality fallback)
+    lines.append("    tls: false")
+    return lines
 
 
 def build_clash_subscription(profile: VPNProfile) -> str:
@@ -89,17 +121,9 @@ def build_clash_subscription(profile: VPNProfile) -> str:
     nameserver = _split_csv(settings.vpn_primary_dns) or ["77.88.8.8", "1.1.1.1"]
     fallback = _split_csv(settings.vpn_fallback_dns) or ["1.1.1.1", "8.8.8.8"]
 
-    flow_line = f"    flow: {parsed['flow']}\n" if parsed.get("flow") else ""
-    reality_block = ""
-    if parsed.get("public_key"):
-        reality_block = (
-            "    reality-opts:\n"
-            f"      public-key: {parsed['public_key']}\n"
-            f"      short-id: {parsed.get('short_id') or ''}\n"
-        )
-
     dns_nameserver = "\n".join([f"    - {item}" for item in nameserver])
     dns_fallback = "\n".join([f"    - {item}" for item in fallback])
+    proxy_block = "\n".join(_build_clash_proxy_block(parsed, proxy_name))
 
     return (
         f"# Profile: {profile_name}\n"
@@ -111,9 +135,6 @@ def build_clash_subscription(profile: VPNProfile) -> str:
         "dns:\n"
         "  enable: true\n"
         "  enhanced-mode: fake-ip\n"
-        "  listen: 0.0.0.0:1053\n"
-        "  default-nameserver:\n"
-        f"{dns_nameserver}\n"
         "  nameserver:\n"
         f"{dns_nameserver}\n"
         "  fallback:\n"
@@ -122,24 +143,11 @@ def build_clash_subscription(profile: VPNProfile) -> str:
         f"{dns_nameserver}\n"
         "tun:\n"
         "  enable: true\n"
-        "  stack: system\n"
         "  auto-route: true\n"
-        "  auto-detect-interface: true\n"
         "  dns-hijack:\n"
         "    - any:53\n"
         "proxies:\n"
-        f"  - name: \"{proxy_name}\"\n"
-        "    type: vless\n"
-        f"    server: {parsed['host']}\n"
-        f"    port: {parsed['port']}\n"
-        f"    uuid: {parsed['uuid']}\n"
-        f"    network: {parsed['transport'] or 'tcp'}\n"
-        "    udp: true\n"
-        "    tls: true\n"
-        f"    servername: {parsed.get('sni') or parsed['host']}\n"
-        "    client-fingerprint: chrome\n"
-        f"{flow_line}"
-        f"{reality_block}"
+        f"{proxy_block}\n"
         "proxy-groups:\n"
         f"  - name: {group_name}\n"
         "    type: select\n"
@@ -151,15 +159,19 @@ def build_clash_subscription(profile: VPNProfile) -> str:
     )
 
 
-def build_hiddify_subscription(profile: VPNProfile) -> str:
-    # Hiddify can import a subscription containing one or more raw links.
-    title = profile.display_title or settings.vpn_hiddify_profile_name
+def build_happ_subscription(profile: VPNProfile) -> str:
+    # Happ imports a standard subscription containing VLESS links.
+    title = profile.display_title or settings.vpn_happ_profile_name or settings.vpn_hiddify_profile_name
     raw = _normalize_vless_for_export(profile.raw_vless_url or profile.vless_url)
     return f"# {title}\n{raw}\n"
+
+
+# Backward-compatible alias.
+def build_hiddify_subscription(profile: VPNProfile) -> str:
+    return build_happ_subscription(profile)
 
 
 def default_subscription_for_platform(profile: VPNProfile, platform: str) -> str:
     if platform == "iphone":
         return profile.subscription_url_hiddify or profile.subscription_url
     return profile.subscription_url_clash or profile.subscription_url
-

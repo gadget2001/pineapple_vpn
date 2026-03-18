@@ -64,7 +64,7 @@ def _scheme_template(platform: str) -> str:
     if platform == "linux":
         return settings.vpn_linux_clash_scheme
     if platform == "iphone":
-        return settings.vpn_ios_hiddify_scheme
+        return settings.vpn_ios_happ_scheme or settings.vpn_ios_hiddify_scheme
     return settings.vpn_clash_scheme
 
 

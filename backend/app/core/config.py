@@ -66,6 +66,7 @@ class Settings(BaseSettings):
     vpn_clash_group_name: str = "Pineapple"
     vpn_profile_name_template: str = "{brand} - {country}"
     vpn_hiddify_profile_name: str = "Pineapple VPN"
+    vpn_happ_profile_name: str = "Pineapple VPN"
     vpn_subscription_base_url: str = ""
     vpn_enable_emoji_in_profile_names: bool = True
 
@@ -75,6 +76,7 @@ class Settings(BaseSettings):
     vpn_android_clash_scheme: str = "clash://install-config?url={url}"
     vpn_macos_clash_scheme: str = "koala-clash://install-config?url={url}"
     vpn_linux_clash_scheme: str = "clash://install-config?url={url}"
+    vpn_ios_happ_scheme: str = "happ://import?url={url}"
     vpn_ios_hiddify_scheme: str = "hiddify://import/{url}"
     vpn_enable_install_landing: bool = True
     vpn_install_link_signing_secret: str = "change-me-install-signing-secret"

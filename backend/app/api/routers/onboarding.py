@@ -327,12 +327,13 @@ async def get_onboarding_config(
             },
         )
 
-    generation_action = "vpn_profile_generated_hiddify" if bundle.client_type == "hiddify" else "vpn_profile_generated_clash"
+    generation_action = "vpn_profile_generated_happ" if bundle.client_type == "happ" else "vpn_profile_generated_clash"
     log_audit(db, user.id, generation_action, {"platform": bundle.platform, "uuid": profile.uuid})
     log_audit(db, user.id, "vpn_platform_config_issued", {"platform": bundle.platform, "client_type": bundle.client_type})
     log_audit(db, user.id, "vpn_install_link_generated", {"platform": bundle.platform, "install_url": bundle.install_url})
     if bundle.profile_reused:
         log_audit(db, user.id, "vpn_profile_reused_for_new_device", {"platform": bundle.platform})
+        log_audit(db, user.id, "vpn_profile_reused", {"platform": bundle.platform})
 
     await send_admin_log(
         "onboarding_config_received",
@@ -361,6 +362,7 @@ async def get_onboarding_config(
         subscription_url=bundle.subscription_url,
         subscription_url_clash=bundle.subscription_url_clash,
         subscription_url_hiddify=bundle.subscription_url_hiddify,
+        subscription_url_happ=bundle.subscription_url_hiddify,
         raw_vless_url=bundle.raw_vless_url,
         install_url=bundle.install_url,
         install_urls=bundle.install_urls,
