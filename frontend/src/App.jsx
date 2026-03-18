@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
@@ -16,10 +16,11 @@ const TABS = [
 ];
 
 const OS_OPTIONS = [
-  { id: "windows", title: "Windows", app: "NekoRay" },
-  { id: "iphone", title: "iPhone", app: "Streisand" },
-  { id: "android", title: "Android", app: "v2rayNG" },
-  { id: "macos", title: "macOS", app: "Streisand" },
+  { id: "windows", title: "Windows", app: "Clash Meta / Mihomo" },
+  { id: "iphone", title: "iPhone", app: "Hiddify" },
+  { id: "android", title: "Android", app: "Clash Meta / Mihomo" },
+  { id: "macos", title: "macOS", app: "Clash Meta / Mihomo" },
+  { id: "linux", title: "Linux", app: "Clash Meta / Mihomo" },
 ];
 
 const INTRO_SLIDES = [
@@ -48,6 +49,7 @@ const INSTRUCTION_IMAGE_FOLDERS = {
   iphone: ["Iphone", "iPhone", "iphone"],
   android: ["Android", "android"],
   macos: ["macOS", "MacOS", "macos"],
+  linux: ["Linux", "linux"],
 };
 
 const MAX_INSTRUCTION_IMAGES = 10;
@@ -214,35 +216,18 @@ function onboardingTitle(step) {
 function configInstructionByOs(os) {
   if (os === "iphone") {
     return [
-      "Нажмите на этой странице «Скопировать конфигурацию».",
-      "Откройте приложение Streisand.",
-      "Нажмите значок «+» в правом верхнем углу.",
-      "Выберите «Добавить из буфера».",
-      "VPN будет добавлен, после чего его можно включить кнопкой «⏻».",
+      "Нажмите «Открыть в Hiddify» или скопируйте ссылку подписки.",
+      "Импортируйте подписку в Hiddify.",
+      "Разрешите создание VPN-профиля на iPhone.",
+      "Включите VPN и проверьте доступ к сервисам.",
     ];
   }
 
-  if (os === "windows") {
+  if (os === "windows" || os === "android" || os === "macos" || os === "linux") {
     return [
-      "Нажмите на этой странице «Скопировать конфигурацию».",
-      "Откройте приложение nekobox.exe.",
-      "В верхней панели откройте раздел «Сервер».",
-      "Выберите «Добавить профиль из буфера обмена».",
-      "Подтвердите добавление конфигурации как подписки.",
-      "В правой части верхней панели включите «Режим TUN».",
-      "Если приложение запросит права администратора, разрешите их.",
-      "После этого нажмите правой кнопкой мыши по добавленному профилю.",
-      "Выберите «Запустить/Остановить», чтобы включить или выключить подключение.",
-    ];
-  }
-
-  if (os === "android") {
-    return [
-      "Нажмите на этой странице «Скопировать конфигурацию».",
-      "Откройте приложение Happ.",
-      "В нижней левой части экрана нажмите кнопку «Из буфера».",
-      "Профиль Pineapple будет добавлен автоматически.",
-      "После этого подключение можно включить кнопкой «⏻».",
+      "Нажмите «Открыть в Clash» для автоимпорта подписки.",
+      "Если автоимпорт не сработал, скопируйте ссылку подписки вручную.",
+      "Включите TUN в клиенте и активируйте профиль Pineapple VPN.",
     ];
   }
 
@@ -849,7 +834,8 @@ export default function App() {
     try {
       const config = await request("/onboarding/config", { method: "POST", headers: authHeaders });
       setOnboardingConfig(config);
-      setVpnConfig({ subscription_url: config.subscription_url });
+      setSelectedOs(config.platform || selectedOs);
+      setVpnConfig(config);
       await refreshOnboardingState();
       await loadAll();
     } catch (e) {
@@ -858,6 +844,15 @@ export default function App() {
       setConfigGenerating(false);
       setLoading(false);
     }
+  };
+
+  const openInstallUrl = (url) => {
+    if (!url) return;
+    if (tg?.openLink) {
+      tg.openLink(url);
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const onboardingComplete = async () => {
@@ -920,8 +915,15 @@ export default function App() {
   const progressTotal = isRepeatDeviceFlow ? 4 : onboardingTotal;
 
   const setupSubscriptionUrl = normalizeSubscriptionUrl(
-    onboardingConfig?.subscription_url || vpnConfig?.subscription_url,
+    onboardingConfig?.subscription_url
+      || vpnConfig?.subscription_url
+      || (selectedOs === "iphone" ? vpnConfig?.subscription_url_hiddify : vpnConfig?.subscription_url_clash),
   );
+  const setupInstallUrl = onboardingConfig?.install_url || vpnConfig?.install_urls?.[selectedOs] || "";
+  const setupInstallCta =
+    selectedOs === "iphone"
+      ? "Открыть в Hiddify"
+      : "Открыть в Clash";
   const configHelp = configInstructionByOs(selectedOs);
 
   const currentInstructionImage =
@@ -1243,6 +1245,9 @@ export default function App() {
 
               {onboardingStep === "device_select" && (
                 <>
+                  {isRepeatDeviceFlow && (
+                    <p className="muted">Ваш ключ уже создан и активен. Сейчас настроим его для нового устройства.</p>
+                  )}
                   <p>Выберите устройство, на котором хотите настроить подключение в первую очередь.</p>
                   <div className="os-grid">
                     {OS_OPTIONS.map((os) => (
@@ -1300,16 +1305,21 @@ export default function App() {
                   {!configGenerating && !!setupSubscriptionUrl && (
                     <div className="vpn-ready-layout">
                       <h3>{"Ваш VPN готов"}</h3>
-                      <p className="muted">{"Осталось добавить конфигурацию в приложение"}</p>
+                      <p className="muted">{onboardingConfig?.message || "Осталось добавить конфигурацию в приложение"}</p>
 
                       <div className="config-box">
+                        {!!setupInstallUrl && (
+                          <div className="row wrap-row">
+                            <button onClick={() => openInstallUrl(setupInstallUrl)}>{setupInstallCta}</button>
+                            <button className="soft-btn" onClick={() => setShowQr((v) => !v)}>{showQr ? "Скрыть QR код" : "Показать QR код"}</button>
+                          </div>
+                        )}
                         <div className="config-item">
-                          <label>{"Конфигурация VPN"}</label>
+                          <label>{"Ссылка подписки"}</label>
                           <textarea readOnly value={setupSubscriptionUrl} rows={4} />
                         </div>
                         <div className="row wrap-row">
-                          <button onClick={() => copy(setupSubscriptionUrl)}>{"Скопировать конфигурацию"}</button>
-                          <button className="soft-btn" onClick={() => setShowQr((v) => !v)}>{showQr ? "Скрыть QR код" : "Показать QR код"}</button>
+                          <button onClick={() => copy(setupSubscriptionUrl)}>{"Скопировать ссылку"}</button>
                         </div>
                         {showQr && (
                           <div className="qr-wrap">
@@ -1564,7 +1574,7 @@ export default function App() {
             <article className="card">
               <h3>Подключить новое устройство</h3>
               <p className="muted">Поможем быстро настроить VPN на новом устройстве: выбор ОС, установка клиента и импорт конфигурации.</p>
-              <p className="muted">Доступные ОС: Windows, iPhone, Android, macOS.</p>
+              <p className="muted">Доступные ОС: Windows, iPhone, Android, macOS, Linux.</p>
               <button disabled={loading || !hasActiveAccess} onClick={startDeviceFlow}>Запустить мастер подключения</button>
             </article>
           </section>
@@ -1653,4 +1663,5 @@ export default function App() {
     </div>
   );
 }
+
 

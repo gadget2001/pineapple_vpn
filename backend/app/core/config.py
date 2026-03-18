@@ -55,7 +55,30 @@ class Settings(BaseSettings):
     vpn_max_connections: int = 2
     vpn_daily_data_limit_gb: int = 40
     vpn_daily_limit_alerts_enabled: bool = True
-    vpn_connection_name_template: str = "🍍 Pineapple VPN ({username})"
+    vpn_connection_name_template: str = "Pineapple VPN ({username})"
+
+    # Display & subscription generation settings
+    vpn_brand_name: str = "Pineapple VPN"
+    vpn_display_country_name: str = "Russia"
+    vpn_primary_dns: str = "77.88.8.8"
+    vpn_fallback_dns: str = "1.1.1.1"
+    vpn_clash_mixed_port: int = 7890
+    vpn_clash_group_name: str = "Pineapple"
+    vpn_profile_name_template: str = "{brand} - {country}"
+    vpn_hiddify_profile_name: str = "Pineapple VPN"
+    vpn_subscription_base_url: str = ""
+    vpn_enable_emoji_in_profile_names: bool = True
+
+    # Auto install / deep links
+    vpn_install_base_url: str = ""
+    vpn_clash_scheme: str = "koala-clash://install-config?url={url}"
+    vpn_android_clash_scheme: str = "clash://install-config?url={url}"
+    vpn_macos_clash_scheme: str = "koala-clash://install-config?url={url}"
+    vpn_linux_clash_scheme: str = "clash://install-config?url={url}"
+    vpn_ios_hiddify_scheme: str = "hiddify://import/{url}"
+    vpn_enable_install_landing: bool = True
+    vpn_install_link_signing_secret: str = "change-me-install-signing-secret"
+    vpn_install_link_ttl_seconds: int = 3600
 
     vpn_access_log_enabled: bool = True
     vpn_access_log_path: str = "/var/log/xray/access.log"
@@ -88,3 +111,5 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+

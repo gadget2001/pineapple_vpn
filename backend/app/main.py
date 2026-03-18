@@ -1,9 +1,9 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.responses import JSONResponse
 
-from app.api.routers import admin, auth, onboarding, payments, referral, subscriptions, users, vpn, webhooks
+from app.api.routers import admin, auth, install, onboarding, payments, referral, subscriptions, users, vpn, webhooks
 from app.core.config import settings
 from app.core.rate_limit import RateLimitMiddleware
 
@@ -36,6 +36,7 @@ app = FastAPI(
         {"name": "Subscriptions", "description": "Trial, статусы и покупка подписки"},
         {"name": "Payments", "description": "Пополнение кошелька и webhook ЮKassa"},
         {"name": "VPN", "description": "Выдача VPN-конфигурации через Marzban"},
+        {"name": "VPN Install", "description": "Install/deep-link и fallback страницы"},
         {"name": "Referrals", "description": "Реферальная система и статистика приглашений"},
         {"name": "admin", "description": "Админ-эндпоинты"},
         {"name": "webhooks", "description": "Системные webhook-эндпоинты"},
@@ -91,6 +92,8 @@ for prefix in ("", "/api"):
     app.include_router(subscriptions.router, prefix=prefix)
     app.include_router(payments.router, prefix=prefix)
     app.include_router(vpn.router, prefix=prefix)
+    app.include_router(install.router, prefix=prefix)
     app.include_router(referral.router, prefix=prefix)
     app.include_router(admin.router, prefix=prefix)
     app.include_router(webhooks.router, prefix=prefix)
+

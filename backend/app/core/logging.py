@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
-from typing import Any, Dict
-from urllib.parse import unquote
+from typing import Any
 
 import httpx
 
@@ -18,6 +17,18 @@ ACTION_TITLES = {
     "subscription_expired": "Окончание подписки",
     "vpn_disabled": "Отключение VPN",
     "vpn_config_created": "Создан VPN-конфиг",
+    "vpn_profile_generated_clash": "Сгенерирован Clash профиль",
+    "vpn_profile_generated_hiddify": "Сгенерирован Hiddify профиль",
+    "vpn_subscription_opened": "Открыта ссылка подписки",
+    "vpn_profile_downloaded": "Скачан VPN-профиль",
+    "vpn_client_selected": "Выбран VPN-клиент",
+    "vpn_platform_config_issued": "Выдана платформенная конфигурация",
+    "vpn_profile_reused_for_new_device": "Ключ переиспользован для нового устройства",
+    "vpn_repeat_device_setup_started": "Запущена повторная настройка устройства",
+    "vpn_install_link_generated": "Сгенерирована install-ссылка",
+    "vpn_install_link_opened": "Открыта install-ссылка",
+    "vpn_install_fallback_opened": "Открыта install fallback-страница",
+    "vpn_deep_link_redirected": "Выполнен deep-link редирект",
     "onboarding_platform_selected": "Выбор устройства в onboarding",
     "onboarding_instruction_viewed": "Просмотр инструкции подключения",
     "onboarding_app_installed": "Подтверждена установка приложения",
@@ -34,34 +45,23 @@ def _present_action(action: str) -> str:
     return ACTION_TITLES.get(action, action)
 
 
-def _present_details(action: str, details: Dict[str, Any]) -> list[str]:
+def _present_details(action: str, details: dict[str, Any]) -> list[str]:
     if not details:
         return []
 
     if action == "vpn_config_created":
-        vless_url = details.get("vless_url") or ""
-        try:
-            vless_url = unquote(str(vless_url))
-        except Exception:
-            vless_url = str(vless_url)
-
         items = [
             ("UUID", details.get("uuid")),
-            ("VLESS", vless_url),
-            ("Конфигурация VPN", details.get("subscription_url")),
+            ("VLESS", details.get("vless_url")),
+            ("VPN subscription", details.get("subscription_url")),
             ("Reality key", details.get("reality_public_key")),
         ]
         return [f"{k}: {v}" for k, v in items if v not in (None, "", "None")]
 
-    pretty_lines: list[str] = []
-    for key, value in details.items():
-        if value in (None, "", "None"):
-            continue
-        pretty_lines.append(f"{key}: {value}")
-    return pretty_lines
+    return [f"{key}: {value}" for key, value in details.items() if value not in (None, "", "None")]
 
 
-def _build_message(action: str, user_id: int | None, username: str | None, details: Dict[str, Any]) -> str:
+def _build_message(action: str, user_id: int | None, username: str | None, details: dict[str, Any]) -> str:
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     user_tag = f"#user_{user_id}" if user_id else "#user_unknown"
     lines = [
@@ -83,7 +83,7 @@ def _build_message(action: str, user_id: int | None, username: str | None, detai
     return "\n".join(lines)
 
 
-async def send_admin_log(action: str, user_id: int | None, username: str | None, details: Dict[str, Any]):
+async def send_admin_log(action: str, user_id: int | None, username: str | None, details: dict[str, Any]):
     if not settings.admin_chat_id or not settings.bot_token:
         return
 
@@ -99,7 +99,7 @@ async def send_admin_log(action: str, user_id: int | None, username: str | None,
         )
 
 
-def send_admin_log_sync(action: str, user_id: int | None, username: str | None, details: Dict[str, Any]):
+def send_admin_log_sync(action: str, user_id: int | None, username: str | None, details: dict[str, Any]):
     if not settings.admin_chat_id or not settings.bot_token:
         return
 
@@ -111,13 +111,12 @@ def send_admin_log_sync(action: str, user_id: int | None, username: str | None, 
     )
 
 
-
 def _build_bot_main_menu_markup() -> dict:
     return {
         "inline_keyboard": [
             [
                 {
-                    "text": "🏠 Главное меню",
+                    "text": "Главное меню",
                     "callback_data": "main_menu",
                 }
             ]
@@ -142,3 +141,4 @@ async def send_user_bot_message(user_telegram_id: int, text: str, with_main_menu
             f"https://api.telegram.org/bot{settings.bot_token}/sendMessage",
             json=payload,
         )
+

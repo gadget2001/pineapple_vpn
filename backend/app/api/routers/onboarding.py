@@ -20,6 +20,8 @@ from app.schemas.onboarding import (
     SelectDeviceRequest,
     TrialActivationOut,
 )
+from app.services.vpn_clients import normalize_platform, platform_client
+from app.services.vpn_delivery import issue_platform_config
 from app.services.vpn_profile import get_or_create_vpn_profile, marzban_error
 from app.utils.audit import log_audit
 from app.utils.trial_state import mark_trial_used
@@ -37,58 +39,9 @@ STEP_INDEX = {
     "done": 6,
 }
 
-INSTRUCTIONS = {
-    "windows": {
-        "app_name": "NekoRay",
-        "download_url": "https://github.com/MatsuriDayo/nekoray/releases/download/4.0.1/nekoray-4.0.1-2024-12-12-windows64.zip",
-        "steps": [
-            "Скачайте архив NekoRay для Windows и распакуйте его в удобную папку.",
-            "Запустите файл nekobox.exe и дождитесь загрузки приложения.",
-            "На следующем шаге получите ссылку конфигурации и импортируйте её в NekoRay.",
-            "Выберите добавленный профиль и включите подключение.",
-        ],
-    },
-    "iphone": {
-        "app_name": "Streisand",
-        "download_url": "https://apps.apple.com/app/streisand/id6450534064",
-        "steps": [
-            "Установите приложение Streisand из App Store.",
-            "Откройте приложение и разрешите создание VPN-профиля на iPhone.",
-            "На следующем шаге получите ссылку конфигурации и импортируйте её.",
-            "Активируйте профиль и проверьте подключение.",
-        ],
-    },
-    "android": {
-        "app_name": "Happ",
-        "download_url": "https://play.google.com/store/apps/details?id=com.happ.app",
-        "steps": [
-            "Установите приложение Happ из Google Play.",
-            "Откройте приложение и разрешите создание VPN-подключения.",
-            "На следующем шаге получите ссылку конфигурации Pineapple и добавьте её в приложение.",
-            "Сохраните профиль.",
-            "Выберите добавленный профиль и включите подключение.",
-        ],
-    },
-    "macos": {
-        "app_name": "Streisand",
-        "download_url": "https://apps.apple.com/app/streisand/id6450534064",
-        "steps": [
-            "Установите приложение Streisand на macOS.",
-            "Откройте приложение и подготовьте его к импорту конфигурации.",
-            "На следующем шаге получите ссылку конфигурации и импортируйте её.",
-            "Активируйте профиль и проверьте подключение к сервисам.",
-        ],
-    },
-}
-
 
 def _normalize_os(value: str | None) -> str | None:
-    if not value:
-        return None
-    raw = value.strip().lower()
-    if raw == "ios":
-        return "iphone"
-    return raw
+    return normalize_platform(value)
 
 
 def _trial_used(db: Session, user: User) -> bool:
@@ -118,7 +71,6 @@ def _resolve_step(db: Session, user: User) -> str:
         user.onboarding_os = normalized_os
         db.commit()
 
-    # Respect explicit in-progress states (used by repeat device flow).
     if user.onboarding_step in {"device_select", "install_app", "get_config", "complete"}:
         return user.onboarding_step
 
@@ -170,12 +122,7 @@ def _state(db: Session, user: User) -> OnboardingStateOut:
     )
 
 
-@router.get(
-    "/state",
-    response_model=OnboardingStateOut,
-    summary="Состояние мастера подключения",
-    description="Возвращает текущий шаг onboarding и все флаги, чтобы MiniApp мог продолжить с места остановки.",
-)
+@router.get("/state", response_model=OnboardingStateOut)
 def onboarding_state(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -187,12 +134,7 @@ def onboarding_state(
     return _state(db, user)
 
 
-@router.post(
-    "/accept-terms",
-    response_model=OnboardingStateOut,
-    summary="Подтвердить согласие с правилами",
-    description="Фиксирует согласие пользователя с правилами и переводит его к шагу пробного периода.",
-)
+@router.post("/accept-terms", response_model=OnboardingStateOut)
 async def accept_terms(
     payload: AcceptTermsRequest,
     user: User = Depends(get_current_user),
@@ -226,12 +168,7 @@ async def accept_terms(
     return _state(db, user)
 
 
-@router.post(
-    "/activate-trial",
-    response_model=TrialActivationOut,
-    summary="Активировать пробный период",
-    description="Однократно активирует trial и переводит пользователя к выбору устройства.",
-)
+@router.post("/activate-trial", response_model=TrialActivationOut)
 async def activate_trial(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -270,29 +207,30 @@ async def activate_trial(
     return TrialActivationOut(status="ok", ends_at=ends_at, trial_days=user.trial_days)
 
 
-@router.post(
-    "/device",
-    response_model=OnboardingStateOut,
-    summary="Выбрать устройство",
-    description="Сохраняет платформу пользователя и переводит на шаг установки приложения.",
-)
+@router.post("/device", response_model=OnboardingStateOut)
 async def select_device(
     payload: SelectDeviceRequest,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     normalized_os = _normalize_os(payload.os)
+    if not normalized_os:
+        raise HTTPException(status_code=400, detail="Неподдерживаемая платформа.")
+
+    client = platform_client(normalized_os)
     user.onboarding_os = normalized_os
     user.onboarding_step = "install_app"
     db.commit()
 
     log_audit(db, user.id, "onboarding_platform_selected", {"os": payload.os})
+    log_audit(db, user.id, "vpn_client_selected", {"os": payload.os, "client_type": client.client_type})
     await send_admin_log(
         "onboarding_platform_selected",
         user.telegram_id,
         user.username,
         {
-            "os": normalized_os or payload.os,
+            "os": normalized_os,
+            "client_type": client.client_type,
             "flow": "repeat_device" if user.onboarding_completed_at else "first_time",
             "step": "device_select",
         },
@@ -301,19 +239,14 @@ async def select_device(
     return _state(db, user)
 
 
-@router.get(
-    "/instructions",
-    response_model=OnboardingInstructionOut,
-    summary="Инструкция установки клиента",
-    description="Возвращает пошаговую инструкцию для выбранной платформы.",
-)
+@router.get("/instructions", response_model=OnboardingInstructionOut)
 async def get_instructions(
     os: str | None = None,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    target_os = _normalize_os(os or user.onboarding_os) or ""
-    if target_os not in INSTRUCTIONS:
+    target_os = _normalize_os(os or user.onboarding_os)
+    if not target_os:
         raise HTTPException(status_code=400, detail="Сначала выберите устройство.")
 
     if user.onboarding_os != target_os:
@@ -321,31 +254,30 @@ async def get_instructions(
         user.onboarding_step = "install_app"
         db.commit()
 
-    info = INSTRUCTIONS[target_os]
-
+    client = platform_client(target_os)
     log_audit(db, user.id, "onboarding_instruction_viewed", {"os": target_os})
 
     return OnboardingInstructionOut(
         os=target_os,
-        app_name=info["app_name"],
-        download_url=info["download_url"],
-        steps=info["steps"],
+        app_name=client.client_name,
+        client_type=client.client_type,
+        download_url=client.download_url,
+        install_cta=client.install_cta,
+        steps=client.instructions,
     )
 
 
-@router.post(
-    "/confirm-install",
-    response_model=OnboardingStateOut,
-    summary="Подтвердить установку приложения",
-    description="Подтверждает установку VPN-клиента и переводит на шаг получения конфигурации.",
-)
+@router.post("/confirm-install", response_model=OnboardingStateOut)
 async def confirm_install(
     payload: InstructionConfirmRequest,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     if payload.os:
-        user.onboarding_os = _normalize_os(payload.os)
+        normalized_os = _normalize_os(payload.os)
+        if not normalized_os:
+            raise HTTPException(status_code=400, detail="Неподдерживаемая платформа.")
+        user.onboarding_os = normalized_os
 
     user.onboarding_install_confirmed_at = datetime.utcnow()
     user.onboarding_step = "get_config"
@@ -356,12 +288,7 @@ async def confirm_install(
     return _state(db, user)
 
 
-@router.post(
-    "/config",
-    response_model=OnboardingConfigOut,
-    summary="Получить конфигурацию на шаге onboarding",
-    description="Создает (если нужно) и возвращает subscription URL пользователя после проверки активной подписки/trial.",
-)
+@router.post("/config", response_model=OnboardingConfigOut)
 async def get_onboarding_config(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -369,12 +296,21 @@ async def get_onboarding_config(
     if not _active_subscription(db, user):
         raise HTTPException(status_code=402, detail="Для получения конфигурации нужен активный тариф или пробный период.")
 
+    selected_platform = _normalize_os(user.onboarding_os) or "windows"
+
     try:
         profile, created = await get_or_create_vpn_profile(db, user)
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=502, detail=marzban_error(exc)) from exc
 
-    # Keep user on config step until manual confirmation
+    bundle = issue_platform_config(
+        db,
+        user=user,
+        profile=profile,
+        platform=selected_platform,
+        created=created,
+    )
+
     user.onboarding_step = "get_config"
     db.commit()
 
@@ -391,26 +327,48 @@ async def get_onboarding_config(
             },
         )
 
-    log_audit(db, user.id, "onboarding_config_received", {"uuid": profile.uuid})
+    generation_action = "vpn_profile_generated_hiddify" if bundle.client_type == "hiddify" else "vpn_profile_generated_clash"
+    log_audit(db, user.id, generation_action, {"platform": bundle.platform, "uuid": profile.uuid})
+    log_audit(db, user.id, "vpn_platform_config_issued", {"platform": bundle.platform, "client_type": bundle.client_type})
+    log_audit(db, user.id, "vpn_install_link_generated", {"platform": bundle.platform, "install_url": bundle.install_url})
+    if bundle.profile_reused:
+        log_audit(db, user.id, "vpn_profile_reused_for_new_device", {"platform": bundle.platform})
+
     await send_admin_log(
         "onboarding_config_received",
         user.telegram_id,
         user.username,
-        {"uuid": profile.uuid},
+        {
+            "uuid": profile.uuid,
+            "platform": bundle.platform,
+            "client_type": bundle.client_type,
+            "profile_reused": bundle.profile_reused,
+        },
+    )
+
+    import_help = (
+        "Нажмите автонастройку. Если приложение не открылось, используйте копирование ссылки или QR."
     )
 
     return OnboardingConfigOut(
-        subscription_url=profile.subscription_url,
-        import_help="Скопируйте ссылку и импортируйте ее в VPN-клиент на предыдущем шаге.",
+        platform=bundle.platform,
+        client_type=bundle.client_type,
+        client_name=bundle.client_name,
+        profile_reused=bundle.profile_reused,
+        message=bundle.message,
+        display_title=bundle.display_title,
+        display_subtitle=bundle.display_subtitle,
+        subscription_url=bundle.subscription_url,
+        subscription_url_clash=bundle.subscription_url_clash,
+        subscription_url_hiddify=bundle.subscription_url_hiddify,
+        raw_vless_url=bundle.raw_vless_url,
+        install_url=bundle.install_url,
+        install_urls=bundle.install_urls,
+        import_help=import_help,
     )
 
 
-@router.post(
-    "/complete",
-    response_model=OnboardingStateOut,
-    summary="Завершить onboarding",
-    description="Помечает первичную настройку как завершенную.",
-)
+@router.post("/complete", response_model=OnboardingStateOut)
 async def complete_onboarding(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -431,12 +389,7 @@ async def complete_onboarding(
     return _state(db, user)
 
 
-@router.post(
-    "/restart-device-flow",
-    response_model=OnboardingStateOut,
-    summary="Повторная настройка для нового устройства",
-    description="Запускает укороченный сценарий: выбор устройства -> инструкция -> конфигурация.",
-)
+@router.post("/restart-device-flow", response_model=OnboardingStateOut)
 async def restart_device_flow(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -453,6 +406,7 @@ async def restart_device_flow(
     db.commit()
 
     log_audit(db, user.id, "onboarding_restarted", {})
+    log_audit(db, user.id, "vpn_repeat_device_setup_started", {})
     await send_admin_log(
         "onboarding_restarted",
         user.telegram_id,
@@ -463,12 +417,7 @@ async def restart_device_flow(
     return _state(db, user)
 
 
-@router.post(
-    "/cancel-device-flow",
-    response_model=OnboardingStateOut,
-    summary="Свернуть повторный мастер настройки",
-    description="Закрывает сокращенный мастер настройки устройства и возвращает пользователя в основной интерфейс.",
-)
+@router.post("/cancel-device-flow", response_model=OnboardingStateOut)
 async def cancel_device_flow(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -483,3 +432,4 @@ async def cancel_device_flow(
 
     log_audit(db, user.id, "onboarding_cancelled", {})
     return _state(db, user)
+

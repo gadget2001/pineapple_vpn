@@ -33,7 +33,12 @@ def _absolute_subscription_url(raw_url: str | None) -> str:
     if not raw_url.startswith("/"):
         return raw_url
 
-    base = (settings.panel_url or "").strip()
+    base = (
+        settings.vpn_subscription_base_url
+        or settings.api_base_url
+        or settings.frontend_url
+        or settings.panel_url
+    ).strip()
     if not (base.startswith("http://") or base.startswith("https://")):
         return raw_url
 

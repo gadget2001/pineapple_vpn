@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -13,7 +13,8 @@ OnboardingStep = Literal[
     "done",
 ]
 
-DeviceOS = Literal["windows", "iphone", "android", "macos"]
+DeviceOS = Literal["windows", "iphone", "android", "macos", "linux"]
+ClientType = Literal["clash", "hiddify"]
 
 
 class OnboardingStateOut(BaseModel):
@@ -51,12 +52,26 @@ class InstructionConfirmRequest(BaseModel):
 class OnboardingInstructionOut(BaseModel):
     os: DeviceOS
     app_name: str
+    client_type: ClientType
     download_url: str
+    install_cta: str
     steps: list[str]
 
 
 class OnboardingConfigOut(BaseModel):
+    platform: DeviceOS
+    client_type: ClientType
+    client_name: str
+    profile_reused: bool
+    message: str
+    display_title: str
+    display_subtitle: str
     subscription_url: str
+    subscription_url_clash: str
+    subscription_url_hiddify: str
+    raw_vless_url: str
+    install_url: str
+    install_urls: dict[str, str]
     import_help: str
 
 
@@ -64,3 +79,4 @@ class TrialActivationOut(BaseModel):
     status: str
     ends_at: datetime
     trial_days: int
+
