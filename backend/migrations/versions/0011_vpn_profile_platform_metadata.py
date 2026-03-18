@@ -1,7 +1,7 @@
 from alembic import op
 import sqlalchemy as sa
 
-revision = "0011_vpn_profile_platform_metadata"
+revision = "0011_vpn_profile_meta"
 down_revision = "0010_vpn_limits_and_access_logs"
 branch_labels = None
 depends_on = None
