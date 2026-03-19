@@ -22,11 +22,11 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
     "windows": PlatformClientInfo(
         platform="windows",
         client_type="clash",
-        client_name="Clash Meta / Mihomo",
+        client_name="Koala Clash",
         download_url="https://github.com/MetaCubeX/mihomo/releases",
         install_cta="Открыть в Clash",
         instructions=[
-            "Установите Clash-совместимый клиент для Windows.",
+            "Установите Koala Clash для Windows.",
             "Нажмите кнопку автонастройки и разрешите открыть приложение.",
             "Включите TUN-режим и активируйте профиль Pineapple VPN.",
         ],
@@ -46,7 +46,7 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
     "macos": PlatformClientInfo(
         platform="macos",
         client_type="clash",
-        client_name="Clash Mi / Mihomo",
+        client_name="Clash Mi",
         download_url="https://github.com/MetaCubeX/mihomo/releases",
         install_cta="Открыть в Clash",
         instructions=[

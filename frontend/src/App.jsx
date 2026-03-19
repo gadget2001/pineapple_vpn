@@ -1278,7 +1278,7 @@ export default function App() {
                   {isRepeatDeviceFlow && (
                     <p className="muted">Ваш ключ уже создан и активен. Сейчас настроим его для нового устройства.</p>
                   )}
-                  <p>Выберите устройство, на котором хотите настроить подключение в первую очередь.</p>
+                  <p>Выберите устройство, на котором хотите настроить подключение.</p>
                   <div className="os-grid">
                     {OS_OPTIONS.map((os) => (
                       <button
@@ -1296,23 +1296,25 @@ export default function App() {
               )}
 
               {onboardingStep === "install_app" && (
-                <>
-                  <p>
+                <div className="install-app-layout">
+                  <p className="install-app-lead">
                     Установите приложение <strong>{onboardingInstruction?.app_name || "для выбранной ОС"}</strong>.
                     После установки вернитесь и подтвердите.
                   </p>
                   {onboardingInstruction?.download_url && (
-                    <a className="download-link" href={onboardingInstruction.download_url} target="_blank" rel="noreferrer">
+                    <a className="download-link install-app-download" href={onboardingInstruction.download_url} target="_blank" rel="noreferrer">
                       Скачать приложение
                     </a>
                   )}
-                  <ol className="steps clean">
+                  <ol className="steps clean install-app-steps">
                     {(onboardingInstruction?.steps || []).map((line, idx) => (
                       <li key={idx} className="pending">{line}</li>
                     ))}
                   </ol>
-                  <button disabled={loading} onClick={onboardingConfirmInstall}>Я установил приложение</button>
-                </>
+                  <div className="install-app-confirm-row">
+                    <button className="onboarding-action-btn" disabled={loading} onClick={onboardingConfirmInstall}>Я установил приложение</button>
+                  </div>
+                </div>
               )}
 
               {onboardingStep === "get_config" && (

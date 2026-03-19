@@ -497,6 +497,29 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   font-weight: 700;
 }
 
+.install-app-layout {
+  display: grid;
+  gap: 12px;
+}
+
+.install-app-lead {
+  margin: 0;
+}
+
+.install-app-download {
+  margin: 0;
+  width: fit-content;
+}
+
+.install-app-steps {
+  margin: 0;
+}
+
+.install-app-confirm-row {
+  display: grid;
+  gap: 8px;
+}
+
 .tabbar {
   position: fixed;
   z-index: 30;
@@ -621,6 +644,11 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 
   .os-grid {
     grid-template-columns: 1fr;
+  }
+
+  .install-app-download {
+    width: 100%;
+    justify-content: center;
   }
 
   .hero {
