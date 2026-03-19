@@ -157,6 +157,11 @@ def build_clash_subscription(profile: VPNProfile) -> str:
     )
 
 
+def build_hiddify_subscription(profile: VPNProfile) -> str:
+    raw = _normalize_vless_for_export(profile.raw_vless_url or profile.vless_url)
+    return f"{raw}\n" if raw else ""
+
+
 def default_subscription_for_platform(profile: VPNProfile, platform: str) -> str:
     if (platform or "").strip().lower() == "android":
         return profile.subscription_url_hiddify or profile.subscription_url_clash or profile.subscription_url
