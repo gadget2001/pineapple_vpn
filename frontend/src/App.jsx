@@ -1341,7 +1341,7 @@ export default function App() {
                         {!!setupInstallUrl && (
                           <div className="row wrap-row">
                             <button onClick={() => openInstallUrl(setupInstallUrl)}>{setupInstallCta}</button>
-                            <span className="muted">??????? ?????? ???????? ???????, ????? ????????? ????????? ?????????????.</span>
+                            <span className="muted">Нажмите кнопку открытия клиента, чтобы применить настройку автоматически.</span>
                           </div>
                         )}
                         <div className="row wrap-row">
@@ -1350,14 +1350,14 @@ export default function App() {
                             style={{ padding: "6px 10px", fontSize: "12px" }}
                             onClick={() => copy(setupSubscriptionUrl)}
                           >
-                            {"??????????? ??????"}
+                            {"Скопировать ссылку"}
                           </button>
                           <button
                             className="soft-btn"
                             style={{ padding: "6px 10px", fontSize: "12px" }}
                             onClick={() => setShowQr((v) => !v)}
                           >
-                            {showQr ? "?????? QR-???" : "???????? QR-???"}
+                            {showQr ? "Скрыть QR-код" : "Показать QR-код"}
                           </button>
                         </div>
                         {showQr && (
