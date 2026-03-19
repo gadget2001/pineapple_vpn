@@ -1338,21 +1338,16 @@ export default function App() {
 
                       <div className="config-box">
                         {!!setupInstallUrl && (
-                          <div className="row wrap-row">
-                            <button onClick={() => openInstallUrl(setupInstallUrl)}>{setupInstallCta}</button>
-                            <span className="muted">Нажмите кнопку открытия клиента, чтобы применить настройку автоматически.</span>
+                          <div className="onboarding-install-row">
+                            <button className="onboarding-action-btn" onClick={() => openInstallUrl(setupInstallUrl)}>{setupInstallCta}</button>
                           </div>
                         )}
-                        <div className="row wrap-row">
-                          <button
-                            className="soft-btn"
-                            style={{ padding: "6px 10px", fontSize: "12px" }}
-                            onClick={onboardingComplete}
-                            disabled={loading}
-                          >
-                            {"Я добавил конфигурацию"}
-                          </button>
-                        </div>
+                        {!!setupInstallUrl && (
+                          <p className="muted onboarding-install-hint">Нажмите кнопку открытия клиента, чтобы применить настройку автоматически.</p>
+                        )}
+                      </div>
+                      <div className="onboarding-complete-row">
+                        <button className="onboarding-action-btn" onClick={onboardingComplete} disabled={loading}>{"Я добавил конфигурацию"}</button>
                       </div>
 
                       <article className="mini-instruction">

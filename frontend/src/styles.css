@@ -564,6 +564,15 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   word-break: break-word;
 }
 
+.onboarding-card p {
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+
+.onboarding-card .muted {
+  margin: 0;
+}
+
 @media (min-width: 920px) {
   .app-main { padding-bottom: 24px; }
   .tabbar {
@@ -872,7 +881,58 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.vpn-ready-layout { display: grid; gap: 12px; }
+.vpn-ready-layout {
+  display: grid;
+  gap: 12px;
+}
+
+.vpn-ready-layout > .muted {
+  margin: 0;
+}
+
+.vpn-ready-layout .config-box {
+  margin-top: 0;
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.onboarding-install-row {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.onboarding-action-btn {
+  width: 100%;
+  min-height: 44px;
+  font-size: 14px;
+}
+
+.onboarding-install-hint {
+  margin: 0;
+  line-height: 1.42;
+  font-size: 13px;
+}
+
+.onboarding-complete-row {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.mini-instruction h4,
+.instruction-screens-block h4 {
+  margin: 0 0 6px;
+}
+
+.mini-instruction .steps {
+  margin-top: 0;
+}
+
+.help-box .row {
+  margin-top: 8px;
+}
 
 .qr-wrap { margin-top: 10px; display: flex; justify-content: center; }
 .qr-wrap svg { border-radius: 8px; background: #fff; padding: 8px; border: 1px solid #ece5cf; }
