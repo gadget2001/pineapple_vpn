@@ -75,9 +75,6 @@ def _resolve_step(db: Session, user: User) -> str:
     if user.onboarding_step in {"device_select", "install_app", "complete"}:
         return user.onboarding_step
 
-    if user.onboarding_completed_at:
-        return "done"
-
     if user.onboarding_step == "get_config":
         profile = db.query(VPNProfile).filter(VPNProfile.user_id == user.id).first()
         issued_at = profile.last_config_issued_at if profile else None
@@ -93,6 +90,9 @@ def _resolve_step(db: Session, user: User) -> str:
                 log_audit(db, user.id, "onboarding_completed", {"mode": "auto_timeout", "step": "get_config"})
                 return "done"
         return "get_config"
+
+    if user.onboarding_completed_at:
+        return "done"
     if not user.terms_accepted_at:
         return "welcome"
 
