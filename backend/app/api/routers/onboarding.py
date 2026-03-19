@@ -81,7 +81,10 @@ def _resolve_step(db: Session, user: User) -> str:
     if user.onboarding_step == "get_config":
         profile = db.query(VPNProfile).filter(VPNProfile.user_id == user.id).first()
         issued_at = profile.last_config_issued_at if profile else None
-        if issued_at:
+        install_confirmed_at = user.onboarding_install_confirmed_at
+        # Auto-timeout applies only to the current onboarding run.
+        # For repeat flows, older issued_at values from previous runs must not close the step.
+        if issued_at and install_confirmed_at and issued_at >= install_confirmed_at:
             elapsed = (datetime.utcnow() - issued_at).total_seconds()
             if elapsed >= AUTO_COMPLETE_GET_CONFIG_AFTER_SECONDS:
                 user.onboarding_completed_at = datetime.utcnow()
