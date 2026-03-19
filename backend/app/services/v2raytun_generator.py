@@ -7,7 +7,6 @@ from urllib.parse import quote
 
 from app.core.config import settings
 from app.models.vpn_profile import VPNProfile
-from app.services.vpn_subscription import parse_vless
 
 
 def _normalize_vless_for_export(raw: str) -> str:
@@ -19,34 +18,16 @@ def build_v2raytun_subscription(profile: VPNProfile) -> str:
     return f"{raw}\n"
 
 
-def build_v2raytun_routing_profile() -> dict[str, object]:
-    return {
-        "name": f"{settings.vpn_brand_name} Global",
-        "domainStrategy": "AsIs",
-        "domainMatcher": "hybrid",
-        "rules": [
-            {
-                "type": "field",
-                "network": "tcp,udp",
-                "port": "53",
-                "outboundTag": "proxy",
-                "__name__": "DNS through proxy",
-            },
-            {
-                "type": "field",
-                "outboundTag": "proxy",
-                "__name__": "Global mode",
-            },
-        ],
-    }
-
-
-def encode_v2raytun_routing(profile: VPNProfile) -> str:
-    # Security-aware metadata still parsed from vless URL to keep behavior deterministic.
-    # routing itself is global proxy profile for v2RayTun.
-    _ = parse_vless(profile.raw_vless_url or profile.vless_url)
-    routing_json = json.dumps(build_v2raytun_routing_profile(), separators=(",", ":"), ensure_ascii=False)
-    return base64.b64encode(routing_json.encode("utf-8")).decode("utf-8")
+def resolve_v2raytun_routing_base64() -> str:
+    raw = (settings.vpn_v2raytun_routing_base64 or "").strip()
+    if not raw:
+        raise ValueError("VPN_V2RAYTUN_ROUTING_BASE64 is required for iPhone subscription flow")
+    try:
+        decoded = base64.b64decode(raw).decode("utf-8")
+        json.loads(decoded)
+    except Exception as exc:  # noqa: BLE001
+        raise ValueError("VPN_V2RAYTUN_ROUTING_BASE64 must be valid base64-encoded JSON") from exc
+    return raw
 
 
 def _default_total_bytes() -> int:
@@ -69,7 +50,7 @@ def build_v2raytun_headers(
         "profile-title": profile_title,
         "subscription-userinfo": f"upload=0; download=0; total={total}; expire={expire_ts}",
         "profile-update-interval": str(int(settings.vpn_v2raytun_profile_update_interval_hours or 24)),
-        "routing": encode_v2raytun_routing(profile),
+        "routing": resolve_v2raytun_routing_base64(),
         "update-always": "true" if settings.vpn_v2raytun_update_always else "false",
     }
 
@@ -90,4 +71,3 @@ def build_v2raytun_install_link(subscription_url: str) -> str:
     if template.endswith("/"):
         return f"{template}{encoded_url}"
     return f"{template}/{encoded_url}"
-

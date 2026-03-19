@@ -80,6 +80,7 @@ class Settings(BaseSettings):
     vpn_v2raytun_update_always: bool = True
     vpn_v2raytun_announce: str = ""
     vpn_v2raytun_announce_url: str = ""
+    vpn_v2raytun_routing_base64: str = ""
     vpn_enable_install_landing: bool = True
     vpn_install_link_signing_secret: str = "change-me-install-signing-secret"
     vpn_install_link_ttl_seconds: int = 3600

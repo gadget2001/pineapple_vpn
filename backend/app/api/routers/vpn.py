@@ -109,8 +109,13 @@ def get_public_subscription(
         return Response(content=payload, media_type="text/yaml; charset=utf-8")
 
     payload = build_v2raytun_subscription(profile)
-    headers = build_v2raytun_headers(profile=profile, expire_at=active_sub.ends_at)
+    try:
+        headers = build_v2raytun_headers(profile=profile, expire_at=active_sub.ends_at)
+    except ValueError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     log_audit(db, profile.user_id, "vpn_profile_downloaded", {"kind": "v2raytun"})
     log_audit(db, profile.user_id, "vpn_profile_generated_v2raytun", {"profile_id": profile.id})
+    log_audit(db, profile.user_id, "vpn_v2raytun_subscription_served", {"profile_id": profile.id})
+    log_audit(db, profile.user_id, "vpn_v2raytun_routing_header_applied", {"profile_id": profile.id})
     return Response(content=payload, media_type="text/plain; charset=utf-8", headers=headers)
 
