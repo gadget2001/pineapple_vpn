@@ -720,10 +720,11 @@ export default function App() {
     }
   };
 
-  const loadVpnConfig = async () => {
+  const loadVpnConfig = async (platform = selectedOs) => {
     setLoading(true);
     try {
-      const data = await request("/vpn/config", { headers: authHeaders });
+      const targetPlatform = encodeURIComponent(platform || "windows");
+      const data = await request(`/vpn/config?platform=${targetPlatform}`, { headers: authHeaders });
       setVpnConfig(data);
     } catch (e) {
       setAuthError(String(e.message));
@@ -1554,20 +1555,46 @@ export default function App() {
         {!isHydrating && !showOnboarding && tab === "setup" && (
           <section className="page">
             <article className="card">
-              <h3>Ваша активная ссылка подключения</h3>
-              <p className="muted">Этот ключ можно использовать на всех ваших устройствах.</p>
-              {hasActiveAccess && !setupSubscriptionUrl && (
-                <button onClick={loadVpnConfig} disabled={loading || !hasActiveAccess}>Получить / обновить ключ</button>
-              )}
-              {status?.status !== "active" && <p className="muted">Для получения ключа активируйте пробный период или оплатите тариф.</p>}
-              {hasActiveAccess && !!setupSubscriptionUrl && (
-                <div className="config-box">
-                  <div className="config-item">
-                    <label>Ссылка подключения</label>
-                    <textarea readOnly value={setupSubscriptionUrl} rows={4} />
+              <h3>Быстрая настройка подключения</h3>
+              <p className="muted">Выберите ОС и подключите клиент одной кнопкой. Ключ будет переиспользован для всех ваших устройств.</p>
+              {status?.status !== "active" && <p className="muted">Для настройки подключения активируйте пробный период или оплатите тариф.</p>}
+              {hasActiveAccess && (
+                <>
+                  <div className="os-grid">
+                    {OS_OPTIONS.map((os) => (
+                      <button
+                        key={`setup-${os.id}`}
+                        type="button"
+                        className={`os-card ${selectedOs === os.id ? "active" : ""}`}
+                        onClick={() => setSelectedOs(os.id)}
+                      >
+                        <strong>{os.title}</strong>
+                        <span>{os.app}</span>
+                      </button>
+                    ))}
                   </div>
-                  <button onClick={() => copy(setupSubscriptionUrl)}>Скопировать ключ</button>
-                </div>
+                  <div className="row wrap-row">
+                    <button onClick={() => loadVpnConfig(selectedOs)} disabled={loading || !hasActiveAccess}>
+                      Подготовить автонастройку
+                    </button>
+                    {!!setupInstallUrl && (
+                      <button onClick={() => openInstallUrl(setupInstallUrl)}>{setupInstallCta}</button>
+                    )}
+                    {!!setupSubscriptionUrl && (
+                      <>
+                        <button className="soft-btn" onClick={() => copy(setupSubscriptionUrl)}>Скопировать ссылку</button>
+                        <button className="soft-btn" onClick={() => setShowQr((v) => !v)}>
+                          {showQr ? "Скрыть QR код" : "Показать QR код"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {showQr && !!setupSubscriptionUrl && (
+                    <div className="qr-wrap">
+                      <QRCodeSVG value={setupSubscriptionUrl} size={210} level="M" includeMargin />
+                    </div>
+                  )}
+                </>
               )}
             </article>
 
