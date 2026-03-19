@@ -24,7 +24,6 @@ class VPNProfile(Base):
 
     subscription_url_clash: Mapped[str | None] = mapped_column(String(512), nullable=True)
     subscription_url_hiddify: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    subscription_url_v2raytun: Mapped[str | None] = mapped_column(String(512), nullable=True)
     raw_vless_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
 
     server_host: Mapped[str | None] = mapped_column(String(255), nullable=True)

@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.core.config import settings
+
 PLATFORMS = ("windows", "android", "iphone", "macos", "linux")
-CLASH_PLATFORMS = {"windows", "android", "macos", "linux"}
+CLASH_PLATFORMS = {"windows", "android", "macos", "linux", "iphone"}
 
 
 @dataclass(frozen=True)
@@ -44,7 +46,7 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
     "macos": PlatformClientInfo(
         platform="macos",
         client_type="clash",
-        client_name="Clash Meta / Mihomo",
+        client_name="Clash Mi / Mihomo",
         download_url="https://github.com/MetaCubeX/mihomo/releases",
         install_cta="Открыть в Clash",
         instructions=[
@@ -67,15 +69,15 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
     ),
     "iphone": PlatformClientInfo(
         platform="iphone",
-        client_type="v2raytun",
-        client_name="v2RayTun",
-        download_url="https://apps.apple.com/app/id6476628951",
-        install_cta="Открыть в v2RayTun",
+        client_type="clash",
+        client_name=settings.vpn_ios_client_name,
+        download_url=settings.vpn_ios_appstore_url,
+        install_cta="Открыть в Clash Mi",
         instructions=[
-            "Установите v2RayTun на iPhone.",
-            "Нажмите кнопку автонастройки или импортируйте subscription URL в v2RayTun.",
-            "Включите Global mode и разрешите создание VPN-профиля iOS.",
-            "После импорта активируйте VPN-профиль.",
+            "Установите Clash Mi на iPhone.",
+            "Нажмите «Открыть в Clash Mi» или скопируйте ссылку подписки.",
+            "В Clash Mi откройте «Мои конфиги» -> «Добавить конфигурационную ссылку».",
+            "Вставьте ссылку, обновите подписку и включите VPN-профиль.",
         ],
     ),
 }

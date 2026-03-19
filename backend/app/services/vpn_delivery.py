@@ -25,7 +25,6 @@ class PlatformConfigBundle:
     message: str
     subscription_url: str
     subscription_url_clash: str
-    subscription_url_v2raytun: str
     raw_vless_url: str
     install_url: str
     install_urls: dict[str, str]
@@ -65,7 +64,6 @@ def ensure_profile_metadata(profile: VPNProfile) -> None:
 
 def refresh_platform_urls(profile: VPNProfile) -> None:
     profile.subscription_url_clash = build_subscription_url(profile, "clash")
-    profile.subscription_url_v2raytun = build_subscription_url(profile, "v2raytun")
     profile.subscription_url = profile.subscription_url_clash
 
     install_urls = build_platform_install_urls(profile)
@@ -118,10 +116,7 @@ def issue_platform_config(
         "linux": profile.install_url_linux or "",
     }
 
-    if normalized_platform == "iphone":
-        selected_subscription = profile.subscription_url_v2raytun or profile.subscription_url
-    else:
-        selected_subscription = profile.subscription_url_clash or profile.subscription_url
+    selected_subscription = profile.subscription_url_clash or profile.subscription_url
 
     message = (
         "Ваш ключ уже создан и активен. Сейчас настроим его для нового устройства."
@@ -140,7 +135,6 @@ def issue_platform_config(
         message=message,
         subscription_url=selected_subscription,
         subscription_url_clash=profile.subscription_url_clash or "",
-        subscription_url_v2raytun=profile.subscription_url_v2raytun or "",
         raw_vless_url=profile.raw_vless_url or profile.vless_url,
         install_url=install_urls[normalized_platform],
         install_urls=install_urls,

@@ -158,6 +158,4 @@ def build_clash_subscription(profile: VPNProfile) -> str:
 
 
 def default_subscription_for_platform(profile: VPNProfile, platform: str) -> str:
-    if platform == "iphone":
-        return profile.subscription_url_v2raytun or profile.subscription_url
     return profile.subscription_url_clash or profile.subscription_url

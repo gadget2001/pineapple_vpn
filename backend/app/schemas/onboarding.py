@@ -14,7 +14,7 @@ OnboardingStep = Literal[
 ]
 
 DeviceOS = Literal["windows", "iphone", "android", "macos", "linux"]
-ClientType = Literal["clash", "v2raytun"]
+ClientType = Literal["clash"]
 
 
 class OnboardingStateOut(BaseModel):
@@ -68,7 +68,6 @@ class OnboardingConfigOut(BaseModel):
     display_subtitle: str
     subscription_url: str
     subscription_url_clash: str
-    subscription_url_v2raytun: str
     raw_vless_url: str
     install_url: str
     install_urls: dict[str, str]

@@ -9,7 +9,6 @@ from urllib.parse import quote
 
 from app.core.config import settings
 from app.models.vpn_profile import VPNProfile
-from app.services.v2raytun_generator import build_v2raytun_install_link
 from app.services.vpn_clients import CLASH_PLATFORMS
 from app.services.vpn_subscription import default_subscription_for_platform
 
@@ -58,6 +57,8 @@ def parse_install_token(token: str) -> dict | None:
 
 
 def _scheme_template(platform: str) -> str:
+    if platform == "iphone":
+        return (settings.vpn_ios_install_scheme or "").strip()
     if platform == "android":
         return settings.vpn_android_clash_scheme
     if platform == "macos":
@@ -68,9 +69,9 @@ def _scheme_template(platform: str) -> str:
 
 
 def build_deep_link(platform: str, subscription_url: str) -> str:
-    if platform == "iphone":
-        return build_v2raytun_install_link(subscription_url)
-
+    if platform == "iphone" and not _scheme_template(platform):
+        # iOS safe default: do not assume unsupported deep links.
+        return settings.vpn_ios_appstore_url
     encoded_url = quote(subscription_url, safe="")
     template = _scheme_template(platform)
     if "{url}" in template:
