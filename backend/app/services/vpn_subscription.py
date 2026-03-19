@@ -90,7 +90,6 @@ def _build_clash_proxy_block(parsed: dict[str, Any], proxy_name: str) -> list[st
     ]
 
     if parsed.get("security") == "reality":
-        # CASE 2: reality
         lines.extend(
             [
                 "    tls: true",
@@ -105,7 +104,6 @@ def _build_clash_proxy_block(parsed: dict[str, Any], proxy_name: str) -> list[st
             lines.append(f"    flow: {parsed['flow']}")
         return lines
 
-    # CASE 1: none (and any non-reality fallback)
     lines.append("    tls: false")
     return lines
 
@@ -159,19 +157,7 @@ def build_clash_subscription(profile: VPNProfile) -> str:
     )
 
 
-def build_happ_subscription(profile: VPNProfile) -> str:
-    # Happ imports a standard subscription containing VLESS links.
-    title = profile.display_title or settings.vpn_happ_profile_name or settings.vpn_hiddify_profile_name
-    raw = _normalize_vless_for_export(profile.raw_vless_url or profile.vless_url)
-    return f"# {title}\n{raw}\n"
-
-
-# Backward-compatible alias.
-def build_hiddify_subscription(profile: VPNProfile) -> str:
-    return build_happ_subscription(profile)
-
-
 def default_subscription_for_platform(profile: VPNProfile, platform: str) -> str:
     if platform == "iphone":
-        return profile.subscription_url_hiddify or profile.subscription_url
+        return profile.subscription_url_v2raytun or profile.subscription_url
     return profile.subscription_url_clash or profile.subscription_url

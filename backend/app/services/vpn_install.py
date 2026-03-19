@@ -9,6 +9,7 @@ from urllib.parse import quote
 
 from app.core.config import settings
 from app.models.vpn_profile import VPNProfile
+from app.services.v2raytun_generator import build_v2raytun_install_link
 from app.services.vpn_clients import CLASH_PLATFORMS
 from app.services.vpn_subscription import default_subscription_for_platform
 
@@ -63,12 +64,13 @@ def _scheme_template(platform: str) -> str:
         return settings.vpn_macos_clash_scheme
     if platform == "linux":
         return settings.vpn_linux_clash_scheme
-    if platform == "iphone":
-        return settings.vpn_ios_happ_scheme or settings.vpn_ios_hiddify_scheme
     return settings.vpn_clash_scheme
 
 
 def build_deep_link(platform: str, subscription_url: str) -> str:
+    if platform == "iphone":
+        return build_v2raytun_install_link(subscription_url)
+
     encoded_url = quote(subscription_url, safe="")
     template = _scheme_template(platform)
     if "{url}" in template:
@@ -161,7 +163,7 @@ def render_install_landing_html(
       <ol class=\"steps\">
         <li>Установите клиент {client_name}</li>
         <li>Нажмите кнопку открытия приложения</li>
-        <li>Если не открылось, используйте копирование или QR</li>
+        <li>Если не открылось, используйте копирование ссылки или QR</li>
       </ol>
     </div>
   </div>
@@ -177,4 +179,3 @@ def is_deep_link_primary(platform: str) -> bool:
     if platform in CLASH_PLATFORMS:
         return True
     return True
-

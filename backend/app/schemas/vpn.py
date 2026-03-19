@@ -6,8 +6,7 @@ class VPNConfigOut(BaseModel):
     vless_url: str
     subscription_url: str
     subscription_url_clash: str
-    subscription_url_hiddify: str
-    subscription_url_happ: str
+    subscription_url_v2raytun: str
     raw_vless_url: str
     install_urls: dict[str, str]
     display_title: str

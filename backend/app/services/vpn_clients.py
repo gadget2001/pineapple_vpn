@@ -67,15 +67,15 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
     ),
     "iphone": PlatformClientInfo(
         platform="iphone",
-        client_type="happ",
-        client_name="Happ",
-        download_url="https://apps.apple.com",
-        install_cta="Открыть в Happ",
+        client_type="v2raytun",
+        client_name="v2RayTun",
+        download_url="https://apps.apple.com/app/id6476628951",
+        install_cta="Открыть в v2RayTun",
         instructions=[
-            "Установите Happ на iPhone.",
-            "Откройте ссылку автонастройки или импортируйте subscription URL в Happ.",
-            "Включите режим Global (или TUN, если доступен в версии клиента).",
-            "После импорта включите VPN-профиль.",
+            "Установите v2RayTun на iPhone.",
+            "Нажмите кнопку автонастройки или импортируйте subscription URL в v2RayTun.",
+            "Включите Global mode и разрешите создание VPN-профиля iOS.",
+            "После импорта активируйте VPN-профиль.",
         ],
     ),
 }
@@ -95,4 +95,3 @@ def platform_client(platform: str) -> PlatformClientInfo:
     if not normalized:
         raise ValueError(f"Unsupported platform: {platform}")
     return PLATFORM_CLIENTS[normalized]
-

@@ -10,12 +10,7 @@ from app.models.user import User
 from app.models.vpn_profile import VPNProfile
 from app.services.vpn_clients import normalize_platform, platform_client
 from app.services.vpn_install import build_platform_install_urls
-from app.services.vpn_subscription import (
-    build_subscription_url,
-    display_subtitle,
-    parse_vless,
-    render_display_title,
-)
+from app.services.vpn_subscription import build_subscription_url, display_subtitle, parse_vless, render_display_title
 
 
 @dataclass
@@ -30,7 +25,7 @@ class PlatformConfigBundle:
     message: str
     subscription_url: str
     subscription_url_clash: str
-    subscription_url_hiddify: str
+    subscription_url_v2raytun: str
     raw_vless_url: str
     install_url: str
     install_urls: dict[str, str]
@@ -70,7 +65,7 @@ def ensure_profile_metadata(profile: VPNProfile) -> None:
 
 def refresh_platform_urls(profile: VPNProfile) -> None:
     profile.subscription_url_clash = build_subscription_url(profile, "clash")
-    profile.subscription_url_hiddify = build_subscription_url(profile, "happ")
+    profile.subscription_url_v2raytun = build_subscription_url(profile, "v2raytun")
     profile.subscription_url = profile.subscription_url_clash
 
     install_urls = build_platform_install_urls(profile)
@@ -124,7 +119,7 @@ def issue_platform_config(
     }
 
     if normalized_platform == "iphone":
-        selected_subscription = profile.subscription_url_hiddify or profile.subscription_url
+        selected_subscription = profile.subscription_url_v2raytun or profile.subscription_url
     else:
         selected_subscription = profile.subscription_url_clash or profile.subscription_url
 
@@ -145,11 +140,10 @@ def issue_platform_config(
         message=message,
         subscription_url=selected_subscription,
         subscription_url_clash=profile.subscription_url_clash or "",
-        subscription_url_hiddify=profile.subscription_url_hiddify or "",
+        subscription_url_v2raytun=profile.subscription_url_v2raytun or "",
         raw_vless_url=profile.raw_vless_url or profile.vless_url,
         install_url=install_urls[normalized_platform],
         install_urls=install_urls,
         display_title=profile.display_title or render_display_title(),
         display_subtitle=profile.display_subtitle or display_subtitle(),
     )
-

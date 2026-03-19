@@ -107,6 +107,8 @@ def install_root(
 
     log_audit(db, profile.user_id, "vpn_install_link_opened", {"platform": payload.get("platform")})
     log_audit(db, profile.user_id, "vpn_install_opened", {"platform": payload.get("platform")})
+    if str(payload.get("platform")) == "iphone":
+        log_audit(db, profile.user_id, "vpn_v2raytun_opened", {"profile_id": profile.id})
     return HTMLResponse(_landing(profile, payload, token))
 
 
@@ -128,6 +130,8 @@ def install_open(
 
     log_audit(db, profile.user_id, "vpn_install_link_opened", {"platform": platform})
     log_audit(db, profile.user_id, "vpn_install_opened", {"platform": platform})
+    if platform == "iphone":
+        log_audit(db, profile.user_id, "vpn_v2raytun_opened", {"profile_id": profile.id})
 
     if not settings.vpn_enable_install_landing and not landing:
         log_audit(db, profile.user_id, "vpn_deep_link_redirected", {"platform": platform})

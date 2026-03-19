@@ -17,7 +17,7 @@ const TABS = [
 
 const OS_OPTIONS = [
   { id: "windows", title: "Windows", app: "Clash Meta / Mihomo" },
-  { id: "iphone", title: "iPhone", app: "Happ" },
+  { id: "iphone", title: "iPhone", app: "v2RayTun" },
   { id: "android", title: "Android", app: "Clash Meta / Mihomo" },
   { id: "macos", title: "macOS", app: "Clash Meta / Mihomo" },
   { id: "linux", title: "Linux", app: "Clash Meta / Mihomo" },
@@ -216,8 +216,8 @@ function onboardingTitle(step) {
 function configInstructionByOs(os) {
   if (os === "iphone") {
     return [
-      "Нажмите «Открыть в Happ» или скопируйте ссылку подписки.",
-      "Импортируйте подписку в Happ.",
+      "Нажмите «Открыть в v2RayTun» или скопируйте ссылку подписки.",
+      "Импортируйте подписку в v2RayTun.",
       "Разрешите создание VPN-профиля на iPhone.",
       "Включите VPN и проверьте доступ к сервисам.",
     ];
@@ -917,12 +917,12 @@ export default function App() {
   const setupSubscriptionUrl = normalizeSubscriptionUrl(
     onboardingConfig?.subscription_url
       || vpnConfig?.subscription_url
-      || (selectedOs === "iphone" ? (vpnConfig?.subscription_url_happ || vpnConfig?.subscription_url_hiddify) : vpnConfig?.subscription_url_clash),
+      || (selectedOs === "iphone" ? vpnConfig?.subscription_url_v2raytun : vpnConfig?.subscription_url_clash),
   );
   const setupInstallUrl = onboardingConfig?.install_url || vpnConfig?.install_urls?.[selectedOs] || "";
   const setupInstallCta =
     selectedOs === "iphone"
-      ? "Открыть в Happ"
+      ? "Открыть в v2RayTun"
       : "Открыть в Clash";
   const configHelp = configInstructionByOs(selectedOs);
 
