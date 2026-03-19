@@ -258,7 +258,7 @@ def _build_bot_main_menu_markup() -> dict:
         "inline_keyboard": [
             [
                 {
-                    "text": "Main menu",
+                    "text": "🏚 Главное меню",
                     "callback_data": "main_menu",
                 }
             ]
