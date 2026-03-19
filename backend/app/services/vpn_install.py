@@ -69,15 +69,15 @@ def _scheme_template(platform: str) -> str:
 
 
 def build_hiddify_install_link(subscription_url: str, profile_name: str) -> str:
-    encoded_url = quote(subscription_url, safe="")
-    encoded_name = quote(profile_name or settings.vpn_brand_name, safe="")
+    raw_url = (subscription_url or "").strip()
+    raw_name = (profile_name or settings.vpn_brand_name).strip()
     template = _scheme_template("android")
     if template:
         return (
-            template.replace("{url}", encoded_url)
-            .replace("{name}", encoded_name)
+            template.replace("{url}", raw_url)
+            .replace("{name}", raw_name)
         )
-    return f"hiddify://import/{encoded_url}#{encoded_name}"
+    return f"hiddify://import/{raw_url}#{raw_name}"
 
 
 def build_deep_link(platform: str, subscription_url: str, profile_name: str = "") -> str:

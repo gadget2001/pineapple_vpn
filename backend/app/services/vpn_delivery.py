@@ -70,7 +70,7 @@ def ensure_profile_metadata(profile: VPNProfile) -> None:
 
 def refresh_platform_urls(profile: VPNProfile) -> None:
     profile.subscription_url_clash = build_subscription_url(profile, "clash")
-    profile.subscription_url_hiddify = build_subscription_url(profile, "hiddify")
+    profile.subscription_url_hiddify = profile.subscription_url_clash
     profile.subscription_url = profile.subscription_url_clash
 
     install_urls = build_platform_install_urls(profile)

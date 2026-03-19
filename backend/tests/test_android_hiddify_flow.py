@@ -28,30 +28,27 @@ def test_android_client_is_hiddify():
 def test_build_hiddify_install_link_uses_official_format():
     settings.vpn_android_hiddify_scheme = "hiddify://import/{url}#{name}"
     link = build_hiddify_install_link("https://example.com/sub/clash", "Pineapple VPN")
-    assert link.startswith("hiddify://import/")
-    assert "https%3A%2F%2Fexample.com%2Fsub%2Fclash" in link
-    assert "#Pineapple%20VPN" in link
+    assert link == "hiddify://import/https://example.com/sub/clash#Pineapple VPN"
 
 
 def test_android_deep_link_uses_hiddify_builder():
     settings.vpn_android_hiddify_scheme = "hiddify://import/{url}#{name}"
     link = build_deep_link("android", "https://example.com/sub/clash", "Premium RU")
-    assert link.startswith("hiddify://import/")
-    assert "#Premium%20RU" in link
+    assert link == "hiddify://import/https://example.com/sub/clash#Premium RU"
 
 
-def test_android_subscription_prefers_hiddify_url():
+def test_android_subscription_uses_clash_url_as_primary():
     profile = _make_profile()
-    assert default_subscription_for_platform(profile, "android") == profile.subscription_url_hiddify
+    assert default_subscription_for_platform(profile, "android") == profile.subscription_url_clash
 
 
-def test_android_subscription_falls_back_to_clash_url():
+def test_android_subscription_falls_back_to_default_url():
     profile = _Profile(
         subscription_url="https://example.com/sub/default",
-        subscription_url_clash="https://example.com/sub/clash",
+        subscription_url_clash="",
         subscription_url_hiddify="",
     )
-    assert default_subscription_for_platform(profile, "android") == profile.subscription_url_clash
+    assert default_subscription_for_platform(profile, "android") == profile.subscription_url
 
 
 def test_android_landing_contains_hiddify_fallback_steps():
