@@ -1585,7 +1585,7 @@ export default function App() {
           <section className="page">
             <article className="card">
               <h3>Быстрая настройка подключения</h3>
-              <p className="muted">Выберите ОС и подключите клиент одной кнопкой. Ключ будет переиспользован для всех ваших устройств.</p>
+              <p className="muted">Выберите ОС и подключите конфиг одной кнопкой.</p>
               {status?.status !== "active" && <p className="muted">Для настройки подключения активируйте пробный период или оплатите тариф.</p>}
               {hasActiveAccess && (
                 <>
