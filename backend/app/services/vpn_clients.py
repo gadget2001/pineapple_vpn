@@ -23,7 +23,7 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
         platform="windows",
         client_type="clash",
         client_name="Koala Clash",
-        download_url="https://github.com/MetaCubeX/mihomo/releases",
+        download_url="https://release-assets.githubusercontent.com/github-production-release-asset/1011075251/eca6652e-716e-42b3-9f98-199855c9df63?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-03-19T10%3A58%3A22Z&rscd=attachment%3B+filename%3DKoala.Clash_x64-setup.exe&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-03-19T09%3A57%3A26Z&ske=2026-03-19T10%3A58%3A22Z&sks=b&skv=2018-11-09&sig=j963XNL93sd9qEMHL%2BfLEHHQn5zKfp%2BmL7IAYtsnvNA%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc3MzkxODEzMSwibmJmIjoxNzczOTE0NTMxLCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.vRY8W3NrVwpaQGdTNl_eoDfP11a3Mc6Vcytj387g3eM&response-content-disposition=attachment%3B%20filename%3DKoala.Clash_x64-setup.exe&response-content-type=application%2Foctet-stream",
         install_cta="Открыть в Clash",
         instructions=[
             "Установите Koala Clash для Windows.",

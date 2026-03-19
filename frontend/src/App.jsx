@@ -16,7 +16,7 @@ const TABS = [
 ];
 
 const OS_OPTIONS = [
-  { id: "windows", title: "Windows", app: "Clash Meta / Mihomo" },
+  { id: "windows", title: "Windows", app: "Koala Clash" },
   { id: "iphone", title: "iPhone", app: "Clash Mi" },
   { id: "android", title: "Android", app: "Clash Meta / Mihomo" },
   { id: "macos", title: "macOS", app: "Clash Meta / Mihomo" },
