@@ -51,9 +51,8 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
         download_url="https://apps.apple.com/ru/app/clash-mi/id6744321968",
         install_cta="Открыть в Clash",
         instructions=[
-            "Установите Clash Mi для macOS.",
-            "Нажмите кнопку автонастройки и импортируйте подписку.",
-            "Включите TUN и активируйте профиль Pineapple VPN.",
+            "Установите Clash Mi для macOS из AppStore",
+            "Перейдите к следующему шагу, на котором создастся ВПН конфигурация специально для Вас",
         ],
     ),
     "linux": PlatformClientInfo(
