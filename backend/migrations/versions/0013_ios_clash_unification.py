@@ -1,8 +1,8 @@
 from alembic import op
 
 
-revision = "0012_ios_clash_unification"
-down_revision = "0011_vpn_profile_meta"
+revision = "0013_ios_clash_unification"
+down_revision = "0012_v2raytun_ios"
 branch_labels = None
 depends_on = None
 
