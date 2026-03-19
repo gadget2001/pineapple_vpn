@@ -60,7 +60,7 @@ def _scheme_template(platform: str) -> str:
     if platform == "iphone":
         return (settings.vpn_ios_install_scheme or "").strip()
     if platform == "android":
-        return settings.vpn_android_clash_scheme
+        return (settings.vpn_android_hiddify_scheme or "").strip()
     if platform == "macos":
         return settings.vpn_macos_clash_scheme
     if platform == "linux":
@@ -68,7 +68,21 @@ def _scheme_template(platform: str) -> str:
     return settings.vpn_clash_scheme
 
 
-def build_deep_link(platform: str, subscription_url: str) -> str:
+def build_hiddify_install_link(subscription_url: str, profile_name: str) -> str:
+    encoded_url = quote(subscription_url, safe="")
+    encoded_name = quote(profile_name or settings.vpn_brand_name, safe="")
+    template = _scheme_template("android")
+    if template:
+        return (
+            template.replace("{url}", encoded_url)
+            .replace("{name}", encoded_name)
+        )
+    return f"hiddify://import/{encoded_url}#{encoded_name}"
+
+
+def build_deep_link(platform: str, subscription_url: str, profile_name: str = "") -> str:
+    if platform == "android":
+        return build_hiddify_install_link(subscription_url, profile_name or settings.vpn_brand_name)
     if platform == "iphone" and not _scheme_template(platform):
         # iOS safe default: do not assume unsupported deep links.
         return settings.vpn_ios_appstore_url
@@ -114,6 +128,7 @@ def render_install_landing_html(
     subscription_url: str,
     fallback_url: str,
     title: str,
+    client_download_url: str = "",
 ) -> str:
     qr_data = quote(subscription_url, safe="")
     return f"""<!doctype html>
@@ -156,15 +171,16 @@ def render_install_landing_html(
       <h1>{brand}</h1>
       <p>{title}</p>
       <p><strong>{platform}</strong> • клиент: {client_name}</p>
-      <a class=\"btn btn-main\" href=\"{deep_link}\">Открыть приложение</a>
+      <a class=\"btn btn-main\" href=\"{deep_link}\">Открыть в {client_name}</a>
+      {f'<a class=\"btn btn-soft\" href=\"{client_download_url}\">Установить {client_name}</a>' if client_download_url else ''}
       <a class=\"btn btn-soft\" href=\"{fallback_url}\">Открыть fallback-страницу</a>
       <textarea id=\"sub\" class=\"mono\" readonly>{subscription_url}</textarea>
       <a class=\"btn btn-soft\" href=\"javascript:copySub()\">Скопировать ссылку подписки</a>
       <div class=\"qr\"><img alt=\"QR\" src=\"https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={qr_data}\"/></div>
       <ol class=\"steps\">
-        <li>Установите клиент {client_name}</li>
-        <li>Нажмите кнопку открытия приложения</li>
-        <li>Если не открылось, используйте копирование ссылки или QR</li>
+        <li>Установите {client_name}</li>
+        {('<li>Откройте Hiddify, нажмите \"+\" и выберите Add from clipboard или Add manually.</li>' if platform == "android" else '<li>Нажмите кнопку открытия приложения</li>')}
+        <li>Если автоимпорт не сработал, используйте копирование ссылки или QR-код</li>
       </ol>
     </div>
   </div>

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from app.core.config import settings
 
 PLATFORMS = ("windows", "android", "iphone", "macos", "linux")
-CLASH_PLATFORMS = {"windows", "android", "macos", "linux", "iphone"}
+CLASH_PLATFORMS = {"windows", "macos", "linux", "iphone"}
 
 
 @dataclass(frozen=True)
@@ -33,14 +33,15 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
     ),
     "android": PlatformClientInfo(
         platform="android",
-        client_type="clash",
-        client_name="Clash Meta / Mihomo",
-        download_url="https://github.com/MetaCubeX/mihomo/releases",
-        install_cta="Открыть в Clash",
+        client_type="hiddify",
+        client_name=settings.vpn_android_client_name,
+        download_url=settings.vpn_android_store_url,
+        install_cta="Открыть в Hiddify",
         instructions=[
-            "Установите Clash-совместимый клиент для Android.",
-            "Нажмите кнопку автонастройки и подтвердите импорт подписки.",
-            "Включите VPN-профиль Pineapple VPN.",
+            "Установите Hiddify на Android.",
+            "Нажмите «Открыть в Hiddify» для автоимпорта подписки.",
+            "Если автоимпорт не сработал: скопируйте ссылку и в Hiddify выберите Home -> '+' -> Add from clipboard.",
+            "Подключите профиль Pineapple VPN.",
         ],
     ),
     "macos": PlatformClientInfo(

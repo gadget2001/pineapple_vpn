@@ -10,7 +10,13 @@ from app.models.user import User
 from app.models.vpn_profile import VPNProfile
 from app.services.vpn_clients import normalize_platform, platform_client
 from app.services.vpn_install import build_platform_install_urls
-from app.services.vpn_subscription import build_subscription_url, display_subtitle, parse_vless, render_display_title
+from app.services.vpn_subscription import (
+    build_subscription_url,
+    default_subscription_for_platform,
+    display_subtitle,
+    parse_vless,
+    render_display_title,
+)
 
 
 @dataclass
@@ -64,6 +70,7 @@ def ensure_profile_metadata(profile: VPNProfile) -> None:
 
 def refresh_platform_urls(profile: VPNProfile) -> None:
     profile.subscription_url_clash = build_subscription_url(profile, "clash")
+    profile.subscription_url_hiddify = profile.subscription_url_clash
     profile.subscription_url = profile.subscription_url_clash
 
     install_urls = build_platform_install_urls(profile)
@@ -116,7 +123,7 @@ def issue_platform_config(
         "linux": profile.install_url_linux or "",
     }
 
-    selected_subscription = profile.subscription_url_clash or profile.subscription_url
+    selected_subscription = default_subscription_for_platform(profile, normalized_platform)
 
     message = (
         "Ваш ключ уже создан и активен. Сейчас настроим его для нового устройства."

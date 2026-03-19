@@ -54,7 +54,7 @@ def _landing(profile: VPNProfile, payload: dict, token: str) -> str:
     platform = str(payload.get("platform") or "windows")
     client = platform_client(platform)
     subscription_url = target_subscription_url(profile, platform)
-    deep_link = build_deep_link(platform, subscription_url)
+    deep_link = build_deep_link(platform, subscription_url, profile.display_title or settings.vpn_brand_name)
     fallback_url = build_install_fallback_url(token)
     return render_install_landing_html(
         brand=settings.vpn_brand_name,
@@ -64,6 +64,7 @@ def _landing(profile: VPNProfile, payload: dict, token: str) -> str:
         subscription_url=subscription_url,
         fallback_url=fallback_url,
         title=profile.display_title or settings.vpn_brand_name,
+        client_download_url=client.download_url,
     )
 
 
@@ -81,7 +82,7 @@ def install_root(
             client = platform_client(platform)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail="Unsupported platform") from exc
-        deep_link = build_deep_link(platform, sub)
+        deep_link = build_deep_link(platform, sub, settings.vpn_brand_name)
         if not landing and not settings.vpn_enable_install_landing:
             return RedirectResponse(url=deep_link, status_code=302)
 
@@ -93,6 +94,7 @@ def install_root(
             subscription_url=sub,
             fallback_url=f"/install?platform={quote_plus(platform)}&sub={quote_plus(sub)}",
             title=settings.vpn_brand_name,
+            client_download_url=client.download_url,
         )
         return HTMLResponse(html)
 
@@ -105,9 +107,12 @@ def install_root(
     db.add(profile)
     db.commit()
 
-    log_audit(db, profile.user_id, "vpn_install_link_opened", {"platform": payload.get("platform")})
-    log_audit(db, profile.user_id, "vpn_install_opened", {"platform": payload.get("platform")})
-    if str(payload.get("platform")) == "iphone":
+    platform_name = str(payload.get("platform") or "")
+    log_audit(db, profile.user_id, "vpn_install_link_opened", {"platform": platform_name})
+    log_audit(db, profile.user_id, "vpn_install_opened", {"platform": platform_name})
+    if platform_name == "android":
+        log_audit(db, profile.user_id, "vpn_hiddify_install_opened", {"profile_id": profile.id})
+    if platform_name == "iphone":
         log_audit(db, profile.user_id, "vpn_install_link_opened_ios", {"profile_id": profile.id})
     return HTMLResponse(_landing(profile, payload, token))
 
@@ -121,7 +126,7 @@ def install_open(
     payload, profile = _resolve(token, db)
     platform = str(payload.get("platform") or "windows")
     subscription_url = target_subscription_url(profile, platform)
-    deep_link = build_deep_link(platform, subscription_url)
+    deep_link = build_deep_link(platform, subscription_url, profile.display_title or settings.vpn_brand_name)
 
     profile.last_install_opened_at = datetime.utcnow()
     profile.last_install_platform = platform
@@ -130,6 +135,8 @@ def install_open(
 
     log_audit(db, profile.user_id, "vpn_install_link_opened", {"platform": platform})
     log_audit(db, profile.user_id, "vpn_install_opened", {"platform": platform})
+    if platform == "android":
+        log_audit(db, profile.user_id, "vpn_hiddify_install_opened", {"profile_id": profile.id})
     if platform == "iphone":
         log_audit(db, profile.user_id, "vpn_install_link_opened_ios", {"profile_id": profile.id})
 
@@ -147,8 +154,10 @@ def install_fallback(
     db: Session = Depends(get_db),
 ):
     payload, profile = _resolve(token, db)
-    log_audit(db, profile.user_id, "vpn_install_fallback_opened", {"platform": payload.get("platform")})
-    if str(payload.get("platform")) == "iphone":
+    platform_name = str(payload.get("platform") or "")
+    log_audit(db, profile.user_id, "vpn_install_fallback_opened", {"platform": platform_name})
+    if platform_name == "android":
+        log_audit(db, profile.user_id, "vpn_hiddify_fallback_opened", {"profile_id": profile.id})
+    if platform_name == "iphone":
         log_audit(db, profile.user_id, "vpn_install_fallback_opened_ios", {"profile_id": profile.id})
     return HTMLResponse(_landing(profile, payload, token))
-

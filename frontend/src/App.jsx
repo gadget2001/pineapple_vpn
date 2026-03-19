@@ -18,7 +18,7 @@ const TABS = [
 const OS_OPTIONS = [
   { id: "windows", title: "Windows", app: "Koala Clash" },
   { id: "iphone", title: "iPhone", app: "Clash Mi" },
-  { id: "android", title: "Android", app: "Clash Meta / Mihomo" },
+  { id: "android", title: "Android", app: "Hiddify" },
   { id: "macos", title: "macOS", app: "Clash Meta / Mihomo" },
   { id: "linux", title: "Linux", app: "Clash Meta / Mihomo" },
 ];
@@ -223,7 +223,16 @@ function configInstructionByOs(os) {
     ];
   }
 
-  if (os === "windows" || os === "android" || os === "macos" || os === "linux") {
+  if (os === "android") {
+    return [
+      "Нажмите «Открыть в Hiddify» для автоимпорта подписки.",
+      "Если автоимпорт не сработал, скопируйте ссылку и откройте Hiddify.",
+      "В Hiddify нажмите Home -> '+' -> Add from clipboard (или Add manually).",
+      "Подключите профиль Pineapple VPN.",
+    ];
+  }
+
+  if (os === "windows" || os === "macos" || os === "linux") {
     return [
       "Нажмите «Открыть в Clash» для автоимпорта подписки.",
       "Если автоимпорт не сработал, скопируйте ссылку подписки вручную.",
@@ -953,7 +962,9 @@ export default function App() {
   const setupInstallCta =
     selectedOs === "iphone"
       ? "Открыть в Clash Mi"
-      : "Открыть в Clash";
+      : selectedOs === "android"
+        ? "Открыть в Hiddify"
+        : "Открыть в Clash";
   const configHelp = configInstructionByOs(selectedOs);
 
   const currentInstructionImage =

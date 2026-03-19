@@ -345,9 +345,13 @@ async def get_onboarding_config(
         )
 
     generation_action = "vpn_profile_generated_clash"
+    if bundle.platform == "android" and bundle.client_type == "hiddify":
+        generation_action = "vpn_profile_generated_android_hiddify"
     log_audit(db, user.id, generation_action, {"platform": bundle.platform, "uuid": profile.uuid})
     log_audit(db, user.id, "vpn_platform_config_issued", {"platform": bundle.platform, "client_type": bundle.client_type})
     log_audit(db, user.id, "vpn_install_link_generated", {"platform": bundle.platform, "install_url": bundle.install_url})
+    if bundle.platform == "android" and bundle.client_type == "hiddify":
+        log_audit(db, user.id, "vpn_hiddify_install_link_generated", {"install_url": bundle.install_url})
     if bundle.platform == "iphone":
         log_audit(db, user.id, "vpn_install_link_generated_ios", {"install_url": bundle.install_url})
     if bundle.profile_reused:
@@ -366,9 +370,12 @@ async def get_onboarding_config(
         },
     )
 
-    import_help = (
-        "Нажмите автонастройку. Если приложение не открылось, используйте копирование ссылки или QR."
-    )
+    import_help = "Нажмите автонастройку. Если приложение не открылось, используйте копирование ссылки или QR."
+    if bundle.platform == "android" and bundle.client_type == "hiddify":
+        import_help = (
+            "Нажмите «Открыть в Hiddify». "
+            "Если автоимпорт не сработал, скопируйте ссылку и в Hiddify выберите Home -> '+' -> Add from clipboard."
+        )
 
     return OnboardingConfigOut(
         platform=bundle.platform,
