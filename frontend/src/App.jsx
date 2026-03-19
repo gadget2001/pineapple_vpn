@@ -856,6 +856,35 @@ export default function App() {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  const openSetupAutoInstall = async () => {
+    if (!hasActiveAccess) {
+      setAuthError("Для автонастройки нужен активный тариф или пробный период.");
+      return;
+    }
+
+    if (setupInstallUrl) {
+      openInstallUrl(setupInstallUrl);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const targetPlatform = encodeURIComponent(selectedOs || "windows");
+      const data = await request(`/vpn/config?platform=${targetPlatform}`, { headers: authHeaders });
+      setVpnConfig(data);
+      const freshInstallUrl = data?.install_urls?.[selectedOs] || "";
+      if (!freshInstallUrl) {
+        setAuthError("Не удалось подготовить ссылку автонастройки. Попробуйте еще раз.");
+        return;
+      }
+      openInstallUrl(freshInstallUrl);
+    } catch (e) {
+      setAuthError(String(e.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onboardingComplete = async () => {
     setLoading(true);
     try {
@@ -1574,12 +1603,7 @@ export default function App() {
                     ))}
                   </div>
                   <div className="row wrap-row">
-                    <button onClick={() => loadVpnConfig(selectedOs)} disabled={loading || !hasActiveAccess}>
-                      Подготовить автонастройку
-                    </button>
-                    {!!setupInstallUrl && (
-                      <button onClick={() => openInstallUrl(setupInstallUrl)}>{setupInstallCta}</button>
-                    )}
+                    <button onClick={openSetupAutoInstall} disabled={loading || !hasActiveAccess}>{setupInstallCta}</button>
                     {!!setupSubscriptionUrl && (
                       <>
                         <button className="soft-btn" onClick={() => copy(setupSubscriptionUrl)}>Скопировать ссылку</button>
