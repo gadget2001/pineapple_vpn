@@ -1334,7 +1334,6 @@ export default function App() {
 
                   {!configGenerating && !!setupSubscriptionUrl && (
                     <div className="vpn-ready-layout">
-                      <h3>{"Ваш VPN готов"}</h3>
                       <p className="muted">{onboardingConfig?.message || "Осталось добавить конфигурацию в приложение"}</p>
 
                       <div className="config-box">
@@ -1348,23 +1347,12 @@ export default function App() {
                           <button
                             className="soft-btn"
                             style={{ padding: "6px 10px", fontSize: "12px" }}
-                            onClick={() => copy(setupSubscriptionUrl)}
+                            onClick={onboardingComplete}
+                            disabled={loading}
                           >
-                            {"Скопировать ссылку"}
-                          </button>
-                          <button
-                            className="soft-btn"
-                            style={{ padding: "6px 10px", fontSize: "12px" }}
-                            onClick={() => setShowQr((v) => !v)}
-                          >
-                            {showQr ? "Скрыть QR-код" : "Показать QR-код"}
+                            {"Я добавил конфигурацию"}
                           </button>
                         </div>
-                        {showQr && (
-                          <div className="qr-wrap">
-                            <QRCodeSVG value={setupSubscriptionUrl} size={210} level="M" includeMargin />
-                          </div>
-                        )}
                       </div>
 
                       <article className="mini-instruction">
@@ -1395,8 +1383,6 @@ export default function App() {
                           </div>
                         </section>
                       )}
-
-                      <button onClick={onboardingComplete} disabled={loading}>{"Я добавил конфигурацию"}</button>
 
                       <div className="help-box">
                         <strong>{"Не получается подключиться?"}</strong>

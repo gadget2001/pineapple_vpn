@@ -27,6 +27,7 @@ from app.utils.audit import log_audit
 from app.utils.trial_state import mark_trial_used
 
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
+AUTO_COMPLETE_GET_CONFIG_AFTER_SECONDS = 3600
 
 TOTAL_STEPS = 6
 STEP_INDEX = {
@@ -71,11 +72,24 @@ def _resolve_step(db: Session, user: User) -> str:
         user.onboarding_os = normalized_os
         db.commit()
 
-    if user.onboarding_step in {"device_select", "install_app", "get_config", "complete"}:
+    if user.onboarding_step in {"device_select", "install_app", "complete"}:
         return user.onboarding_step
 
     if user.onboarding_completed_at:
         return "done"
+
+    if user.onboarding_step == "get_config":
+        profile = db.query(VPNProfile).filter(VPNProfile.user_id == user.id).first()
+        issued_at = profile.last_config_issued_at if profile else None
+        if issued_at:
+            elapsed = (datetime.utcnow() - issued_at).total_seconds()
+            if elapsed >= AUTO_COMPLETE_GET_CONFIG_AFTER_SECONDS:
+                user.onboarding_completed_at = datetime.utcnow()
+                user.onboarding_step = "done"
+                db.commit()
+                log_audit(db, user.id, "onboarding_completed", {"mode": "auto_timeout", "step": "get_config"})
+                return "done"
+        return "get_config"
     if not user.terms_accepted_at:
         return "welcome"
 
