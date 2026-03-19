@@ -16,6 +16,7 @@ from app.services.vpn_delivery import issue_platform_config
 from app.services.vpn_profile import get_or_create_vpn_profile, marzban_error
 from app.services.vpn_subscription import (
     build_clash_subscription,
+    build_hiddify_subscription,
     verify_subscription_signature,
 )
 from app.utils.audit import log_audit
@@ -101,7 +102,7 @@ def get_public_subscription(
     db: Session = Depends(get_db),
 ):
     normalized_kind = (kind or "").strip().lower()
-    if normalized_kind != "clash":
+    if normalized_kind not in {"clash", "hiddify"}:
         raise HTTPException(status_code=404, detail="Unknown subscription kind")
 
     if not verify_subscription_signature(pid, normalized_kind, v, sig):
@@ -116,6 +117,16 @@ def get_public_subscription(
         raise HTTPException(status_code=402, detail="Subscription is not active")
 
     log_audit(db, profile.user_id, "vpn_subscription_opened", {"kind": normalized_kind, "profile_id": pid})
+
+    if normalized_kind == "hiddify":
+        payload = build_hiddify_subscription(profile)
+        if not payload:
+            raise HTTPException(status_code=422, detail="Profile does not contain valid v2ray sublink")
+        log_audit(db, profile.user_id, "vpn_profile_downloaded", {"kind": "hiddify"})
+        return Response(
+            content=payload,
+            media_type="text/plain",
+        )
 
     payload = build_clash_subscription(profile)
     log_audit(db, profile.user_id, "vpn_profile_downloaded", {"kind": "clash"})

@@ -159,7 +159,17 @@ def build_clash_subscription(profile: VPNProfile) -> str:
 
 def build_hiddify_subscription(profile: VPNProfile) -> str:
     raw = _normalize_vless_for_export(profile.raw_vless_url or profile.vless_url)
-    return f"{raw}\n" if raw else ""
+    if not raw:
+        return ""
+
+    lines = [line.strip() for line in raw.splitlines()]
+    vless_lines = [line for line in lines if line.startswith("vless://")]
+
+    if vless_lines:
+        return "\n".join(vless_lines)
+    if raw.startswith("vless://"):
+        return raw
+    return ""
 
 
 def default_subscription_for_platform(profile: VPNProfile, platform: str) -> str:
