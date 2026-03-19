@@ -48,10 +48,10 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
         platform="macos",
         client_type="clash",
         client_name="Clash Mi",
-        download_url="https://github.com/MetaCubeX/mihomo/releases",
+        download_url="https://apps.apple.com/ru/app/clash-mi/id6744321968",
         install_cta="Открыть в Clash",
         instructions=[
-            "Установите Clash-совместимый клиент для macOS.",
+            "Установите Clash Mi для macOS.",
             "Нажмите кнопку автонастройки и импортируйте подписку.",
             "Включите TUN и активируйте профиль Pineapple VPN.",
         ],
