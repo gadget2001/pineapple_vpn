@@ -1341,15 +1341,24 @@ export default function App() {
                         {!!setupInstallUrl && (
                           <div className="row wrap-row">
                             <button onClick={() => openInstallUrl(setupInstallUrl)}>{setupInstallCta}</button>
-                            <button className="soft-btn" onClick={() => setShowQr((v) => !v)}>{showQr ? "Скрыть QR код" : "Показать QR код"}</button>
+                            <span className="muted">??????? ?????? ???????? ???????, ????? ????????? ????????? ?????????????.</span>
                           </div>
                         )}
-                        <div className="config-item">
-                          <label>{"Ссылка подписки"}</label>
-                          <textarea readOnly value={setupSubscriptionUrl} rows={4} />
-                        </div>
                         <div className="row wrap-row">
-                          <button onClick={() => copy(setupSubscriptionUrl)}>{"Скопировать ссылку"}</button>
+                          <button
+                            className="soft-btn"
+                            style={{ padding: "6px 10px", fontSize: "12px" }}
+                            onClick={() => copy(setupSubscriptionUrl)}
+                          >
+                            {"??????????? ??????"}
+                          </button>
+                          <button
+                            className="soft-btn"
+                            style={{ padding: "6px 10px", fontSize: "12px" }}
+                            onClick={() => setShowQr((v) => !v)}
+                          >
+                            {showQr ? "?????? QR-???" : "???????? QR-???"}
+                          </button>
                         </div>
                         {showQr && (
                           <div className="qr-wrap">
