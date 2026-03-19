@@ -52,7 +52,7 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
         install_cta="Открыть в Clash",
         instructions=[
             "Установите Clash Mi для macOS из AppStore",
-            "Перейдите к следующему шагу, на котором создастся ВПН конфигурация специально для Вас",
+            "Перейдите к следующему шагу для активации ВПН конфигурации",
         ],
     ),
     "linux": PlatformClientInfo(
@@ -74,10 +74,8 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
         download_url=settings.vpn_ios_appstore_url,
         install_cta="Открыть в Clash Mi",
         instructions=[
-            "Установите Clash Mi на iPhone.",
-            "Нажмите «Открыть в Clash Mi» или скопируйте ссылку подписки.",
-            "В Clash Mi откройте «Мои конфиги» -> «Добавить конфигурационную ссылку».",
-            "Вставьте ссылку, обновите подписку и включите VPN-профиль.",
+            "Установите Clash Mi из AppStore",
+            "Перейдите к следующему шагу для активации ВПН конфигурации",
         ],
     ),
 }
