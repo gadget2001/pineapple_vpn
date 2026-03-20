@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass, field
 
@@ -28,8 +28,7 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
         install_cta="Открыть в Clash",
         instructions=[
             "Установите Koala Clash для Windows.",
-            "Нажмите кнопку автонастройки и разрешите открыть приложение.",
-            "Включите TUN-режим и активируйте профиль Pineapple VPN.",
+            "Перейдите к следующему шагу для активации ВПН конфигурации.",
         ],
     ),
     "android": PlatformClientInfo(
@@ -53,7 +52,7 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
         install_cta="Открыть в Clash",
         instructions=[
             "Установите Clash Mi для macOS из AppStore",
-            "Перейдите к следующему шагу для активации ВПН конфигурации",
+            "Перейдите к следующему шагу для активации ВПН конфигурации.",
         ],
     ),
     "linux": PlatformClientInfo(
