@@ -64,8 +64,7 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
         instructions=[
             "Выберите пакет под ваш дистрибутив Linux и архитектуру.",
             "Установите Koala Clash (deb/rpm).",
-            "Нажмите автонастройку или импортируйте subscription URL вручную.",
-            "Активируйте профиль Pineapple VPN и включите TUN.",
+            "Перейдите к следующему шагу для активации ВПН конфигурации.",
         ],
         download_options=[
             {
