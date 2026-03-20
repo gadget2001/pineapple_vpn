@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.core.config import settings
 
@@ -16,6 +16,7 @@ class PlatformClientInfo:
     download_url: str
     install_cta: str
     instructions: list[str]
+    download_options: list[dict[str, str]] = field(default_factory=list)
 
 
 PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
@@ -58,13 +59,32 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
     "linux": PlatformClientInfo(
         platform="linux",
         client_type="clash",
-        client_name="Clash Meta / Mihomo",
-        download_url="https://github.com/MetaCubeX/mihomo/releases",
+        client_name="Koala Clash",
+        download_url="https://github.com/coolcoala/clash-verge-rev-lite/releases/latest",
         install_cta="Открыть в Clash",
         instructions=[
-            "Установите Clash Meta / Mihomo для Linux.",
+            "Выберите пакет под ваш дистрибутив Linux и архитектуру.",
+            "Установите Koala Clash (deb/rpm).",
             "Нажмите автонастройку или импортируйте subscription URL вручную.",
             "Активируйте профиль Pineapple VPN и включите TUN.",
+        ],
+        download_options=[
+            {
+                "label": "amd64 (.deb)",
+                "url": "https://github.com/coolcoala/clash-verge-rev-lite/releases/latest/download/Koala.Clash_amd64.deb",
+            },
+            {
+                "label": "amd64 (.rpm)",
+                "url": "https://github.com/coolcoala/clash-verge-rev-lite/releases/latest/download/Koala.Clash.x86_64.rpm",
+            },
+            {
+                "label": "arm64 (.deb)",
+                "url": "https://github.com/coolcoala/clash-verge-rev-lite/releases/latest/download/Koala.Clash_arm64.deb",
+            },
+            {
+                "label": "arm64 (.rpm)",
+                "url": "https://github.com/coolcoala/clash-verge-rev-lite/releases/latest/download/Koala.Clash.aarch64.rpm",
+            },
         ],
     ),
     "iphone": PlatformClientInfo(

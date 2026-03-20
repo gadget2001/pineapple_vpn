@@ -1312,9 +1312,32 @@ export default function App() {
                     Установите приложение <strong>{onboardingInstruction?.app_name || "для выбранной ОС"}</strong>.
                     После установки вернитесь и подтвердите.
                   </p>
+                  {selectedOs === "linux" && (
+                    <article className="install-app-warning" role="note" aria-live="polite">
+                      <h4>Предупреждение</h4>
+                      <p>
+                        Если вы ранее использовали Clash Verge Rev, то его требуется удалить перед установкой Koala Clash.
+                      </p>
+                    </article>
+                  )}
+                  {selectedOs === "linux" && (onboardingInstruction?.download_options || []).length > 0 && (
+                    <div className="download-options-grid">
+                      {(onboardingInstruction?.download_options || []).map((item, idx) => (
+                        <a
+                          key={`${item.url}-${idx}`}
+                          className="download-link install-app-download-option"
+                          href={item.url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Скачать {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                   {onboardingInstruction?.download_url && (
                     <a className="download-link install-app-download" href={onboardingInstruction.download_url} target="_blank" rel="noreferrer">
-                      Скачать приложение
+                      {selectedOs === "linux" ? "Открыть страницу релизов" : "Скачать приложение"}
                     </a>
                   )}
                   <ol className="steps clean install-app-steps">

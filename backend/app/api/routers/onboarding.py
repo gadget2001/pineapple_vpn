@@ -279,6 +279,7 @@ async def get_instructions(
         app_name=client.client_name,
         client_type=client.client_type,
         download_url=client.download_url,
+        download_options=client.download_options,
         install_cta=client.install_cta,
         steps=client.instructions,
     )

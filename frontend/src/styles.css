@@ -511,6 +511,41 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   width: fit-content;
 }
 
+.install-app-warning {
+  border: 1px solid #f0d6a5;
+  background: linear-gradient(180deg, #fff9ee, #fff4df);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.install-app-warning h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #7a4b00;
+}
+
+.install-app-warning p {
+  margin: 0;
+  color: #6e5a33;
+  line-height: 1.42;
+  font-size: 13px;
+}
+
+.download-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.install-app-download-option {
+  margin: 0;
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
 .install-app-steps {
   margin: 0;
 }
@@ -649,6 +684,10 @@ button:disabled { opacity: 0.55; cursor: default; transform: none; box-shadow: n
   .install-app-download {
     width: 100%;
     justify-content: center;
+  }
+
+  .download-options-grid {
+    grid-template-columns: 1fr;
   }
 
   .hero {

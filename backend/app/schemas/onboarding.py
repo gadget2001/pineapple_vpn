@@ -49,11 +49,17 @@ class InstructionConfirmRequest(BaseModel):
     os: DeviceOS | None = None
 
 
+class DownloadOption(BaseModel):
+    label: str
+    url: str
+
+
 class OnboardingInstructionOut(BaseModel):
     os: DeviceOS
     app_name: str
     client_type: ClientType
     download_url: str
+    download_options: list[DownloadOption] = Field(default_factory=list)
     install_cta: str
     steps: list[str]
 
