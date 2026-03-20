@@ -20,7 +20,7 @@ ACTION_TITLES = {
     "vpn_disabled": "VPN отключен",
     "vpn_config_created": "VPN-конфиг создан",
     "vpn_profile_generated_clash": "Сгенерирован Clash-профиль",
-    "vpn_profile_generated_android_hiddify": "Сгенерирован Android Hiddify-профиль",
+    "vpn_profile_generated_android_flclash": "Сгенерирован Android FlClash-профиль",
     "vpn_subscription_opened": "Открыта ссылка подписки VPN",
     "vpn_profile_downloaded": "Профиль VPN скачан",
     "vpn_client_selected": "Выбран VPN-клиент",
@@ -36,9 +36,10 @@ ACTION_TITLES = {
     "vpn_install_link_generated_ios": "Сгенерирована iOS-ссылка автонастройки",
     "vpn_install_link_opened_ios": "Открыта iOS-ссылка автонастройки",
     "vpn_install_fallback_opened_ios": "Открыта iOS fallback-страница",
-    "vpn_hiddify_install_link_generated": "Сгенерирована Hiddify-ссылка автонастройки",
-    "vpn_hiddify_install_opened": "Открыта Hiddify-ссылка автонастройки",
-    "vpn_hiddify_fallback_opened": "Открыт Hiddify fallback",
+    "vpn_flclash_apk_download_opened": "Открыта ссылка загрузки FlClash APK",
+    "vpn_flclash_install_link_generated": "Сгенерирована FlClash-ссылка автонастройки",
+    "vpn_flclash_install_opened": "Открыта FlClash-ссылка автонастройки",
+    "vpn_flclash_fallback_opened": "Открыт FlClash fallback",
     "onboarding_platform_selected": "Выбрана платформа в онбординге",
     "onboarding_instruction_viewed": "Открыта инструкция онбординга",
     "onboarding_app_installed": "Подтверждена установка приложения",
@@ -121,7 +122,7 @@ ACTION_SEVERITY = {
     "subscription_reminder_sent": "yellow",
     "vpn_install_fallback_opened": "yellow",
     "vpn_install_fallback_opened_ios": "yellow",
-    "vpn_hiddify_fallback_opened": "yellow",
+    "vpn_flclash_fallback_opened": "yellow",
     # Info events by default below
 }
 

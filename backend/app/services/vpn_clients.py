@@ -1,11 +1,11 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 
 from app.core.config import settings
 
 PLATFORMS = ("windows", "android", "iphone", "macos", "linux")
-CLASH_PLATFORMS = {"windows", "macos", "linux", "iphone"}
+CLASH_PLATFORMS = {"windows", "android", "macos", "linux", "iphone"}
 
 
 @dataclass(frozen=True)
@@ -33,14 +33,15 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
     ),
     "android": PlatformClientInfo(
         platform="android",
-        client_type="hiddify",
+        client_type="flclash",
         client_name=settings.vpn_android_client_name,
-        download_url=settings.vpn_android_store_url,
-        install_cta="Открыть в Hiddify",
+        download_url=settings.vpn_android_apk_url,
+        install_cta="Открыть в FlClash",
         instructions=[
-            "Установите Hiddify на Android.",
-            "Нажмите «Открыть в Hiddify» для автоимпорта подписки.",
-            "Если автоимпорт не сработал: скопируйте ссылку и в Hiddify выберите Home -> '+' -> Add from clipboard.",
+            "Скачайте и установите FlClash APK.",
+            "Это основной стабильный способ установки на Android.",
+            "Нажмите «Открыть в FlClash» для импорта подписки.",
+            "Если автоимпорт не сработал: добавьте subscription link вручную в FlClash.",
             "Подключите профиль Pineapple VPN.",
         ],
     ),

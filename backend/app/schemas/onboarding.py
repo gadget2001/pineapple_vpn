@@ -14,7 +14,7 @@ OnboardingStep = Literal[
 ]
 
 DeviceOS = Literal["windows", "iphone", "android", "macos", "linux"]
-ClientType = Literal["clash", "hiddify"]
+ClientType = Literal["clash", "flclash", "hiddify"]
 
 
 class OnboardingStateOut(BaseModel):

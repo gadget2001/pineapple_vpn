@@ -18,7 +18,7 @@ const TABS = [
 const OS_OPTIONS = [
   { id: "windows", title: "Windows", app: "Koala Clash" },
   { id: "iphone", title: "iPhone", app: "Clash Mi" },
-  { id: "android", title: "Android", app: "Hiddify" },
+  { id: "android", title: "Android", app: "FlClash" },
   { id: "macos", title: "macOS", app: "Clash Meta / Mihomo" },
   { id: "linux", title: "Linux", app: "Clash Meta / Mihomo" },
 ];
@@ -224,9 +224,9 @@ function configInstructionByOs(os) {
 
   if (os === "android") {
     return [
-      "Нажмите «Открыть в Hiddify» для автоимпорта подписки.",
-      "Если автоимпорт не сработал, скопируйте ссылку и откройте Hiddify.",
-      "В Hiddify нажмите Home -> '+' -> Add from clipboard (или Add manually).",
+      "Нажмите «Открыть в FlClash» для автоимпорта подписки.",
+      "Если автоимпорт не сработал, откройте FlClash и добавьте ссылку подписки вручную.",
+      "В FlClash откройте импорт по ссылке (subscription URL), вставьте ссылку и сохраните профиль.",
       "Подключите профиль Pineapple VPN.",
     ];
   }
@@ -961,7 +961,7 @@ export default function App() {
     selectedOs === "iphone"
       ? "Открыть в Clash Mi"
       : selectedOs === "android"
-        ? "Открыть в Hiddify"
+        ? "Открыть в FlClash"
         : "Открыть в Clash";
   const configHelp = configInstructionByOs(selectedOs);
 
@@ -1335,7 +1335,7 @@ export default function App() {
                   )}
                   {onboardingInstruction?.download_url && (
                     <a className="download-link install-app-download" href={onboardingInstruction.download_url} target="_blank" rel="noreferrer">
-                      {selectedOs === "linux" ? "Открыть страницу релизов" : "Скачать приложение"}
+                      {selectedOs === "linux" ? "Открыть страницу релизов" : selectedOs === "android" ? "Скачать APK" : "Скачать приложение"}
                     </a>
                   )}
                   <ol className="steps clean install-app-steps">

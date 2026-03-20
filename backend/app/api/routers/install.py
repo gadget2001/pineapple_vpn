@@ -111,7 +111,7 @@ def install_root(
     log_audit(db, profile.user_id, "vpn_install_link_opened", {"platform": platform_name})
     log_audit(db, profile.user_id, "vpn_install_opened", {"platform": platform_name})
     if platform_name == "android":
-        log_audit(db, profile.user_id, "vpn_hiddify_install_opened", {"profile_id": profile.id})
+        log_audit(db, profile.user_id, "vpn_flclash_install_opened", {"profile_id": profile.id})
     if platform_name == "iphone":
         log_audit(db, profile.user_id, "vpn_install_link_opened_ios", {"profile_id": profile.id})
     return HTMLResponse(_landing(profile, payload, token))
@@ -136,7 +136,7 @@ def install_open(
     log_audit(db, profile.user_id, "vpn_install_link_opened", {"platform": platform})
     log_audit(db, profile.user_id, "vpn_install_opened", {"platform": platform})
     if platform == "android":
-        log_audit(db, profile.user_id, "vpn_hiddify_install_opened", {"profile_id": profile.id})
+        log_audit(db, profile.user_id, "vpn_flclash_install_opened", {"profile_id": profile.id})
     if platform == "iphone":
         log_audit(db, profile.user_id, "vpn_install_link_opened_ios", {"profile_id": profile.id})
 
@@ -157,7 +157,7 @@ def install_fallback(
     platform_name = str(payload.get("platform") or "")
     log_audit(db, profile.user_id, "vpn_install_fallback_opened", {"platform": platform_name})
     if platform_name == "android":
-        log_audit(db, profile.user_id, "vpn_hiddify_fallback_opened", {"profile_id": profile.id})
+        log_audit(db, profile.user_id, "vpn_flclash_fallback_opened", {"profile_id": profile.id})
     if platform_name == "iphone":
         log_audit(db, profile.user_id, "vpn_install_fallback_opened_ios", {"profile_id": profile.id})
     return HTMLResponse(_landing(profile, payload, token))

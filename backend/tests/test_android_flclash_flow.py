@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 from app.core.config import settings
 from app.services.vpn_clients import platform_client
-from app.services.vpn_install import build_deep_link, build_hiddify_install_link, render_install_landing_html
+from app.services.vpn_install import build_android_flclash_install_link, build_deep_link, render_install_landing_html
 from app.services.vpn_subscription import default_subscription_for_platform
 
 
@@ -18,23 +18,23 @@ def _make_profile():
     )
 
 
-def test_android_client_is_hiddify():
+def test_android_client_is_flclash():
     info = platform_client("android")
-    assert info.client_type == "hiddify"
-    assert "Hiddify" in info.client_name
-    assert "Hiddify" in info.install_cta
+    assert info.client_type == "flclash"
+    assert "FlClash" in info.client_name
+    assert "FlClash" in info.install_cta
 
 
-def test_build_hiddify_install_link_uses_official_format():
-    settings.vpn_android_hiddify_scheme = "hiddify://import/{url}#{name}"
-    link = build_hiddify_install_link("https://example.com/sub/clash", "Pineapple VPN")
-    assert link == "hiddify://import/https://example.com/sub/clash#Pineapple VPN"
+def test_build_android_flclash_install_link_uses_configured_template():
+    settings.vpn_android_flclash_scheme = "clash://install-config?url={url}"
+    link = build_android_flclash_install_link("https://example.com/sub/clash", "Pineapple VPN")
+    assert link == "clash://install-config?url=https%3A%2F%2Fexample.com%2Fsub%2Fclash"
 
 
-def test_android_deep_link_uses_hiddify_builder():
-    settings.vpn_android_hiddify_scheme = "hiddify://import/{url}#{name}"
+def test_android_deep_link_uses_flclash_builder():
+    settings.vpn_android_flclash_scheme = "clash://install-config?url={url}"
     link = build_deep_link("android", "https://example.com/sub/clash", "Premium RU")
-    assert link == "hiddify://import/https://example.com/sub/clash#Premium RU"
+    assert link == "clash://install-config?url=https%3A%2F%2Fexample.com%2Fsub%2Fclash"
 
 
 def test_android_subscription_uses_clash_url_as_primary():
@@ -51,21 +51,20 @@ def test_android_subscription_falls_back_to_default_url():
     assert default_subscription_for_platform(profile, "android") == profile.subscription_url
 
 
-def test_android_landing_contains_hiddify_fallback_steps():
+def test_android_landing_contains_flclash_fallback_steps():
     html = render_install_landing_html(
         brand="Pineapple VPN",
         platform="android",
-        client_name="Hiddify",
-        deep_link="hiddify://import/example#Pineapple",
+        client_name="FlClash",
+        deep_link="clash://install-config?url=https%3A%2F%2Fexample.com%2Fsub",
         subscription_url="https://example.com/sub/clash",
         fallback_url="https://example.com/install/fallback",
-        title="Pineapple VPN • Russia",
-        client_download_url="https://play.google.com/store/apps/details?id=app.hiddify.com",
+        title="Pineapple VPN - Russia",
+        client_download_url="https://example.com/flclash.apk",
     )
 
-    assert "Add from clipboard" in html
-    assert "Add manually" in html
-    assert "Открыть в Hiddify" in html
+    assert "FlClash" in html
+    assert "subscription link" in html
 
 
 def test_windows_deep_link_remains_clash():
