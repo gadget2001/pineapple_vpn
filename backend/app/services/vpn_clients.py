@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass, field
 
@@ -40,9 +40,10 @@ PLATFORM_CLIENTS: dict[str, PlatformClientInfo] = {
         instructions=[
             "Скачайте и установите FlClash APK.",
             "Это основной стабильный способ установки на Android.",
-            "Нажмите «Открыть в FlClash» для импорта подписки.",
-            "Если автоимпорт не сработал: добавьте subscription link вручную в FlClash.",
-            "Подключите профиль Pineapple VPN.",
+            "Откройте скачанный apk файл.",
+            "Нажмите «Установить».",
+            "Откройте установленное приложение и согласитесь со всеми условиями.",
+            "Перейдите к следующему шагу для активации ВПН конфигурации.",
         ],
     ),
     "macos": PlatformClientInfo(
