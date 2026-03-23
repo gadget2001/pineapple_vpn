@@ -341,6 +341,31 @@ async def get_onboarding_config(
     db: Session = Depends(get_db),
 ):
     eligible_sub = _eligible_subscription_for_config(db, user)
+    if not eligible_sub and not _trial_used(db, user):
+        now = datetime.utcnow()
+        trial_sub = Subscription(
+            user_id=user.id,
+            plan="trial",
+            status="active",
+            price_rub=0,
+            starts_at=now,
+            ends_at=now + timedelta(days=user.trial_days),
+        )
+        user.trial_activated_at = now
+        db.add(trial_sub)
+        db.add(user)
+        db.commit()
+        await mark_trial_used(user.telegram_id)
+
+        log_audit(db, user.id, "trial_activated", {"days": user.trial_days, "source": "onboarding_config"})
+        await send_admin_log(
+            "trial_activated",
+            user.telegram_id,
+            user.username,
+            {"days": user.trial_days, "ends_at": trial_sub.ends_at.isoformat(), "source": "onboarding_config"},
+        )
+        eligible_sub = trial_sub
+
     if not eligible_sub:
         raise HTTPException(status_code=402, detail="Active plan or trial is required to issue VPN config.")
     _activate_pending_trial_if_needed(db, user, eligible_sub)

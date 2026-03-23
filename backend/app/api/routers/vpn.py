@@ -20,6 +20,7 @@ from app.services.vpn_subscription import (
     verify_subscription_signature,
 )
 from app.utils.audit import log_audit
+from app.utils.trial_state import mark_trial_used
 
 router = APIRouter(prefix="/vpn", tags=["VPN"])
 
@@ -48,6 +49,17 @@ def _eligible_subscription_for_config(db: Session, user: User) -> Subscription |
     if active:
         return active
     return _pending_trial_subscription(db, user.id)
+
+
+def _trial_used(db: Session, user: User) -> bool:
+    if user.trial_activated_at:
+        return True
+    trial_exists = (
+        db.query(Subscription.id)
+        .filter(Subscription.user_id == user.id, Subscription.plan == "trial")
+        .first()
+    )
+    return trial_exists is not None
 
 
 def _activate_pending_trial_if_needed(db: Session, user: User, sub: Subscription | None) -> None:
@@ -85,6 +97,31 @@ async def get_config(
     db: Session = Depends(get_db),
 ):
     eligible_sub = _eligible_subscription_for_config(db, user)
+    if not eligible_sub and not _trial_used(db, user):
+        now = datetime.utcnow()
+        trial_sub = Subscription(
+            user_id=user.id,
+            plan="trial",
+            status="active",
+            price_rub=0,
+            starts_at=now,
+            ends_at=now + timedelta(days=user.trial_days),
+        )
+        user.trial_activated_at = now
+        db.add(trial_sub)
+        db.add(user)
+        db.commit()
+        await mark_trial_used(user.telegram_id)
+
+        log_audit(db, user.id, "trial_activated", {"days": user.trial_days, "source": "vpn_config"})
+        await send_admin_log(
+            "trial_activated",
+            user.telegram_id,
+            user.username,
+            {"days": user.trial_days, "ends_at": trial_sub.ends_at.isoformat(), "source": "vpn_config"},
+        )
+        eligible_sub = trial_sub
+
     if not eligible_sub:
         raise HTTPException(status_code=402, detail="Active plan or trial is required to issue VPN config.")
     _activate_pending_trial_if_needed(db, user, eligible_sub)
