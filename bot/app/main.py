@@ -221,6 +221,8 @@ async def cmd_start(message: Message):
     first_key = f"bot:first_start:{message.from_user.id}"
     is_first_start = await redis_client.set(first_key, "1", nx=True)
     if is_first_start:
+        first_start_at_key = f"bot:first_start_at:{message.from_user.id}"
+        await redis_client.set(first_start_at_key, str(int(datetime.now(timezone.utc).timestamp())), nx=True)
         details = {
             "referral_start": "yes" if referral_code else "no",
             "payload_valid": "yes" if referral_code else "no",

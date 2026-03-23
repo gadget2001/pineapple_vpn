@@ -3,6 +3,7 @@ from html import escape
 from zoneinfo import ZoneInfo
 
 import httpx
+from redis import Redis
 from sqlalchemy.orm import Session
 
 from app.celery_app import celery_app
@@ -17,6 +18,8 @@ from app.models.user import User
 from app.models.vpn_profile import VPNProfile
 from app.services.xray_access_ingest import ingest_xray_access_log
 from app.utils.plans import plans_text
+
+redis_sync = Redis.from_url(settings.redis_url, decode_responses=True)
 
 
 def _panel_headers() -> dict:
@@ -59,6 +62,52 @@ def _send_user_message(telegram_id: int, text: str, with_main_menu: bool = True)
         return False
 
 
+def _send_user_message_with_markup(
+    telegram_id: int,
+    text: str,
+    *,
+    reply_markup: dict | None = None,
+    parse_mode: str | None = None,
+) -> str:
+    if not settings.bot_token or not telegram_id:
+        return "failed"
+
+    payload = {
+        "chat_id": telegram_id,
+        "text": text,
+        "disable_web_page_preview": True,
+    }
+    if reply_markup:
+        payload["reply_markup"] = reply_markup
+    if parse_mode:
+        payload["parse_mode"] = parse_mode
+
+    try:
+        response = httpx.post(
+            f"https://api.telegram.org/bot{settings.bot_token}/sendMessage",
+            json=payload,
+            timeout=10,
+        )
+        if response.is_success:
+            return "sent"
+
+        body = {}
+        try:
+            body = response.json()
+        except Exception:
+            body = {}
+        description = str(body.get("description") or "").lower()
+        if response.status_code in {403, 400} and (
+            "bot was blocked by the user" in description
+            or "user is deactivated" in description
+            or "chat not found" in description
+        ):
+            return "blocked"
+        return "failed"
+    except Exception:
+        return "failed"
+
+
 def _format_end_time_local(ends_at_utc: datetime) -> tuple[str, str]:
     tz = ZoneInfo(settings.sched_tz)
     dt_local = ends_at_utc.replace(tzinfo=timezone.utc).astimezone(tz)
@@ -85,6 +134,30 @@ def _reminder_text(plan: str, ends_at: datetime, hours_left: int) -> str:
     )
 
 
+def _trial_reminder_markup() -> dict:
+    rows: list[list[dict]] = []
+    if settings.telegram_miniapp_url:
+        rows.append(
+            [
+                {
+                    "text": "🚀 Открыть Pineapple VPN",
+                    "web_app": {"url": settings.telegram_miniapp_url},
+                }
+            ]
+        )
+    rows.append([{"text": "🏠 Главное меню", "callback_data": "main_menu"}])
+    return {"inline_keyboard": rows}
+
+
+def _trial_reminder_text() -> str:
+    return (
+        "🍍 <b>Pineapple VPN</b>\n\n"
+        "Вы ещё не активировали пробный период.\n"
+        "Подключение занимает <b>2–3 минуты</b>, а доступ к нужным сервисам будет стабильным и защищённым.\n"
+        "Нажмите кнопку ниже и попробуйте."
+    )
+
+
 def _active_subscriptions(db: Session) -> list[tuple[Subscription, User]]:
     now = datetime.utcnow()
     rows = (
@@ -94,6 +167,22 @@ def _active_subscriptions(db: Session) -> list[tuple[Subscription, User]]:
         .all()
     )
     return rows
+
+
+def _user_first_start_at_utc(user: User) -> datetime:
+    key = f"bot:first_start_at:{user.telegram_id}"
+    try:
+        raw = redis_sync.get(key)
+    except Exception:
+        raw = None
+
+    if raw:
+        try:
+            ts = int(raw)
+            return datetime.fromtimestamp(ts, tz=timezone.utc).replace(tzinfo=None)
+        except Exception:
+            pass
+    return user.created_at
 
 
 def _start_of_local_day_utc(day: date) -> tuple[datetime, datetime]:
@@ -221,6 +310,110 @@ def check_expired_subscriptions():
 
         for sub_id in expired_ids:
             disable_vpn_user_task.delay(sub_id)
+    finally:
+        db.close()
+
+
+@celery_app.task
+def send_trial_activation_reminders():
+    db: Session = SessionLocal()
+    try:
+        now = datetime.utcnow()
+        users = db.query(User).all()
+
+        for user in users:
+            first_start_at = _user_first_start_at_utc(user)
+            if (now - first_start_at) < timedelta(days=2):
+                continue
+
+            already_sent = (
+                db.query(AuditLog.id)
+                .filter(
+                    AuditLog.user_id == user.id,
+                    AuditLog.action == "trial_activation_reminder_sent",
+                )
+                .first()
+            )
+            if already_sent:
+                continue
+
+            blocked_before = (
+                db.query(AuditLog.id)
+                .filter(
+                    AuditLog.user_id == user.id,
+                    AuditLog.action == "trial_activation_reminder_skipped_blocked_bot",
+                )
+                .first()
+            )
+            if blocked_before:
+                continue
+
+            has_active_subscription = (
+                db.query(Subscription.id)
+                .filter(
+                    Subscription.user_id == user.id,
+                    Subscription.status == "active",
+                    Subscription.ends_at > now,
+                )
+                .first()
+                is not None
+            )
+            if has_active_subscription:
+                continue
+
+            trial_exists = (
+                db.query(Subscription.id)
+                .filter(Subscription.user_id == user.id, Subscription.plan == "trial")
+                .first()
+                is not None
+            )
+            if trial_exists:
+                continue
+
+            has_profile = db.query(VPNProfile.id).filter(VPNProfile.user_id == user.id).first() is not None
+            if has_profile:
+                continue
+
+            send_result = _send_user_message_with_markup(
+                user.telegram_id,
+                _trial_reminder_text(),
+                reply_markup=_trial_reminder_markup(),
+                parse_mode="HTML",
+            )
+
+            age_days = max(2, int((now - first_start_at).total_seconds() // 86400))
+            if send_result == "sent":
+                db.add(
+                    AuditLog(
+                        user_id=user.id,
+                        action="trial_activation_reminder_sent",
+                        details={"age_days": age_days, "reason": "no_trial_no_profile_after_2d"},
+                    )
+                )
+                db.commit()
+                send_admin_log_sync(
+                    "trial_activation_reminder_sent",
+                    user.telegram_id,
+                    user.username,
+                    {"age_days": age_days, "reason": "no_trial_no_profile_after_2d"},
+                )
+                continue
+
+            if send_result == "blocked":
+                db.add(
+                    AuditLog(
+                        user_id=user.id,
+                        action="trial_activation_reminder_skipped_blocked_bot",
+                        details={"age_days": age_days, "reason": "bot_blocked_or_chat_deleted"},
+                    )
+                )
+                db.commit()
+                send_admin_log_sync(
+                    "trial_activation_reminder_skipped_blocked_bot",
+                    user.telegram_id,
+                    user.username,
+                    {"age_days": age_days, "reason": "bot_blocked_or_chat_deleted"},
+                )
     finally:
         db.close()
 

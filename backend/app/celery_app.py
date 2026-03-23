@@ -20,6 +20,10 @@ celery_app.conf.beat_schedule = {
         "task": "app.tasks.send_renewal_reminders",
         "schedule": 3600.0,
     },
+    "send-trial-activation-reminders": {
+        "task": "app.tasks.send_trial_activation_reminders",
+        "schedule": 86400.0,
+    },
     "ingest-xray-access-logs": {
         "task": "app.tasks.ingest_xray_access_logs",
         "schedule": float(max(settings.vpn_access_log_poll_seconds, 30)),
