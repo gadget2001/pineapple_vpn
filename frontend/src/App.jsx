@@ -834,11 +834,6 @@ export default function App() {
   };
 
   const onboardingGetConfig = async () => {
-    if (status?.status !== "active") {
-      setAuthError("Для получения конфигурации нужен активный тариф или пробный период.");
-      return;
-    }
-
     setConfigGenerating(true);
     setLoading(true);
     try {
