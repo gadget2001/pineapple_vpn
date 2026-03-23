@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
@@ -34,6 +34,35 @@ def _active_subscription(db: Session, user_id: int) -> Subscription | None:
     )
 
 
+def _pending_trial_subscription(db: Session, user_id: int) -> Subscription | None:
+    return (
+        db.query(Subscription)
+        .filter(Subscription.user_id == user_id, Subscription.plan == "trial", Subscription.status == "pending")
+        .order_by(Subscription.created_at.desc())
+        .first()
+    )
+
+
+def _eligible_subscription_for_config(db: Session, user: User) -> Subscription | None:
+    active = _active_subscription(db, user.id)
+    if active:
+        return active
+    return _pending_trial_subscription(db, user.id)
+
+
+def _activate_pending_trial_if_needed(db: Session, user: User, sub: Subscription | None) -> None:
+    if not sub or sub.plan != "trial" or sub.status != "pending":
+        return
+    now = datetime.utcnow()
+    sub.status = "active"
+    sub.starts_at = now
+    sub.ends_at = now + timedelta(days=user.trial_days)
+    user.trial_activated_at = now
+    db.add(sub)
+    db.add(user)
+    db.commit()
+
+
 def _build_subscription_headers(profile: VPNProfile, active_sub: Subscription | None) -> dict[str, str]:
     title = (profile.display_title or "Pineapple VPN").strip()
     daily_limit_gb = int(settings.vpn_daily_data_limit_gb or 40)
@@ -55,8 +84,10 @@ async def get_config(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if not _active_subscription(db, user.id):
-        raise HTTPException(status_code=402, detail="Для получения конфигурации нужен активный тариф или пробный период.")
+    eligible_sub = _eligible_subscription_for_config(db, user)
+    if not eligible_sub:
+        raise HTTPException(status_code=402, detail="Active plan or trial is required to issue VPN config.")
+    _activate_pending_trial_if_needed(db, user, eligible_sub)
 
     try:
         profile, created = await get_or_create_vpn_profile(db, user)

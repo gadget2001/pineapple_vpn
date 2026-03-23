@@ -18,6 +18,7 @@ ACTION_TITLES = {
     "subscription_reminder_sent": "Отправлено напоминание о продлении",
     "subscription_expired": "Подписка истекла",
     "vpn_disabled": "VPN отключен",
+    "vpn_cleanup_skipped_no_profile": "Очистка VPN пропущена (профиль не найден)",
     "vpn_config_created": "VPN-конфиг создан",
     "vpn_profile_generated_clash": "Сгенерирован Clash-профиль",
     "vpn_profile_generated_android_flclash": "Сгенерирован Android FlClash-профиль",
@@ -46,6 +47,7 @@ ACTION_TITLES = {
     "onboarding_config_received": "Получена конфигурация онбординга",
     "onboarding_completed": "Онбординг завершен",
     "onboarding_restarted": "Онбординг перезапущен",
+    "bot_first_start": "Первый запуск бота",
     "payment_error": "Ошибка платежа",
     "user_purged": "Пользователь удален",
     "daily_limit_reached": "Достигнут дневной лимит трафика",
@@ -116,6 +118,7 @@ ACTION_SEVERITY = {
     "payment_error": "red",
     "subscription_expired": "red",
     "vpn_disabled": "red",
+    "vpn_cleanup_skipped_no_profile": "green",
     "daily_limit_reached": "red",
     "user_purged": "red",
     # Warning / requires attention

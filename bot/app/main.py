@@ -3,6 +3,7 @@ import base64
 import os
 import re
 from datetime import datetime, timezone
+from html import escape
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -114,25 +115,33 @@ async def send_admin_log(action: str, message: Message, details: dict | None = N
         return
     details = details or {}
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    title = "Первый запуск бота" if action == "bot_first_start" else action
+    safe_user = escape(message.from_user.username or "unknown")
+    safe_title = escape(title)
     lines = [
-        "[ Pineapple VPN LOG ]",
+        "<b>Pineapple VPN | Админ-лог</b>",
         "",
-        f"Новое событие: {action}",
-        "",
-        f"User ID: {message.from_user.id}",
-        f"Username: @{message.from_user.username or 'unknown'}",
-        f"Дата: {timestamp}",
+        f"<b>Событие:</b> <b>{safe_title}</b>",
+        "<b>Уровень:</b> <b>Инфо</b>",
+        f"<b>Пользователь:</b> <code>{message.from_user.id}</code> | @{safe_user}",
+        f"<b>UTC:</b> <code>{timestamp}</code>",
     ]
-    for k, v in details.items():
-        lines.append(f"{k}: {v}")
-    lines.extend(["", f"#user_{message.from_user.id}", f"#{action}"])
+    if details:
+        lines.extend(["", "<b>Детали:</b>"])
+        for k, v in details.items():
+            lines.append(f"- <b>{escape(str(k))}:</b> <code>{escape(str(v))}</code>")
+    lines.extend(["", f"#user_{message.from_user.id} #{action}"])
 
     async with httpx.AsyncClient(timeout=10) as client:
         await client.post(
             f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-            json={"chat_id": ADMIN_CHAT_ID, "text": "\n".join(lines)},
+            json={
+                "chat_id": ADMIN_CHAT_ID,
+                "text": "\n".join(lines),
+                "parse_mode": "HTML",
+                "disable_web_page_preview": True,
+            },
         )
-
 
 def _build_welcome_caption(is_referral: bool, trial_already_used: bool = False) -> str:
     text = (

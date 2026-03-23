@@ -153,6 +153,7 @@ def account_overview(
         .order_by(Subscription.ends_at.desc())
         .first()
     )
+    trial_pending = bool(sub and sub.status == "pending" and sub.plan == "trial")
     active = bool(sub and sub.status == "active" and sub.ends_at > now)
     trial_active = bool(active and sub and sub.plan == "trial")
     trial_used = bool(
@@ -236,9 +237,9 @@ def account_overview(
             "receipt_email": user.receipt_email,
         },
         "subscription": {
-            "status": "active" if active else "expired" if sub else "none",
-            "plan": sub.plan if sub else None,
-            "ends_at": sub.ends_at if sub else None,
+            "status": "active" if active else "none" if trial_pending else "expired" if sub else "none",
+            "plan": sub.plan if (sub and not trial_pending) else None,
+            "ends_at": sub.ends_at if (sub and not trial_pending) else None,
         },
         "trial": {
             "active": trial_active,

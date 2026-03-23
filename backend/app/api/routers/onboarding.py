@@ -66,6 +66,35 @@ def _active_subscription(db: Session, user: User) -> Subscription | None:
     )
 
 
+def _pending_trial_subscription(db: Session, user: User) -> Subscription | None:
+    return (
+        db.query(Subscription)
+        .filter(Subscription.user_id == user.id, Subscription.plan == "trial", Subscription.status == "pending")
+        .order_by(Subscription.created_at.desc())
+        .first()
+    )
+
+
+def _eligible_subscription_for_config(db: Session, user: User) -> Subscription | None:
+    active = _active_subscription(db, user)
+    if active:
+        return active
+    return _pending_trial_subscription(db, user)
+
+
+def _activate_pending_trial_if_needed(db: Session, user: User, sub: Subscription | None) -> None:
+    if not sub or sub.plan != "trial" or sub.status != "pending":
+        return
+    now = datetime.utcnow()
+    sub.status = "active"
+    sub.starts_at = now
+    sub.ends_at = now + timedelta(days=user.trial_days)
+    user.trial_activated_at = now
+    db.add(sub)
+    db.add(user)
+    db.commit()
+
+
 def _resolve_step(db: Session, user: User) -> str:
     normalized_os = _normalize_os(user.onboarding_os)
     if normalized_os != user.onboarding_os:
@@ -202,13 +231,13 @@ async def activate_trial(
         Subscription(
             user_id=user.id,
             plan="trial",
-            status="active",
+            status="pending",
             price_rub=0,
             starts_at=now,
             ends_at=ends_at,
         )
     )
-    user.trial_activated_at = now
+    user.trial_activated_at = None
     user.onboarding_step = "device_select"
     db.commit()
     await mark_trial_used(user.telegram_id)
@@ -311,8 +340,10 @@ async def get_onboarding_config(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if not _active_subscription(db, user):
-        raise HTTPException(status_code=402, detail="Для получения конфигурации нужен активный тариф или пробный период.")
+    eligible_sub = _eligible_subscription_for_config(db, user)
+    if not eligible_sub:
+        raise HTTPException(status_code=402, detail="Active plan or trial is required to issue VPN config.")
+    _activate_pending_trial_if_needed(db, user, eligible_sub)
 
     selected_platform = _normalize_os(user.onboarding_os) or "windows"
 

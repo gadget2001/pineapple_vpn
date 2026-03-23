@@ -77,6 +77,9 @@ def subscription_status(
     if not sub:
         return SubscriptionStatus(status="none", plan=None, ends_at=None, trial=False)
 
+    if sub.status == "pending" and sub.plan == "trial":
+        return SubscriptionStatus(status="none", plan=None, ends_at=None, trial=False)
+
     active = sub.ends_at > now and sub.status == "active"
     trial = sub.plan == "trial" and active
     return SubscriptionStatus(
@@ -110,7 +113,8 @@ async def activate_trial(
                 .order_by(Subscription.starts_at.asc())
                 .first()
             )
-            user.trial_activated_at = (first_trial.starts_at if first_trial else datetime.utcnow())
+            if first_trial and first_trial.status == "active":
+                user.trial_activated_at = first_trial.starts_at
             db.commit()
             await mark_trial_used(user.telegram_id)
         raise HTTPException(status_code=400, detail="Пробный период уже был активирован.")
@@ -129,12 +133,12 @@ async def activate_trial(
     trial_sub = Subscription(
         user_id=user.id,
         plan="trial",
-        status="active",
+        status="pending",
         price_rub=0,
         starts_at=now,
         ends_at=ends_at,
     )
-    user.trial_activated_at = now
+    user.trial_activated_at = None
     if user.onboarding_step in ("welcome", "trial_offer"):
         user.onboarding_step = "device_select"
     db.add(trial_sub)

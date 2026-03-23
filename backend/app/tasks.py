@@ -14,6 +14,7 @@ from app.models.connection_log import ConnectionLog
 from app.models.payment import Payment
 from app.models.subscription import Subscription
 from app.models.user import User
+from app.models.vpn_profile import VPNProfile
 from app.services.xray_access_ingest import ingest_xray_access_log
 from app.utils.plans import plans_text
 
@@ -387,33 +388,66 @@ def disable_vpn_user_task(subscription_id: int):
         user = db.query(User).filter(User.id == sub.user_id).first()
         if not user:
             return
+        profile = db.query(VPNProfile).filter(VPNProfile.user_id == user.id).first()
+        if not profile:
+            send_admin_log_sync(
+                "vpn_cleanup_skipped_no_profile",
+                user.telegram_id,
+                user.username,
+                {"subscription_id": sub.id, "reason": "no_local_vpn_profile"},
+            )
+            return
 
         panel_base = settings.panel_url.rstrip("/")
         uname = f"tg_{user.telegram_id}"
+        panel_user_exists = None
 
         disabled = False
         deleted = False
         try:
-            resp_disable = httpx.post(
-                f"{panel_base}/api/user/disable/{uname}",
-                headers=_panel_headers(),
-                timeout=15,
-            )
-            disabled = resp_disable.is_success
-        except Exception:
-            disabled = False
-
-        try:
-            resp_delete = httpx.delete(
+            resp_get = httpx.get(
                 f"{panel_base}/api/user/{uname}",
                 headers=_panel_headers(),
                 timeout=15,
             )
-            deleted = resp_delete.is_success
+            if resp_get.status_code == 404:
+                panel_user_exists = False
+            elif resp_get.is_success:
+                panel_user_exists = True
+        except Exception:
+            panel_user_exists = None
+
+        if panel_user_exists is False:
+            disabled = True
+            deleted = True
+
+        try:
+            if panel_user_exists is not False:
+                resp_disable = httpx.post(
+                    f"{panel_base}/api/user/disable/{uname}",
+                    headers=_panel_headers(),
+                    timeout=15,
+                )
+                disabled = resp_disable.is_success or resp_disable.status_code == 404
+        except Exception:
+            disabled = False
+
+        try:
+            if panel_user_exists is not False:
+                resp_delete = httpx.delete(
+                    f"{panel_base}/api/user/{uname}",
+                    headers=_panel_headers(),
+                    timeout=15,
+                )
+                deleted = resp_delete.is_success or resp_delete.status_code == 404
         except Exception:
             deleted = False
 
         if disabled and deleted:
+            profile.is_active = False
+            profile.last_synced_at = datetime.utcnow()
+            db.add(profile)
+            db.commit()
             send_admin_log_sync(
                 "vpn_disabled",
                 user.telegram_id,
