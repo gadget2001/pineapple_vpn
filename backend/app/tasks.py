@@ -20,10 +20,56 @@ from app.services.xray_access_ingest import ingest_xray_access_log
 from app.utils.plans import plans_text
 
 redis_sync = Redis.from_url(settings.redis_url, decode_responses=True)
+_panel_token_cache: str = settings.panel_token or ""
 
 
-def _panel_headers() -> dict:
-    return {"Authorization": f"Bearer {settings.panel_token}"}
+def _panel_headers(token: str | None = None) -> dict:
+    return {"Authorization": f"Bearer {token or _panel_token_cache or settings.panel_token}"}
+
+
+def _refresh_panel_token_sync() -> str:
+    global _panel_token_cache
+
+    if not settings.panel_username or not settings.panel_password:
+        return _panel_token_cache or settings.panel_token
+
+    panel_base = settings.panel_url.rstrip("/")
+    response = httpx.post(
+        f"{panel_base}/api/admin/token",
+        data={"username": settings.panel_username, "password": settings.panel_password},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        timeout=15,
+    )
+    if not response.is_success:
+        return _panel_token_cache or settings.panel_token
+
+    payload = response.json() if response.content else {}
+    token = payload.get("access_token") or payload.get("token")
+    if token:
+        _panel_token_cache = str(token)
+    return _panel_token_cache or settings.panel_token
+
+
+def _panel_request(method: str, path: str, *, timeout: int = 15, **kwargs) -> httpx.Response:
+    panel_base = settings.panel_url.rstrip("/")
+    response = httpx.request(
+        method,
+        f"{panel_base}{path}",
+        headers=_panel_headers(),
+        timeout=timeout,
+        **kwargs,
+    )
+    if response.status_code != 401:
+        return response
+
+    fresh_token = _refresh_panel_token_sync()
+    return httpx.request(
+        method,
+        f"{panel_base}{path}",
+        headers=_panel_headers(fresh_token),
+        timeout=timeout,
+        **kwargs,
+    )
 
 
 def _main_menu_markup() -> dict:
@@ -217,18 +263,22 @@ def _load_daily_limit_alerted_users(db: Session, today: date) -> set[int]:
 
 
 def _panel_get_user(uname: str) -> dict | None:
-    panel_base = settings.panel_url.rstrip("/")
-    try:
-        response = httpx.get(
-            f"{panel_base}/api/user/{uname}",
-            headers=_panel_headers(),
-            timeout=15,
-        )
-        if response.is_success:
-            return response.json()
-    except Exception:
-        return None
+    state, payload = _panel_get_user_state(uname)
+    if state == "found":
+        return payload
     return None
+
+
+def _panel_get_user_state(uname: str) -> tuple[str, dict | None]:
+    try:
+        response = _panel_request("GET", f"/api/user/{uname}", timeout=15)
+        if response.status_code == 404:
+            return "missing", None
+        if response.is_success:
+            return "found", response.json()
+    except Exception:
+        return "error", None
+    return "error", None
 
 
 def _build_limit_payload(panel_user: dict, uname: str, note: str) -> dict:
@@ -264,15 +314,8 @@ def _sync_panel_user_limit(uname: str, panel_user: dict, note: str) -> dict:
         return panel_user
 
     payload = _build_limit_payload(panel_user, uname, note)
-    panel_base = settings.panel_url.rstrip("/")
-
     try:
-        response = httpx.put(
-            f"{panel_base}/api/user/{uname}",
-            headers=_panel_headers(),
-            json=payload,
-            timeout=15,
-        )
+        response = _panel_request("PUT", f"/api/user/{uname}", json=payload, timeout=15)
         if response.is_success:
             return response.json()
     except Exception:
@@ -308,7 +351,18 @@ def check_expired_subscriptions():
 
         db.commit()
 
-        for sub_id in expired_ids:
+        # Always retry cleanup for expired subscriptions while local VPN profile is still active.
+        stale_expired_ids = [
+            row[0]
+            for row in (
+                db.query(Subscription.id)
+                .join(VPNProfile, VPNProfile.user_id == Subscription.user_id)
+                .filter(Subscription.status == "expired", VPNProfile.is_active.is_(True))
+                .all()
+            )
+        ]
+
+        for sub_id in sorted(set(expired_ids + stale_expired_ids)):
             disable_vpn_user_task.delay(sub_id)
     finally:
         db.close()
@@ -591,52 +645,66 @@ def disable_vpn_user_task(subscription_id: int):
             )
             return
 
-        panel_base = settings.panel_url.rstrip("/")
         uname = f"tg_{user.telegram_id}"
         panel_user_exists = None
 
         disabled = False
         deleted = False
-        try:
-            resp_get = httpx.get(
-                f"{panel_base}/api/user/{uname}",
-                headers=_panel_headers(),
-                timeout=15,
-            )
-            if resp_get.status_code == 404:
-                panel_user_exists = False
-            elif resp_get.is_success:
-                panel_user_exists = True
-        except Exception:
+        disable_status_code = None
+        delete_status_code = None
+        state_before, _ = _panel_get_user_state(uname)
+        if state_before == "found":
+            panel_user_exists = True
+        elif state_before == "missing":
+            panel_user_exists = False
+        else:
             panel_user_exists = None
 
-        if panel_user_exists is False:
-            disabled = True
-            deleted = True
+        if panel_user_exists is None:
+            send_admin_log_sync(
+                "vpn_cleanup_failed",
+                user.telegram_id,
+                user.username,
+                {
+                    "reason": "panel_unreachable_or_auth_failed",
+                    "subscription_id": sub.id,
+                    "panel_username": uname,
+                },
+            )
+            return
 
         try:
-            if panel_user_exists is not False:
-                resp_disable = httpx.post(
-                    f"{panel_base}/api/user/disable/{uname}",
-                    headers=_panel_headers(),
-                    timeout=15,
-                )
-                disabled = resp_disable.is_success or resp_disable.status_code == 404
+            if panel_user_exists:
+                resp_disable = _panel_request("POST", f"/api/user/disable/{uname}", timeout=15)
+                disable_status_code = resp_disable.status_code
+                # 404 here is not success: user existence is already confirmed by GET.
+                disabled = resp_disable.is_success
+            else:
+                disabled = True
         except Exception:
             disabled = False
 
         try:
-            if panel_user_exists is not False:
-                resp_delete = httpx.delete(
-                    f"{panel_base}/api/user/{uname}",
-                    headers=_panel_headers(),
-                    timeout=15,
-                )
+            if panel_user_exists:
+                resp_delete = _panel_request("DELETE", f"/api/user/{uname}", timeout=15)
+                delete_status_code = resp_delete.status_code
                 deleted = resp_delete.is_success or resp_delete.status_code == 404
+            else:
+                deleted = True
         except Exception:
             deleted = False
 
-        if disabled and deleted:
+        state_after, panel_user_after = _panel_get_user_state(uname)
+        if state_after == "missing":
+            effective_block = True
+        elif state_after == "found":
+            panel_user_still_active = str(panel_user_after.get("status") or "").lower() == "active"
+            effective_block = deleted or (disabled and not panel_user_still_active)
+        else:
+            # Network/API verification failed: trust only explicit successful delete.
+            effective_block = deleted
+
+        if effective_block:
             profile.is_active = False
             profile.last_synced_at = datetime.utcnow()
             db.add(profile)
@@ -661,14 +729,17 @@ def disable_vpn_user_task(subscription_id: int):
             return
 
         send_admin_log_sync(
-            "payment_error",
+            "vpn_cleanup_failed",
             user.telegram_id,
             user.username,
             {
-                "reason": "vpn_disable_failed",
+                "reason": "vpn_disable_or_delete_failed",
                 "subscription_id": sub.id,
                 "panel_disable_ok": disabled,
                 "panel_delete_ok": deleted,
+                "disable_status_code": disable_status_code,
+                "delete_status_code": delete_status_code,
+                "panel_username": uname,
             },
         )
     finally:
