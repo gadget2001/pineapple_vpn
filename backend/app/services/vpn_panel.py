@@ -184,7 +184,11 @@ async def _get_vless_inbounds(client: httpx.AsyncClient) -> list[str]:
     return list(dict.fromkeys([n for n in names if n]))
 
 
-def _build_base_payload(uname: str, note: str) -> dict[str, Any]:
+def _build_base_payload(uname: str, note: str, preferred_uuid: str | None = None) -> dict[str, Any]:
+    proxies_vless: dict[str, Any] = {}
+    if preferred_uuid:
+        proxies_vless["id"] = preferred_uuid
+
     return {
         "username": uname,
         "note": note,
@@ -193,7 +197,7 @@ def _build_base_payload(uname: str, note: str) -> dict[str, Any]:
         "data_limit": _daily_limit_bytes(),
         "data_limit_reset_strategy": _daily_reset_strategy(),
         "inbounds": {"vless": []},
-        "proxies": {"vless": {}},
+        "proxies": {"vless": proxies_vless},
     }
 
 
@@ -242,7 +246,7 @@ async def _sync_existing_user(
     return existing
 
 
-async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, Any]:
+async def create_vpn_user(telegram_id: int, username: str | None, preferred_uuid: str | None = None) -> Dict[str, Any]:
     uname = f"tg_{telegram_id}"
     note = _connection_note(uname, username)
 
@@ -259,7 +263,7 @@ async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, A
         inbound_candidates.extend(discovered_inbounds)
         unique_inbounds = list(dict.fromkeys([i for i in inbound_candidates if i]))
 
-        base_payload = _build_base_payload(uname, note)
+        base_payload = _build_base_payload(uname, note, preferred_uuid=preferred_uuid)
 
         last_error: str | None = None
         for inbound_name in unique_inbounds:
@@ -269,6 +273,16 @@ async def create_vpn_user(telegram_id: int, username: str | None) -> Dict[str, A
                 details = await _get_existing_user(client, uname)
                 return _extract_profile(details or response.json())
             last_error = response.text
+
+        if preferred_uuid:
+            fallback_payload = _build_base_payload(uname, note, preferred_uuid=None)
+            for inbound_name in unique_inbounds:
+                payload = {**fallback_payload, "inbounds": {"vless": [inbound_name]}}
+                response = await _request_with_auth(client, "POST", "/api/user", json=payload)
+                if response.is_success:
+                    details = await _get_existing_user(client, uname)
+                    return _extract_profile(details or response.json())
+                last_error = response.text
 
         available = ", ".join(discovered_inbounds) if discovered_inbounds else "не удалось получить список inbound из панели"
         configured = settings.panel_inbound_name

@@ -351,16 +351,28 @@ def check_expired_subscriptions():
 
         db.commit()
 
-        # Always retry cleanup for expired subscriptions while local VPN profile is still active.
-        stale_expired_ids = [
-            row[0]
-            for row in (
+        # Retry cleanup only for users that do not have any active subscription now.
+        # This prevents accidental cleanup for users with historical expired records and current active plan.
+        stale_expired_ids: list[int] = []
+        stale_rows = (
+            db.query(Subscription.id, Subscription.user_id)
+            .join(VPNProfile, VPNProfile.user_id == Subscription.user_id)
+            .filter(Subscription.status == "expired", VPNProfile.is_active.is_(True))
+            .all()
+        )
+        for stale_sub_id, stale_user_id in stale_rows:
+            has_active_now = (
                 db.query(Subscription.id)
-                .join(VPNProfile, VPNProfile.user_id == Subscription.user_id)
-                .filter(Subscription.status == "expired", VPNProfile.is_active.is_(True))
-                .all()
+                .filter(
+                    Subscription.user_id == stale_user_id,
+                    Subscription.status == "active",
+                    Subscription.ends_at > now,
+                )
+                .first()
+                is not None
             )
-        ]
+            if not has_active_now:
+                stale_expired_ids.append(stale_sub_id)
 
         for sub_id in sorted(set(expired_ids + stale_expired_ids)):
             disable_vpn_user_task.delay(sub_id)
@@ -635,6 +647,27 @@ def disable_vpn_user_task(subscription_id: int):
         user = db.query(User).filter(User.id == sub.user_id).first()
         if not user:
             return
+
+        now = datetime.utcnow()
+        has_active_now = (
+            db.query(Subscription.id)
+            .filter(
+                Subscription.user_id == user.id,
+                Subscription.status == "active",
+                Subscription.ends_at > now,
+            )
+            .first()
+            is not None
+        )
+        if has_active_now:
+            send_admin_log_sync(
+                "vpn_cleanup_skipped_active_subscription",
+                user.telegram_id,
+                user.username,
+                {"subscription_id": sub.id, "reason": "active_subscription_exists"},
+            )
+            return
+
         profile = db.query(VPNProfile).filter(VPNProfile.user_id == user.id).first()
         if not profile:
             send_admin_log_sync(

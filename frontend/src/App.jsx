@@ -953,7 +953,12 @@ export default function App() {
       || vpnConfig?.subscription_url
       || vpnConfig?.subscription_url_clash,
   );
-  const setupInstallUrl = onboardingConfig?.install_url || vpnConfig?.install_urls?.[selectedOs] || "";
+  const effectiveSetupPlatform = onboardingConfig?.platform || onboarding?.os || selectedOs || "windows";
+  const setupInstallUrl =
+    onboardingConfig?.install_url
+    || onboardingConfig?.install_urls?.[effectiveSetupPlatform]
+    || vpnConfig?.install_urls?.[effectiveSetupPlatform]
+    || "";
   const setupInstallCta =
     selectedOs === "iphone"
       ? "Открыть в Clash Mi"
@@ -1356,14 +1361,14 @@ export default function App() {
                     </div>
                   )}
 
-                  {!configGenerating && !setupSubscriptionUrl && (
+                  {!configGenerating && (!setupSubscriptionUrl || !setupInstallUrl) && (
                     <>
                       <p>{"Осталось получить персональную конфигурацию и добавить ее в приложение."}</p>
                       <button disabled={loading} onClick={onboardingGetConfig}>{"Получить конфигурацию"}</button>
                     </>
                   )}
 
-                  {!configGenerating && !!setupSubscriptionUrl && (
+                  {!configGenerating && !!setupSubscriptionUrl && !!setupInstallUrl && (
                     <div className="vpn-ready-layout">
                       <p className="muted">{onboardingConfig?.message || "Осталось добавить конфигурацию в приложение"}</p>
 

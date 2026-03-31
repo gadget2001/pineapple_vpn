@@ -56,9 +56,10 @@ def _sync_profile_from_panel(profile: VPNProfile, panel_data: dict) -> bool:
 
 async def get_or_create_vpn_profile(db: Session, user: User) -> tuple[VPNProfile, bool]:
     # Keep live-sync with panel to avoid stale data after user recreation in Marzban.
-    panel_data = await create_vpn_user(user.telegram_id, user.username)
-
     profile = db.query(VPNProfile).filter(VPNProfile.user_id == user.id).first()
+    preferred_uuid = profile.uuid if profile and profile.uuid else None
+    panel_data = await create_vpn_user(user.telegram_id, user.username, preferred_uuid=preferred_uuid)
+
     if profile:
         changed = _sync_profile_from_panel(profile, panel_data)
         ensure_profile_metadata(profile)
